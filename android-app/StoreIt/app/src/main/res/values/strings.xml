@@ -15,4 +15,9 @@
     <string name="home_welcome_text">Welcome to storeit</string>
     <string name="menu_file_rename">Rename</string>
     <string name="menu_file_delete">Delete</string>
+
+    <string-array name="file_upload_option">
+        <item>Camera</item>
+        <item>Choose file</item>
+    </string-array>
 </resources>

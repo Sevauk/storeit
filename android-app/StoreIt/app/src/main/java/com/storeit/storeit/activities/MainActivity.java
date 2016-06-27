@@ -4,18 +4,21 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
@@ -38,6 +42,8 @@ import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
+
+import java.io.File;
 
 /**
  * Main acyivity
@@ -55,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     static int FILE_CODE_RESULT = 1005;
 
     static final int HOME_FRAGMENT = 1, FILES_FRAGMENT = 2, SETTINGS_FRAGMENT = 3;
+
+    static final int CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE = 1002;
 
     RecyclerView mRecyclerView;
     RecyclerView.Adapter mAdapter;
@@ -175,13 +183,37 @@ public class MainActivity extends AppCompatActivity {
         fbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this, FilePickerActivity.class);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-                i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
 
-                i.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
-                startActivityForResult(i, FILE_CODE_RESULT);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Upload new file")
+                        .setItems(R.array.file_upload_option, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                switch (i)
+                                {
+                                    case 0 :
+ /*                                       Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+                                        File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
+                                        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+                                        startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
+                                        break;
+                                        */
+                                    case 1 :
+                                        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+                                        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+                                        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+                                        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
+
+                                        intent.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
+                                        startActivityForResult(intent, FILE_CODE_RESULT);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 
@@ -327,11 +359,11 @@ public class MainActivity extends AppCompatActivity {
             Log.v("MainActivity", "FADD");
             filesManager.addFile(command.getFiles());
             runOnUiThread(new Runnable() {
-                              @Override
-                              public void run() {
-                                  refreshFileExplorer();
-                              }
-                          });
+                @Override
+                public void run() {
+                    refreshFileExplorer();
+                }
+            });
         }
 
         @Override
@@ -339,11 +371,11 @@ public class MainActivity extends AppCompatActivity {
             Log.v("MainActivity", "FUPT");
             filesManager.updateFile(command.getFiles());
             runOnUiThread(new Runnable() {
-                              @Override
-                              public void run() {
-                                  refreshFileExplorer();
-                              }
-                          });
+                @Override
+                public void run() {
+                    refreshFileExplorer();
+                }
+            });
         }
     };
 }
