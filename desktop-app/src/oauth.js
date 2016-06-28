@@ -7,7 +7,7 @@ import fbgraph from 'fbgraph'
 
 import {logger} from '../lib/log'
 
-const REDIRECT_URI = 'http://localhost:7777'
+const REDIRECT_URI = 'http://localhost:7777/'
 const TOKENS_FILE = './.tokens.json'
 const HTTP_PORT = 7777
 
@@ -130,7 +130,7 @@ export class FacebookService extends OAuthProvider {
   }
 
   oauth() {
-    const ENDPOINT = 'auth/facebook'
+    const ENDPOINT = 'auth/fb'
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
         if (!req.query.error)
@@ -148,24 +148,36 @@ export class FacebookService extends OAuthProvider {
   getToken(code) {
     return new Promise((resolve, reject) => {
       let params = Object.assign({code}, this.credentials)
+      let extended = false
 
       /*
-      * FIXME: See error below
-      * Error validating verification code.
-      * Please make sure your redirect_uri is identical to the one you used in the OAuth dialog request
+      * Is called twice
       */
-      this.client.authorize(params, (err, facebookRes) => {
+      let manageTokens = (err, tokens) => {
         if (!err) {
-          // this.client.setCredentials() // TODO
-          // this.saveTokens({facebook: facebookRes.tokens}) // TODO
-          logger.log('SUCCESS', facebookRes)
-          resolve(facebookRes.accessToken)
+          console.log('SUCCESS', tokens)
+          this.saveTokens(tokens)
+          if (!extended)
+            this.client.extendAccessToken(this.prepareToken(), manageTokens)
+          else
+            resolve(tokens)
         }
         else {
           logger.error(err.message)
           reject(err)
         }
-      })
+        extended = !extended // becomes true after first call back
+      }
+
+      this.client.authorize(params, manageTokens)
     })
+  }
+
+  prepareToken() {
+    return {
+      'access_token': this.tokens.facebook['access_token'],
+      'client_id': this.credentials['client_id'],
+      'client_secret':  this.credentials['client_secret']
+    }
   }
 }
