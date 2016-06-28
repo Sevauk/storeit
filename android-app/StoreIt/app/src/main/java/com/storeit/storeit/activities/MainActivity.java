@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     static final int HOME_FRAGMENT = 1, FILES_FRAGMENT = 2, SETTINGS_FRAGMENT = 3;
 
     static final int CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE = 1002;
+    static final int PICK_IMAGE_GALLERY_REQUEST_CODE = 1003;
 
     RecyclerView mRecyclerView;
     RecyclerView.Adapter mAdapter;
@@ -189,23 +191,14 @@ public class MainActivity extends AppCompatActivity {
                         .setItems(R.array.file_upload_option, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                switch (i)
-                                {
-                                    case 0 :
- /*                                       Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-                                        File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
-                                        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
-                                        startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
+                                switch (i) {
+                                    case 0:
+                                        startCameraIntent();
+                                    case 1:
+                                        startGalleryPicker();
                                         break;
-                                        */
-                                    case 1 :
-                                        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
-                                        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-                                        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-                                        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-
-                                        intent.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
-                                        startActivityForResult(intent, FILE_CODE_RESULT);
+                                    case 2:
+                                        startFilePickerIntent();
                                         break;
                                     default:
                                         break;
@@ -229,6 +222,30 @@ public class MainActivity extends AppCompatActivity {
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
+    }
+
+    private void startGalleryPicker() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_GALLERY_REQUEST_CODE);
+    }
+
+    private void startFilePickerIntent() {
+        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
+
+        intent.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
+        startActivityForResult(intent, FILE_CODE_RESULT);
+    }
+
+    private void startCameraIntent() {
+        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+        File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+        startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
     }
 
     @Override
@@ -290,22 +307,30 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) {
-            if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
-                ClipData clip = data.getClipData();
+        if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
+            Uri uri = data.getData();
+            Log.v("MainActivity", "icici " + uri.toString());
+            fbtn.setVisibility(View.VISIBLE);
+            new UploadAsync(this, mBoundService).execute(uri.getPath());
+        } else if (requestCode == PICK_IMAGE_GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) { // Gallery
+            fbtn.setVisibility(View.VISIBLE);
 
-                if (clip != null) {
-                    for (int i = 0; i < clip.getItemCount(); i++) {
-                        Uri uri = clip.getItemAt(i).getUri();
+            Uri uri = data.getData();
+            new UploadAsync(this, mBoundService).execute(getRealPathFromURI(uri));
+        }
+    }
 
-                        Log.v("MainActivity", "lalala " + uri.toString());
-                    }
-                }
-            } else {
-                Uri uri = data.getData();
-                Log.v("MainActivity", "icici " + uri.toString());
-                fbtn.setVisibility(View.VISIBLE);
-                new UploadAsync(this, mBoundService).execute(uri.getPath());
+    public String getRealPathFromURI(Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = getContentResolver().query(contentUri,  proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
             }
         }
     }
