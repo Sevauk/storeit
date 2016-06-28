@@ -18,6 +18,7 @@
 
     <string-array name="file_upload_option">
         <item>Camera</item>
+        <item>Gallery</item>
         <item>Choose file</item>
     </string-array>
 </resources>
