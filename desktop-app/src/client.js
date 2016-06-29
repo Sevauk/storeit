@@ -37,15 +37,18 @@ export default class Client {
     switch (type) {
     case 'facebook':
       service = new FacebookService()
-      return service.oauth()
+      type = 'fb'
       break
     case 'google':
       service = new GoogleService()
-      return service.oauth()
+      type = 'gg'
       break
     default:
-      return this.login()
+      return this.login() // TODO
     }
+
+    return service.oauth()
+      .then((tokens) => this.join(type, tokens.access_token))
   }
 
   login() {
@@ -56,7 +59,7 @@ export default class Client {
     const {SERVER_HOST, SERVER_PORT} = process.env
     this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
-    this.sock.on('open', () => true) // TODO: send user tree ?
+    this.sock.on('open', () => true)
     this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('socket error occured'))
     this.sock.on('message', (data) => this.recv(data))

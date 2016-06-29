@@ -18,4 +18,5 @@ else {
 }
 
 let client = new Client()
-client.auth('facebook')
+client.auth('google')
+  .then(() => console.log('joined server'))
