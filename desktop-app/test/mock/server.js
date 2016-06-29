@@ -12,7 +12,8 @@ wss.on('connection', function connection(ws) {
 
   ws.on('message', function incoming(message) {
     console.log('received: %s', message)
+    ws.send(JSON.stringify({commandUid: 0, message: 'message'}))
   })
 
-  ws.send('welcome')
+  ws.send(JSON.stringify({message: 'welcome'}))
 })

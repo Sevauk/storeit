@@ -2,38 +2,19 @@ import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import {logger} from '../lib/log'
+import {Command} from '../lib/protocol-objects'
 
 let recoTime = 1
-
-let uid = 0 // TODO: remove
-
-// TODO: remove
-class Command {
-  constructor(name, parameters) {
-    this.uid = uid++
-    this.command = name
-    this.parameters = parameters
-  }
-}
-
-// TODO: remove
-class Response { // eslint-disable-line no-unused-vars
-  constructor(code, text, uid, parameters) {
-    this.code = code,
-    this.text = text,
-    this.commandUid = uid,
-    this.parameters = parameters
-  }
-}
 
 export default class Client {
 
   constructor() {
+    this.listeners = {}
     this.connect()
   }
 
   auth(type) {
-    let service = null
+    let service
     switch (type) {
     case 'facebook':
       service = new FacebookService()
@@ -49,6 +30,9 @@ export default class Client {
 
     return service.oauth()
       .then((tokens) => this.join(type, tokens.access_token))
+      .then((cmd) =>
+        this.addResponseListener(cmd.uid, (data) => this.getRemoteTree(data))
+      )
   }
 
   login() {
@@ -62,7 +46,7 @@ export default class Client {
     this.sock.on('open', () => true)
     this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('socket error occured'))
-    this.sock.on('message', (data) => this.recv(data))
+    this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
   }
 
   reconnect() {
@@ -75,6 +59,22 @@ export default class Client {
     }
   }
 
+
+  addResponseListener(uid, listener) {
+    logger.debug('attaching handler for command', uid)
+    this.listeners[uid] = listener
+  }
+
+  handleResponse(res) {
+    let handler = this.listeners[res.commandUid]
+    if (handler != null) {
+      this.listeners[res.commandUid] = null
+      return handler(res.params)
+    }
+
+    return // TODO
+  }
+
   send(cmd, params) {
     logger.info(`sending command ${cmd}`)
     let data = new Command(cmd, params)
@@ -84,10 +84,6 @@ export default class Client {
         !err ? resolve(data) : reject(err)
       )
     )
-  }
-
-  recv(data) {
-    return new Promise((resolve) => resolve(JSON.parse(data)))
   }
 
   join(authType, accessToken) {
@@ -108,5 +104,9 @@ export default class Client {
 
   fileMove(src, dst) {
     return this.send('FMOV', {src, dst})
+  }
+
+  getRemoteTree(files) {
+    return files
   }
 }

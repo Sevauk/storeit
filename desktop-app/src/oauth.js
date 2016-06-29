@@ -126,7 +126,6 @@ export class FacebookService extends OAuthProvider {
       'redirect_uri': REDIRECT_URI,
       'scope': 'email'
     })
-    console.log(REDIRECT_URI)
   }
 
   oauth() {

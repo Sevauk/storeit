@@ -11,7 +11,7 @@
     "build:lib": "babel ../lib/js/src -s -d ./lib",
     "build": "npm run build:lib && babel src -s -d build",
     "nodemon": "npm run build:lib && nodemon src/main.js --debug --watch src --exec babel-node",
-    "mock-server": "babel-node test/mock/server.js",
+    "mock-server": "nodemon test/mock/server.js --watch test/mock --exec babel-node",
     "bdd": "mocha --compilers coffee:coffee-script/register --require source-map-support/register"
   },
   "dependencies": {
