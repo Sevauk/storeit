@@ -90,7 +90,7 @@ public class LoginActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mBoundService.sendJOIN("google", token);
+                mBoundService.sendJOIN("gg", token);
             }
         });
     }
