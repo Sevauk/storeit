@@ -26,10 +26,13 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
 
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
@@ -242,10 +245,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCameraIntent() {
-        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-        File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
-        startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+            startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
+        }
+
+
+
     }
 
     @Override
@@ -317,6 +325,36 @@ public class MainActivity extends AppCompatActivity {
 
             Uri uri = data.getData();
             new UploadAsync(this, mBoundService).execute(getRealPathFromURI(uri));
+        } else if (requestCode == CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = getLayoutInflater();
+
+            builder.setTitle("Save picture");
+            View dialogView = inflater.inflate(R.layout.dialog_name_file, null);
+            builder.setView(dialogView);
+
+            final EditText input = (EditText) dialogView.findViewById(R.id.dialog_file_name_input);
+
+            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                    File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
+                    String fileName = input.getText().toString();
+
+                    File fileRenamed = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
+                    Log.v("RENAME", "result : " + file.renameTo(fileRenamed));
+
+                    fbtn.setVisibility(View.VISIBLE);
+                    new UploadAsync(MainActivity.this, mBoundService).execute(fileRenamed.getAbsolutePath());
+
+                }
+            }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.cancel();
+                }
+            }).show();
         }
     }
 

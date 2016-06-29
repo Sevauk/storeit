@@ -15,6 +15,7 @@
     <string name="home_welcome_text">Welcome to storeit</string>
     <string name="menu_file_rename">Rename</string>
     <string name="menu_file_delete">Delete</string>
+    <string name="dialog_file_name">Enter file name</string>
 
     <string-array name="file_upload_option">
         <item>Camera</item>
