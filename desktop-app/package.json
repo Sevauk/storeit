@@ -21,6 +21,7 @@
     "commander": "^2.9.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
+    "fbgraph": "^1.2.0",
     "googleapis": "^7.1.0",
     "idb-plus-blob-store": "^1.0.0",
     "ipfs": "^0.4.5",
