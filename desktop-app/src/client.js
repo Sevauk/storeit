@@ -119,11 +119,14 @@ export default class Client {
     logger.info(`received FDEL => ${JSON.stringify(params)}`)
     for (let file of params.files) {
       userFile.del(file)
+        .then((file) => logger.info(`removed file ${file}`))
     }
   }
 
   recvFMOV(params) {
     logger.info(`received FMOV => ${JSON.stringify(params)}`)
+    return userFile.move(params.src, params.dest)
+      .then((file) => logger.info(`moved file ${file.src} to ${file.dst}`))
   }
 
   sendFADD(files) {

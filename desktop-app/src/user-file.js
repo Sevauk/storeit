@@ -6,46 +6,6 @@ let storeDir = './storeit'
 
 export let makeFullPath = (filePath) => path.join(storeDir, filePath)
 
-let makeInfo = (path, kind) => {
-  return {
-    path,
-    metadata: 'uninplemented for now',
-    contentHash: 'hache',
-    kind,
-    files: []
-  }
-}
-
-let dirToJson = (filename) => {
-
-  let stats = fs.lstatSync(filename)
-
-  let info = makeInfo(filename, stats.isDirectory ? 0 : 1)
-
-  if (stats.isDirectory()) {
-    info.files = fs.readdirSync(filename).map((child) => {
-      return dirToJson(filename + '/' + child)
-    })
-  }
-
-  return info
-}
-
-let mkdirUser = () => {
-  fs.mkdir(storeDir, (err) => {
-    if (err) {
-      logger.warn('cannot mkdir user dir')
-    }
-  })
-}
-
-let makeUserTree = () => {
-  mkdirUser()
-  let dir = dirToJson(storeDir)
-  dir.path = '/'
-  return dir
-}
-
 let setStoreDir = (dirPath) => {
   storeDir = dirPath
 }
@@ -80,7 +40,12 @@ let fileDelete = (filePath) => {
 }
 
 let fileMove = (src, dst) => {
-
+  return new Promise((resolve, reject) => {
+    fs.rename(makeFullPath(src), makeFullPath(dst), (err) => {
+      if (!err) resolve({src, dst})
+      else reject(err)
+    })
+  })
 }
 
 export default {
@@ -90,3 +55,43 @@ export default {
   del: fileDelete,
   move: fileMove
 }
+
+// let makeInfo = (path, kind) => {
+//   return {
+//     path,
+//     metadata: 'uninplemented for now',
+//     contentHash: 'hache',
+//     kind,
+//     files: []
+//   }
+// }
+//
+// let dirToJson = (filename) => {
+//
+//   let stats = fs.lstatSync(filename)
+//
+//   let info = makeInfo(filename, stats.isDirectory ? 0 : 1)
+//
+//   if (stats.isDirectory()) {
+//     info.files = fs.readdirSync(filename).map((child) => {
+//       return dirToJson(filename + '/' + child)
+//     })
+//   }
+//
+//   return info
+// }
+//
+// let mkdirUser = () => {
+//   fs.mkdir(storeDir, (err) => {
+//     if (err) {
+//       logger.warn('cannot mkdir user dir')
+//     }
+//   })
+// }
+//
+// let makeUserTree = () => {
+//   mkdirUser()
+//   let dir = dirToJson(storeDir)
+//   dir.path = '/'
+//   return dir
+// }
