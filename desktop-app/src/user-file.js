@@ -1,7 +1,10 @@
 import * as fs from 'fs'
+import * as path from 'path'
 import {logger} from '../lib/log'
 
-export let storeDir = './storeit'
+let storeDir = './storeit'
+
+export let makeFullPath = (filePath) => path.join(storeDir, filePath)
 
 let makeInfo = (path, kind) => {
   return {
@@ -36,9 +39,54 @@ let mkdirUser = () => {
   })
 }
 
-export let makeUserTree = () => {
+let makeUserTree = () => {
   mkdirUser()
   let dir = dirToJson(storeDir)
   dir.path = '/'
   return dir
+}
+
+let setStoreDir = (dirPath) => {
+  storeDir = dirPath
+}
+
+let fileCreate = (filePath) => {
+  return new Promise((resolve, reject) => {
+    fs.open(makeFullPath(filePath), 'w', (err, fd) => {
+      if (!err) {
+        resolve({
+          path: filePath,
+          fd
+        })
+      }
+      else
+        reject(err)
+    })
+  })
+}
+
+// let fileUpdate = (filePath) => {
+//   let fullPath = makeFullPath(filePath)
+//
+// }
+
+let fileDelete = (filePath) => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(makeFullPath(filePath), (err) => {
+      if (!err) resolve({path: filePath})
+      else reject(err)
+    })
+  })
+}
+
+let fileMove = (src, dst) => {
+
+}
+
+export default {
+  setStoreDir,
+  create: fileCreate,
+  // update: fileUpdate,
+  del: fileDelete,
+  move: fileMove
 }

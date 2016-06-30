@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import Client from './client'
-import * as userfile from './user-file'
+import userFile from './user-file'
 import {logger} from '../lib/log'
 
 commander
@@ -15,10 +15,10 @@ commander
   .parse(process.argv)
 
 if (commander.store) {
-  userfile.storeDir = commander.store
+  userFile.setStoreDir(commander.store)
 }
 else {
-  userfile.storeDir = './storeit'
+  userFile.setStoreDir('./storeit')
 }
 
 let client = new Client()

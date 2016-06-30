@@ -4,3 +4,4 @@ build
 .env
 .tokens.json
 lib
+storeit

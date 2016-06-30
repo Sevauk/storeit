@@ -1,16 +1,19 @@
 import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
+import userFile from './user-file'
 import {logger} from '../lib/log'
 import {Command} from '../lib/protocol-objects'
 
-let recoTime = 1
+const MAX_RECO_TIME = 4
 
 export default class Client {
 
   constructor() {
-    this.listeners = {}
+    this.recoTime = 1
+    this.customHandlers = {}
     this.connect()
+
   }
 
   auth(type) {
@@ -31,7 +34,7 @@ export default class Client {
     return service.oauth()
       .then((tokens) => this.join(type, tokens.access_token))
       .then((cmd) =>
-        this.addResponseListener(cmd.uid, (data) => this.getRemoteTree(data))
+        this.addResponseHandler(cmd.uid, (data) => this.getRemoteTree(data))
       )
   }
 
@@ -43,36 +46,42 @@ export default class Client {
     const {SERVER_HOST, SERVER_PORT} = process.env
     this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
-    this.sock.on('open', () => true)
+    this.sock.on('open', () => this.recoTime = 1)
     this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('socket error occured'))
     this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
   }
 
   reconnect() {
-    logger.error('attempting to reconnect in ' + recoTime + ' seconds')
-    setTimeout(() => this.connect(), recoTime * 1000)
+    logger.error(`attempting to reconnect in ${this.recoTime} seconds`)
+    setTimeout(() => this.connect(), this.recoTime * 1000)
 
-    const MAX = 4
-    if (recoTime < MAX) {
-      recoTime++
+    if (this.recoTime < MAX_RECO_TIME) {
+      ++this.recoTime
     }
   }
 
-
-  addResponseListener(uid, listener) {
-    logger.debug('attaching handler for command', uid)
-    this.listeners[uid] = listener
+  addResponseHandler(uid, listener) {
+    logger.debug('attaching response handler for command', uid)
+    this.customHandlers[uid] = listener
   }
 
   handleResponse(res) {
-    let handler = this.listeners[res.commandUid]
+    let handler = this.customHandlers[res.commandUid]
     if (handler != null) {
-      this.listeners[res.commandUid] = null
-      return handler(res.params)
+      this.customHandlers[res.commandUid] = null
+    }
+    else {
+      handler = this['recv' + res.command] // set to default handler
     }
 
-    return // TODO
+    if (handler == null) {
+      logger.error(`received unhandled response: ${JSON.stringify(res)}`)
+      return null
+    }
+    else {
+      return handler(res.parameters)
+    }
   }
 
   send(cmd, params) {
@@ -90,19 +99,46 @@ export default class Client {
     return this.send('JOIN', {authType, accessToken})
   }
 
-  fileAdd(files) {
+  recvFADD(params) {
+    logger.info(`received FADD => ${JSON.stringify(params)}`)
+    for (let file of params.files) {
+      userFile.create(file.path)
+        .then((file) => {
+          logger.info(`downloading file ${file.path} from ipfs`)
+        // TODO ipfs get
+        })
+    }
+  }
+
+  recvFUPT(params) {
+    logger.info(`received FUPT => ${JSON.stringify(params)}`)
+    return this.recvFADD(params)
+  }
+
+  recvFDEL(params) {
+    logger.info(`received FDEL => ${JSON.stringify(params)}`)
+    for (let file of params.files) {
+      userFile.del(file)
+    }
+  }
+
+  recvFMOV(params) {
+    logger.info(`received FMOV => ${JSON.stringify(params)}`)
+  }
+
+  sendFADD(files) {
     return this.send('FADD', {files})
   }
 
-  fileUpdate(files) {
+  sendFUPT(files) {
     return this.send('FUPT', {files})
   }
 
-  fileDel(files) {
+  sendFDEL(files) {
     return this.send('FDEL', {files})
   }
 
-  fileMove(src, dst) {
+  sendFMOV(src, dst) {
     return this.send('FMOV', {src, dst})
   }
 
