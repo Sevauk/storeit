@@ -2,10 +2,12 @@ package com.storeit.storeit.services;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -32,7 +34,7 @@ public class SocketService extends Service {
 
     private final IBinder myBinder = new LocalBinder();
 
-    public static final String SERVER = "ws://192.168.0.102:8001";
+    public String server = "ws://192.168.0.102:7641";
     private static final int TIMEOUT = 5000;
     public static final String LOGTAG = "SocketService";
 
@@ -56,7 +58,7 @@ public class SocketService extends Service {
             try {
                 webSocket = new WebSocketFactory()
                         .setConnectionTimeout(TIMEOUT)
-                        .createSocket(SERVER)
+                        .createSocket(server)
                         .addListener(new WebSocketAdapter() {
 
                             public void onTextMessage(WebSocket websocket, String message) {
@@ -154,6 +156,11 @@ public class SocketService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+
+
+        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
+        server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
 
         Thread t = new Thread(new SocketManager());
         t.start();
