@@ -19,12 +19,12 @@ wss.on('connection', function connection(ws) {
     {path: '/foo'}, {path: '/bar'}
   ]}}))
 
-  // ws.send(JSON.stringify({command: 'FDEL', parameters: {files: [
-  //   '/foo', '/bar'
-  // ]}}))
+  ws.send(JSON.stringify({command: 'FDEL', parameters: {files: [
+    '/foo', '/bar'
+  ]}}))
 
-  ws.send(JSON.stringify({command: 'FMOV', parameters: {
-    src: '/foo',
-    dest: '/foobar'
-  }}))
+  // ws.send(JSON.stringify({command: 'FMOV', parameters: {
+  //   src: '/foo',
+  //   dest: '/foobar'
+  // }}))
 })

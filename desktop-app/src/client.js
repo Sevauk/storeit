@@ -105,7 +105,7 @@ export default class Client {
       userFile.create(file.path)
         .then((file) => {
           logger.info(`downloading file ${file.path} from ipfs`)
-        // TODO ipfs get
+          // TODO ipfs get
         })
     }
   }
@@ -117,10 +117,14 @@ export default class Client {
 
   recvFDEL(params) {
     logger.info(`received FDEL => ${JSON.stringify(params)}`)
+    let status = []
     for (let file of params.files) {
-      userFile.del(file)
-        .then((file) => logger.info(`removed file ${file}`))
+      status.push(userFile.del(file))
     }
+    return Promise.all(status)
+      .then((files) =>
+        files.forEach((file) => logger.info(`removed file ${file.path}`))
+      )
   }
 
   recvFMOV(params) {
@@ -130,6 +134,7 @@ export default class Client {
   }
 
   sendFADD(files) {
+
     return this.send('FADD', {files})
   }
 
