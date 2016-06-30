@@ -203,6 +203,8 @@ public class MainActivity extends AppCompatActivity {
                                     case 2:
                                         startFilePickerIntent();
                                         break;
+                                    case 3:
+                                        createFolder();
                                     default:
                                         break;
                                 }
@@ -225,6 +227,51 @@ public class MainActivity extends AppCompatActivity {
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
+    }
+
+
+    private void createFolder() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+
+        builder.setTitle("Create Folder");
+        View dialogView = inflater.inflate(R.layout.dialog_name_file, null);
+        builder.setView(dialogView);
+
+        final EditText input = (EditText) dialogView.findViewById(R.id.dialog_file_name_input);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                String fileName = input.getText().toString();
+                fbtn.setVisibility(View.VISIBLE);
+
+
+                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container); // Get the current fragment
+                if (currentFragment instanceof FileViewerFragment) {
+                    FileViewerFragment fragment = (FileViewerFragment)currentFragment;
+
+                    // Create new folder
+                    StoreitFile folder;
+
+                    if (fragment.getCurrentFile().getPath().equals("/")) {
+                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + fileName, null, true);
+                    } else {
+                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + fileName, null, true);
+                    }
+                    filesManager.addFile(folder);
+                    refreshFileExplorer();
+                    mBoundService.sendFADD(folder);
+                }
+
+            }
+        }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        }).show();
     }
 
     private void startGalleryPicker() {

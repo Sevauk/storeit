@@ -102,7 +102,7 @@ public class FilesManager {
     // Recursively compare new tree with existing tree
     public void recursiveCmp(StoreitFile existingFile, StoreitFile newRoot) {
 
-        if (!existingFile.getPath().equals("/storeit")) { // Don't delete root
+        if (!existingFile.getPath().equals("/")) { // Don't delete root
             StoreitFile f = getFileByHash(existingFile.getIPFSHash(), newRoot); // Look for the actual file
             if (f == null) { // If the file doesn't exist anymore
                 File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + existingFile.getIPFSHash());
@@ -148,7 +148,7 @@ public class FilesManager {
             return root;
 
         for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            if (entry.getValue().getIPFSHash().equals(hash))
+            if (entry.getValue().getIPFSHash() != null && entry.getValue().getIPFSHash().equals(hash))
                 return entry.getValue();
             else if (entry.getValue().isDirectory())
                 recursiveSearch(hash, entry.getValue());
@@ -223,7 +223,12 @@ public class FilesManager {
     public void addFile(StoreitFile file) {
 
         File parentFile = new File(file.getPath());
-        String parentPath = parentFile.getParentFile().getAbsolutePath();
+        String parentPath;
+        if (parentFile.getParent() == null) {
+            parentPath = "/";
+        } else {
+            parentPath = parentFile.getParentFile().getAbsolutePath();
+        }
 
         StoreitFile parent = getParentFile(mRootFile, parentPath);
         if (parent != null) {

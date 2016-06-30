@@ -21,5 +21,6 @@
         <item>Camera</item>
         <item>Gallery</item>
         <item>Choose file</item>
+        <item>Create Folder</item>
     </string-array>
 </resources>
