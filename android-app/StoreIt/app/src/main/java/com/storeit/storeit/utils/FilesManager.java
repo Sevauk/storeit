@@ -156,8 +156,25 @@ public class FilesManager {
         return null;
     }
 
+    private StoreitFile recursiveSearchName(String name, StoreitFile root) {
+        if (root.getPath().equals(name))
+            return root;
+
+        for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
+            if (entry.getValue().getPath().equals(name))
+                return entry.getValue();
+            else if (entry.getValue().isDirectory())
+                recursiveSearch(name, entry.getValue());
+        }
+        return null;
+    }
+
     public StoreitFile getFileByHash(String hash, StoreitFile file) {
         return recursiveSearch(hash, file);
+    }
+
+    public StoreitFile getFileByName(String name, StoreitFile file) {
+        return recursiveSearchName(name, file);
     }
 
     private StoreitFile getParentFile(StoreitFile root, String parentPath) {
@@ -212,12 +229,11 @@ public class FilesManager {
     }
 
     public void addFile(StoreitFile file, StoreitFile parent) {
-        StoreitFile p = getFileByHash(parent.getIPFSHash(), mRootFile);
+        StoreitFile p = getFileByName(parent.getPath(), mRootFile);
         if (p != null) {
             p.addFile(file);
             saveJson();
         }
-
     }
 
     public void addFile(StoreitFile file) {

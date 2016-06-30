@@ -4,9 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -22,7 +20,7 @@ import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.CommandManager;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.JoinCommand;
-import com.storeit.storeit.protocol.command.JoinResponse;
+import com.storeit.storeit.protocol.command.Response;
 
 import java.io.IOException;
 
@@ -48,6 +46,8 @@ public class SocketService extends Service {
 
     private int uid = 0;
 
+    private String lastCmd;
+
     private class SocketManager implements Runnable {
         @Override
         public void run() {
@@ -65,12 +65,13 @@ public class SocketService extends Service {
                                 Log.v(LOGTAG, "received : " + message);
                                 int cmdType = CommandManager.getCommandType(message);
                                 switch (cmdType) {
-                                    case CommandManager.JOIN:
-                                        Log.v(LOGTAG, "Join command received :)");
-                                        if (mLoginHandler != null) {
+                                    case CommandManager.RESP:
+                                        if (lastCmd.equals("JOIN")){
                                             Gson gson = new Gson();
-                                            JoinResponse response = gson.fromJson(message, JoinResponse.class);
-                                            mLoginHandler.handleJoin(response);
+                                            Response response = gson.fromJson(message, Response.class);
+                                            if (mLoginHandler != null) {
+                                                mLoginHandler.handleJoin(response);
+                                            }
                                         }
                                         break;
                                     case CommandManager.FDEL:
@@ -116,6 +117,7 @@ public class SocketService extends Service {
         JoinCommand cmd = new JoinCommand(uid, authType, token);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
+        lastCmd = "JOIN";
     }
 
     public void sendFADD(StoreitFile newFile) {
@@ -123,6 +125,7 @@ public class SocketService extends Service {
         FileCommand cmd = new FileCommand(uid, "FADD", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
+        lastCmd = "FADD";
     }
 
     public void sendFDEL(StoreitFile newFile) {
@@ -130,6 +133,7 @@ public class SocketService extends Service {
         FileCommand cmd = new FileCommand(uid, "FDEL", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
+        lastCmd = "FDEL";
     }
 
     public void sendFUPT(StoreitFile newFile) {
@@ -137,6 +141,7 @@ public class SocketService extends Service {
         FileCommand cmd = new FileCommand(uid, "FUPT", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
+        lastCmd = "FUPT";
     }
 
     public void setmLoginHandler(LoginHandler handler) {
@@ -166,7 +171,9 @@ public class SocketService extends Service {
 
 
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
-        server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
+        //server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
+
+        server = "ws://78.192.138.139:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();

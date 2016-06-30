@@ -8,7 +8,7 @@ import com.google.gson.JsonParser;
  */
 public class CommandManager {
 
-    public final static int JOIN = 0, FDEL = 1, FADD = 2, FUPT = 3;
+    public final static int RESP = 0, FDEL = 1, FADD = 2, FUPT = 3;
     private static final String[] cmds = {
             "RESP",
             "FDEL",

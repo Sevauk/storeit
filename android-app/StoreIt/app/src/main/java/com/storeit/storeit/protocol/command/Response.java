@@ -5,7 +5,7 @@ import com.storeit.storeit.protocol.StoreitFile;
 /**
  * Created by loulo on 21/06/2016.
  */
-public class JoinResponse {
+public class Response {
     int code;
     String text;
     int commandUid;

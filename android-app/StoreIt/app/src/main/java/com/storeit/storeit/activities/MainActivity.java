@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         folder = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + fileName, null, true);
                     }
-                    filesManager.addFile(folder);
+                    filesManager.addFile(folder, fragment.getCurrentFile());
                     refreshFileExplorer();
                     mBoundService.sendFADD(folder);
                 }
@@ -444,7 +444,9 @@ public class MainActivity extends AppCompatActivity {
             fragTransaction.detach(currentFragment);
             fragTransaction.attach(currentFragment);
             fragTransaction.commit();
+            Log.v("MainActivity", "tu fois quoi??");
         }
+        Log.v("MainActivity", "Lamentable fail??");
     }
 
     public SocketService getSocketService() {

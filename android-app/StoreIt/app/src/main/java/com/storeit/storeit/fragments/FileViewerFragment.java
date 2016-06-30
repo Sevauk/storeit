@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.adapters.ExplorerAdapter;
@@ -23,6 +24,8 @@ import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 import com.storeit.storeit.R;
 import com.storeit.storeit.protocol.StoreitFile;
+
+import java.io.File;
 
 public class FileViewerFragment extends Fragment {
 
@@ -149,8 +152,15 @@ public class FileViewerFragment extends Fragment {
                 manager.removeFile(file);
                 adapter.removeFile(position);
                 service.sendFDEL(file);
-
                 break;
+            case R.id.action_delete_file_disk:
+                if (!file.isDirectory()) {
+                    File localFile = new File(manager.getFolderPath() + File.separator + file.getIPFSHash());
+                    if (!localFile.delete()) {
+                        Toast.makeText(getContext(), "Error while deleting file", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
             case R.id.action_rename_file:
                 Log.v("FileVIewerFragment", "Rename");
                 break;

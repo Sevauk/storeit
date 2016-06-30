@@ -70,9 +70,8 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
                                         ContextMenu.ContextMenuInfo menuInfo) {
 
             menu.add(Menu.NONE, R.id.action_delete_file, Menu.NONE, "Delete");
+            menu.add(Menu.NONE, R.id.action_delete_file_disk, Menu.NONE, "Delete from storage");
             menu.add(Menu.NONE, R.id.action_rename_file, Menu.NONE, "Rename");
-
-
         }
     }
 

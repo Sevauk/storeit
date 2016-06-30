@@ -28,7 +28,7 @@ import com.google.gson.Gson;
 import com.storeit.storeit.R;
 import com.storeit.storeit.oauth.GetUsernameTask;
 import com.storeit.storeit.protocol.LoginHandler;
-import com.storeit.storeit.protocol.command.JoinResponse;
+import com.storeit.storeit.protocol.command.Response;
 import com.storeit.storeit.services.SocketService;
 
 /*
@@ -48,7 +48,7 @@ public class LoginActivity extends Activity {
 
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
-        public void handleJoin(final JoinResponse response) {
+        public void handleJoin(final Response response) {
 
             runOnUiThread(new Runnable() {
                 @Override
