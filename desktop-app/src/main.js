@@ -16,7 +16,9 @@ else {
   userfile.storeDir = './storeit'
 }
 
-ws.co('test')
+//ws.co('test')
+
+import * as ipfs from './ipfs.js'
 
 /*
 if (commander.code) {
