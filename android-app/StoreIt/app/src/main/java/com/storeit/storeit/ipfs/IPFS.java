@@ -124,9 +124,9 @@ public class IPFS {
         HttpURLConnection connection;
         URL url;
 
-        m_nodeUrl = "http://192.168.0.102";
+        m_nodeUrl = "https://ipfs.io/ipfs/";
         try {
-            url = new URL(m_nodeUrl + ":8080/ipfs/" + hash);
+            url = new URL(m_nodeUrl + hash);
             connection = (HttpURLConnection)url.openConnection();
 
             connection.setRequestMethod("GET"); // Create the get request

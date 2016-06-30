@@ -46,7 +46,7 @@ public class SocketService extends Service {
     private LoginHandler mLoginHandler;
     private FileCommandHandler mFileCommandHandler;
 
-
+    private int uid = 0;
 
     private class SocketManager implements Runnable {
         @Override
@@ -106,32 +106,37 @@ public class SocketService extends Service {
                 mConnected = true;
             } catch (WebSocketException | IOException e) {
                 e.printStackTrace();
+                mConnected = false;
             }
         }
     }
 
     public void sendJOIN(String authType, String token) {
         Gson gson = new Gson();
-        JoinCommand cmd = new JoinCommand(0, authType, token);
+        JoinCommand cmd = new JoinCommand(uid, authType, token);
         webSocket.sendText(gson.toJson(cmd));
+        uid++;
     }
 
     public void sendFADD(StoreitFile newFile) {
         Gson gson = new Gson();
-        FileCommand cmd = new FileCommand(0, "FADD", newFile);
+        FileCommand cmd = new FileCommand(uid, "FADD", newFile);
         webSocket.sendText(gson.toJson(cmd));
+        uid++;
     }
 
     public void sendFDEL(StoreitFile newFile) {
         Gson gson = new Gson();
-        FileCommand cmd = new FileCommand(0, "FDEL", newFile);
+        FileCommand cmd = new FileCommand(uid, "FDEL", newFile);
         webSocket.sendText(gson.toJson(cmd));
+        uid++;
     }
 
     public void sendFUPT(StoreitFile newFile) {
         Gson gson = new Gson();
-        FileCommand cmd = new FileCommand(0, "FUPT", newFile);
+        FileCommand cmd = new FileCommand(uid, "FUPT", newFile);
         webSocket.sendText(gson.toJson(cmd));
+        uid++;
     }
 
     public void setmLoginHandler(LoginHandler handler) {

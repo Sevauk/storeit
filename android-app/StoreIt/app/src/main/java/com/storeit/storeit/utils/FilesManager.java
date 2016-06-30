@@ -144,7 +144,7 @@ public class FilesManager {
     }
 
     private StoreitFile recursiveSearch(String hash, StoreitFile root) {
-        if (root.getIPFSHash().equals(hash))
+        if (root.getIPFSHash() != null && root.getIPFSHash().equals(hash))
             return root;
 
         for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {

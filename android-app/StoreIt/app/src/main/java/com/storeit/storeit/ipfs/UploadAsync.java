@@ -74,7 +74,13 @@ public class UploadAsync extends AsyncTask<String, Void, String> {
                 FileViewerFragment fragment = (FileViewerFragment)currentFragment;
 
                 // Create new storeit file and add it
-                StoreitFile newFile = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + name, hash, false);
+                StoreitFile newFile;
+
+                if (fragment.getCurrentFile().getPath().equals("/")){
+                    newFile = new StoreitFile(fragment.getCurrentFile().getPath() + name, hash, false);
+                } else {
+                    newFile = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + name, hash, false);
+                }
                 manager.addFile(newFile, fragment.getCurrentFile());
                 mContext.refreshFileExplorer();
                 mService.sendFADD(newFile);

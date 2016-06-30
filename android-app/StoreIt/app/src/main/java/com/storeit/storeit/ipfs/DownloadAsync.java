@@ -71,11 +71,20 @@ public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
             outputStream = new FileOutputStream(file);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            if (!file.delete()) {
+                Log.v("DownloadAsync", "Error while deleting file");
+            }
             return false;
         } catch (IOException e) {
             e.printStackTrace();
+            if (!file.delete()) {
+                Log.v("DownloadAsync", "Error while deleting file");
+            }
         }
         if (outputStream == null){
+            if (!file.delete()) {
+                Log.v("DownloadAsync", "Error while deleting file");
+            }
             return  false;
         }
         return ipfs.downloadFile(outputStream, hash);
