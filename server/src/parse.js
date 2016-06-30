@@ -20,7 +20,7 @@ const join = function(command, arg, socket, handlerFn) {
     }
 
     user.connectUser(email, socket, (err, usr) => {
-      if (err && err.errno === -2) {
+      if (err && err.code === "ENOENT") {
         user.createUser(email, (err) => {
           if (err) {
             return handlerFn(protoObjs.Error.SERVERERROR)
