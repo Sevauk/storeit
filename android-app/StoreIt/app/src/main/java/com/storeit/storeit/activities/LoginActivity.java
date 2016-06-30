@@ -44,29 +44,35 @@ public class LoginActivity extends Activity {
     private boolean destroyService = true;
     private SocketService mBoundService = null;
     private String mEmail;
-    String SCOPE = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
+    String SCOPE = "oauth2:https://www.googleapis.com/auth/userinfo.email";
 
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
-        public void handleJoin(JoinResponse response) {
-            if (response.getCode() == 1) {
+        public void handleJoin(final JoinResponse response) {
 
-                // The service will be handled by MainActivit;
-                destroyService = false;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (response.getCode() == 0) {
 
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        // The service will be handled by MainActivit;
+                        destroyService = false;
 
-                // Stringify fileobject in order to pass it to other activity. It will be save on disk
-                // So passing as string is fine
-                Gson gson = new Gson();
-                String homeJson = gson.toJson(response.getParameters().getHome());
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 
-                intent.putExtra("home", homeJson);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-            } else {
-                Toast.makeText(LoginActivity.this, "Invalid login or password", Toast.LENGTH_LONG).show();
-            }
+                        // Stringify fileobject in order to pass it to other activity. It will be save on disk
+                        // So passing as string is fine
+                        Gson gson = new Gson();
+                        String homeJson = gson.toJson(response.getParameters().getHome());
+
+                        intent.putExtra("home", homeJson);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(LoginActivity.this, response.getText(), Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
         }
     };
 

@@ -62,6 +62,7 @@ public class SocketService extends Service {
                         .addListener(new WebSocketAdapter() {
 
                             public void onTextMessage(WebSocket websocket, String message) {
+                                Log.v(LOGTAG, "received : " + message);
                                 int cmdType = CommandManager.getCommandType(message);
                                 switch (cmdType) {
                                     case CommandManager.JOIN:
