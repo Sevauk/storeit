@@ -3,7 +3,7 @@ import * as path from 'path'
 import * as api from './protocol-objects.js'
 import {logger} from './log.js'
 
-let usersDir = './storeit-users/'
+let usersDir = 'storeit-users' + path.sep
 
 export const setUsersDir = (name) => {
   usersDir = name
@@ -19,7 +19,7 @@ export const makeBasicHome = () => {
 
 export const createUser = (email, handlerFn) => {
 
-  const userHomePath = `${usersDir}/${email}`
+  const userHomePath = `${usersDir}${path.sep}${email}`
 
   const basicHome = makeBasicHome()
 
