@@ -16,10 +16,37 @@ class WebSocketManager {
     let ws: WebSocket
     let navigationManager: NavigationManager
     
-    init(host: String, port: Int, navigationManager: NavigationManager) {
+    var uidFactory: UidFactory
+
+    var list: UITableView?
+    
+    init(host: String, port: Int, uidFactory: UidFactory, navigationManager: NavigationManager) {
         self.url = NSURL(string: "ws://\(host):\(port)/")!
         self.ws = WebSocket(url: url)
         self.navigationManager = navigationManager
+        self.uidFactory = uidFactory
+        self.list = nil
+    }
+    
+    func getTableView() -> UITableView? {
+        // TODO: find a maybe better way to get StoreItSynchDirectoryView
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        let mainNavigationController = appDelegate.window?.rootViewController as! UINavigationController
+        let tabBarController = mainNavigationController.viewControllers[1] as! UITabBarController
+        let navigationController = tabBarController.viewControllers![0] as! UINavigationController
+        let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
+        
+        return listView.list
+    }
+    
+    func updateListView() {
+        if self.list == nil {
+            self.list = self.getTableView()
+        }
+
+        dispatch_async(dispatch_get_main_queue()) {
+            self.list?.reloadData()
+        }
     }
     
     func eventsInitializer(loginFunction: () -> Void, logoutFunction: () -> Void) {
@@ -36,36 +63,70 @@ class WebSocketManager {
         self.ws.onText = { (request: String) in
             print("[Client.WebSocketManager] Client recieved a request : \(request)")
 
-            let command: ResponseResolver? = Mapper<ResponseResolver>().map(request)
+            let cmdInfos = CommandInfos()
             
-            // Server has responded
-            if (command?.command == "RESP") {
-                let response: Response? = Mapper<Response>().map(request)
-               
-                // TODO: structure with different response texts
-                if (response?.text == "welcome") {
-                    let home: File? = response?.parameters!["home"]
-                    self.navigationManager.setItems((home?.files)!)
-                    self.updateListView()
-                }
-            }
-            
-            // Server sent a command (FADD, FUPT, FDEL)
-            else if (command != nil && CommandInfos().SERVER_TO_CLIENT_CMD.contains(command!.command)) {
-                if (command!.command == "FDEL") {
-                	let _: Command? = Mapper<Command<FdelParameters>>().map(request)
+            if let command: ResponseResolver = Mapper<ResponseResolver>().map(request) {
+                if (command.command == cmdInfos.RESP) {
+                    
+                    // SEREVR HAS RESPONDED
+                    if let response: Response = Mapper<Response>().map(request) {
+                        
+                        // JOIN RESPONSE
+                        if (response.text == cmdInfos.JOIN_RESPONSE_TEXT) {
+                            if let params = response.parameters {
+                                let home: File? = params["home"]
+                                
+                                if let files = home?.files {
+                                    self.navigationManager.setItems(files)
+                                    self.updateListView()
+                                }
+                            }
+                        }
+                            
+                        // SUCCESS CMD RESPONSE
+                        else if (response.text == cmdInfos.SUCCESS_TEXT) {
+                            let uid = response.commandUid
 
-                } else if (command!.command == "FMOV") {
-                    let _: Command? = Mapper<Command<FmovParameters>>().map(request)
-                } else {
-                    let _: Command? = Mapper<Command<DefaultParameters>>().map(request)
+                            if (self.uidFactory.isWaitingForReponse(uid)) {
+                                
+                                let commandType = self.uidFactory.getCommandNameForUid(uid)
+
+                                // FADD
+                                if (commandType == cmdInfos.FADD) {
+                                    let files = self.uidFactory.getObjectForUid(uid) as! [File]
+                                    
+                                    for file in files {
+                                        self.navigationManager.insertFileObject(file)
+                                        self.updateListView()
+                                    }
+                                }
+                                
+                            }
+                        }
+                        
+                        // ERROR CMD RESPONSE
+                        // TODO
+                    }
+                }
+                    
+                // Server sent a command (FADD, FUPT, FDEL)
+                else if (cmdInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
+                    if (command.command == "FDEL") {
+                        let _: Command? = Mapper<Command<FdelParameters>>().map(request)
+                        
+                    } else if (command.command == "FMOV") {
+                        let _: Command? = Mapper<Command<FmovParameters>>().map(request)
+                    } else {
+                        let _: Command? = Mapper<Command<DefaultParameters>>().map(request)
+                    }
+                }
+                    
+                // We don't know what the server wants
+                else {
+                    print("[Client.Client.WebSocketManager] Request cannot be processed")
                 }
             }
-                
-            // We don't know what the server wants
-            else {
-                print("[Client.Client.WebSocketManager] Request cannot be processed")
-            }
+            
         }
         
         self.ws.onData = { (data: NSData) in
@@ -73,19 +134,6 @@ class WebSocketManager {
         }
         
         self.ws.connect()
-    }
-    
-    func updateListView() {
-        // TODO: find a maybe better way to get StoreItSynchDirectoryView
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        let mainNavigationController = appDelegate.window?.rootViewController as! UINavigationController
-        let tabBarController = mainNavigationController.viewControllers[1] as! UITabBarController
-        let navigationController = tabBarController.viewControllers![0] as! UINavigationController
-        let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
-
-        dispatch_async(dispatch_get_main_queue()) {
-            listView.list!.reloadData()
-        }
     }
     
     func sendRequest(request: String, completion: (() -> ())?) {

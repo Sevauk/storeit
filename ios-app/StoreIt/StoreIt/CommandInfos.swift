@@ -8,15 +8,18 @@
 
 import Foundation
 
-typealias uid = Int
-typealias name = String
-typealias CommandType = (uid, name)
-
 struct CommandInfos {
-    let SERVER_TO_CLIENT_CMD = ["FADD", "FDEL", "FUPT", "FMOV"]
-    let JOIN: CommandType = (263, "JOIN")
-    let FDEL: CommandType = (765, "FDEL")
-    let FADD: CommandType = (766, "FADD")
-    let FUPT: CommandType = (767, "FUPT")
-    let FMOVE: CommandType = (768, "FMOVE")
+    
+    let RESP = "RESP"
+    
+    let JOIN = "JOIN"
+    let FDEL = "FDEL"
+    let FADD = "FADD"
+    let FUPT = "FUPT"
+    let FMOV = "FMOVE"
+
+    var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV] }
+    
+    var JOIN_RESPONSE_TEXT = "welcome"
+    var SUCCESS_TEXT = "success"
 }

@@ -109,9 +109,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
             }
         }
         
-        self.networkManager?.join(connectionType!, accessToken: accessToken!) { _ in
-			//
-        }
+        self.networkManager?.join(connectionType!, accessToken: accessToken!, completion: nil)
     }
     
     @IBAction func logoutSegue(segue: UIStoryboardSegue) {
