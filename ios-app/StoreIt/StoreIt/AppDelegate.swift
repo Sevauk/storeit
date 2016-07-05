@@ -13,7 +13,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     
+    var connectionType: ConnectionType? = nil
+    var networkManager: NetworkManager? = nil
+    var connectionManager: ConnectionManager? = nil
+    var fileManager: FileManager? = nil
+    var navigationManager: NavigationManager? = nil
+    var ipfsManager: IpfsManager? = nil
+    let plistManager: PListManager = PListManager()
+    
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+        let navigationController = self.window?.rootViewController as! UINavigationController
+        let loginView = navigationController.viewControllers[0] as! LoginView
+
+		loginView.connectionType = self.connectionType
+        loginView.networkManager = self.networkManager
+        loginView.connectionManager = self.connectionManager
+        loginView.fileManager = self.fileManager
+        loginView.ipfsManager = self.ipfsManager
+        loginView.plistManager = self.plistManager
+        
         return FBSDKApplicationDelegate.sharedInstance().application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
@@ -21,12 +39,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let navigationController = self.window?.rootViewController as! UINavigationController
         let loginView = navigationController.viewControllers[0] as! LoginView
 
-        if (loginView.managers.connexionType != nil
-            && loginView.managers.connexionType! == ConnexionType.GOOGLE) {
-            loginView.managers.connexionManager?.handleRedirectUrl(url)
+        if (loginView.connectionType != nil
+            && loginView.connectionType! == ConnectionType.GOOGLE) {
+            loginView.connectionManager?.handleRedirectUrl(url)
         }
-        else if (loginView.managers.connexionType != nil
-            && loginView.managers.connexionType! == ConnexionType.FACEBOOK) {
+        else if (loginView.connectionType != nil
+            && loginView.connectionType! == ConnectionType.FACEBOOK) {
             return FBSDKApplicationDelegate.sharedInstance().application(application, openURL: url, sourceApplication: sourceApplication, annotation: annotation)
         }
         return true

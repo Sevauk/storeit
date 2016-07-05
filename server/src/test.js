@@ -136,6 +136,7 @@ describe('protocol file commands', () => {
       done()
     }
 
+//    this.send({"command":"FADD","parameters":{"files":[{"IPFSHash":"QmQxbFWVWcmVJmsPimPpW36evA7U1jdaKZPh7g7jpQyQU7","files":{},"isDir":false,"metadata":"","path":"/hangouts_incoming_call.ogg"}]},"uid":1})
     fakeA.send(new api.Command('FADD', {
       files: [
         FADDContent

@@ -13,4 +13,5 @@ protocol OAuth2 {
     func handleRedirectUrl(url: NSURL)
     func forgetTokens()
     func onFailureOrAuthorizeAddEvents()
+    func accessToken() -> String?
 }

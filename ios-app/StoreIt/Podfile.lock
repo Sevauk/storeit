@@ -1,5 +1,15 @@
 PODS:
+  - Bolts (1.7.0):
+    - Bolts/AppLinks (= 1.7.0)
+    - Bolts/Tasks (= 1.7.0)
+  - Bolts/AppLinks (1.7.0):
+    - Bolts/Tasks
+  - Bolts/Tasks (1.7.0)
   - CryptoSwift (0.2.3)
+  - FBSDKCoreKit (4.13.1):
+    - Bolts (~> 1.7)
+  - FBSDKLoginKit (4.13.1):
+    - FBSDKCoreKit
   - ObjectMapper (1.1.5)
   - p2.OAuth2 (2.2.6):
     - SwiftKeychain (~> 1.0)
@@ -9,13 +19,18 @@ PODS:
 
 DEPENDENCIES:
   - CryptoSwift
+  - FBSDKCoreKit (~> 4.13)
+  - FBSDKLoginKit (~> 4.13)
   - ObjectMapper (~> 1.1)
   - p2.OAuth2 (~> 2.2)
   - Plist
   - Starscream (~> 1.1.3)
 
 SPEC CHECKSUMS:
+  Bolts: a0058fa3b331c5a1e4402d534f2dae36dbff31e4
   CryptoSwift: b2bf37b8e7cc6d682ef3365cb966bc5ae5174aa5
+  FBSDKCoreKit: 2807fe0da2ddb49a1469da6d6ff597f99912980f
+  FBSDKLoginKit: 6d350cb6a22d6956e9d078885de6ee8a0ebc51b4
   ObjectMapper: 528b1a6677a6acac7747edd508576983e76a9148
   p2.OAuth2: a89edc5660aca8a5349882ee9008de793bbbbcd0
   Plist: bab866356000edecf38fcda2b71092c6bc211c27

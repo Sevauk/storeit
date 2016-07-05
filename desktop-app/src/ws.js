@@ -13,8 +13,11 @@ export let sendCmd = (cmd) => {
   ws.send(cmdString)
 }
 
-export let co = (accessToken) => {
+export let co = (accessToken, handlerFn) => {
   ws = new WebSocket(serverCoo)
+
+  if (handlerFn)
+  handlerFn() // TODO: call this after server answered welcome
 
   ws.on('error', () => {
     logger.error('server socket error')
@@ -24,11 +27,7 @@ export let co = (accessToken) => {
 
     sendCmd(new Command('JOIN', {
       authType: 'fb',
-      accessToken: 'blahblah',
-    }))
-
-    sendCmd(new Command('FADD', {
-      'files': [{'name': 'Iam a happy file object'}]
+      accessToken: 'developer',
     }))
   })
 

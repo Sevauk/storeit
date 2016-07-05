@@ -60,7 +60,6 @@ const recast = (command, client) => {
 
 const add = (command, arg, client) => {
   client.getUser().addTree(arg.files)
-  logger.info('user tree: ' + client.getUser().home)
   recast(command, client)
 }
 

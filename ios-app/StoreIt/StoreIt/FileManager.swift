@@ -32,11 +32,29 @@ class FileManager {
     }
     
     func getSyncDirTree() -> [String: File] {
-        return self.buildTree("demo/")
+        return self.buildTree(self.rootDirPath)
+    }
+    
+    func createDir(path: String, metadata: String, IPFSHash: String, files: [String:File]? = nil) -> File {
+        let dir = File(path: path,
+                       metadata: metadata,
+                       IPFSHash: IPFSHash,
+                       isDir: true,
+                       files: (files == nil ? [:] : files!))
+        return dir
+    }
+    
+    func createFile(path: String, metadata: String, IPFSHash: String) -> File {
+        let file = File(path: path,
+                       metadata: metadata,
+                       IPFSHash: IPFSHash,
+                       isDir: false,
+                       files: [:])
+        return file
     }
     
     // Build recursively the tree of the root directory into a dictionnary
-    func buildTree(path: String) -> [String: File] {
+    private func buildTree(path: String) -> [String: File] {
         let files: [String] = getDirectoryContent(path)
         var nestedFiles: [String: File] = [String:File]()
         
@@ -47,17 +65,15 @@ class FileManager {
             switch type {
                 case .RegularFile :
                     nestedFiles[file] = File(path: filePath,
-                                             unique_hash: sha256(filePath),
                                              metadata: "",
-                                             chunks_hashes: [""],
-                                             kind: type.rawValue,
+                                             IPFSHash: "",
+                                             isDir: false,
                                              files: [String:File]())
                 case .Directory :
                     nestedFiles[file] = File(path: filePath,
-                                             unique_hash: "0",
                                              metadata: "",
-                                             chunks_hashes: [""],
-                                             kind: type.rawValue,
+                                             IPFSHash: "",
+                                             isDir: true,
                                              files: buildTree(filePath))
                 default :
                     print("[FileManager] Error while building tree : file type doesn't exist.")

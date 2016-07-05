@@ -1,0 +1,8 @@
+github "norio-nomura/Base32" "v0.4.1"
+github "NeoTeo/SwiftGMP" "v0.4.0"
+github "NeoTeo/SwiftHex" "v0.2.5"
+github "NeoTeo/VarInt" "v0.1.4"
+github "NeoTeo/SwiftBase58" "v0.4.0"
+github "NeoTeo/SwiftMultihash" "v1.1.0"
+github "NeoTeo/SwiftMultiaddr" "v0.1.5"
+github "NeoTeo/swift-ipfs-api" "v0.1.2"

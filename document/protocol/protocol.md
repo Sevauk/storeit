@@ -129,13 +129,13 @@ And you want to update foo's timestamp, just send :
 	"uid": 767,
 	"command": "FUPT",
 	"parameters": {
-		"files": {
+		"files": [{
 			"path": "/foo",
 			"metadata": "updated metadata",
 			"IPFSHash": null,
 			"isDir": true,
 			"files": null
-		}
+		}]
 	}
 }
 ```

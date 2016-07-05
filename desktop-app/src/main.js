@@ -2,6 +2,7 @@ import commander from 'commander'
 import * as userfile from './user-file.js'
 import * as ws from './ws.js'
 import * as auth from './auth.js'
+import * as watcher from './watcher.js'
 
 commander
   .version('0.0.1')
@@ -16,9 +17,10 @@ else {
   userfile.storeDir = './storeit'
 }
 
-//ws.co('test')
 
-import * as ipfs from './ipfs.js'
+ws.co('test', () => {
+  watcher.watch()
+})
 
 /*
 if (commander.code) {

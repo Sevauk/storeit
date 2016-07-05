@@ -16,7 +16,11 @@ const co = (onCo) => {
 
 co()
 
-const get = (hash, file, handlerFn) => {
+export const add = (file, handlerFn) => {
+  node.add(file, handlerFn)
+}
+
+export const get = (hash, file, handlerFn) => {
 
   file = usr.storeDir + '/' + file
 

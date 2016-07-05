@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as api from './protocol-objects.js'
+import * as tree from './tree.js'
 import {logger} from './log.js'
 
 let usersDir = 'storeit-users' + path.sep
@@ -44,29 +45,9 @@ export class User {
     this.commandUid = 0
   }
 
-  setTree(destPath, action) {
-
-    if (this.home === undefined) {
-      logger.error('home has not loaded')
-    }
-
-    const pathToFile = destPath.split(path.sep)
-    const stepInto = (path, tree) => {
-
-      if (pathToFile.length === 1) {
-        return action(tree, pathToFile[0])
-      }
-
-      const name = pathToFile.shift()
-      return stepInto(pathToFile, tree.files[name])
-    }
-    pathToFile.shift()
-    return stepInto(pathToFile, this.home)
-  }
-
   setTrees(trees, action) {
     for (const treeIncoming of trees) {
-      this.setTree(treeIncoming.path, (treeParent, name) =>
+      tree.setTree(this.home, treeIncoming.path, (treeParent, name) =>
         action(treeParent, treeIncoming, name))
     }
   }
@@ -84,13 +65,13 @@ export class User {
   }
 
   renameFile(src, dest) {
-    const takenTree = this.setTree(src, (treeParent, name) => {
+    const takenTree = tree.setTree(this.home, src, (treeParent, name) => {
       const tree = treeParent.files[name]
       delete treeParent.files[name]
       return tree
     })
 
-    this.setTree(dest, (treeParent, name) => {
+    tree.setTree(this.home, dest, (treeParent, name) => {
       treeParent.files[name] = takenTree
 
       const rec = (tree, name, currentPath) => {
@@ -114,7 +95,13 @@ export class User {
 
   delTree(paths) {
     for (const p of paths) {
-      this.setTree(p, (tree, name) => delete tree.files[name])
+      if (typeof p !== 'string') {
+        // TODO: send error response
+        logger.debug('client sent bad request')
+      }
+      else {
+        tree.setTree(this.home, p, (tree, name) => delete tree.files[name])
+      }
     }
   }
 
@@ -123,6 +110,10 @@ export class User {
       this.home = obj
       handlerFn(err, obj)
     })
+  }
+
+  flushHome() {
+    fs.writeFile(usersDir + this.email, JSON.stringify(this.home, null, 2))
   }
 }
 
@@ -151,6 +142,8 @@ export const disconnectSocket = (client) => {
 
   delete user.sockets[client.uid]
 
+  user.flushHome()
+
   if (Object.keys(user.sockets).length === 0) {
     delete users[user.email]
   }
@@ -176,8 +169,9 @@ export const connectUser = (email, client, handlerFn) => {
     if (err) {
       disconnectSocket(client)
     }
+    else {
+      logger.info(`${user.email} has connected. ${getStat()}`)
+    }
     handlerFn(err, user)
   })
-
-  logger.info(`${user.email} has connected. ${getStat()}`)
 }

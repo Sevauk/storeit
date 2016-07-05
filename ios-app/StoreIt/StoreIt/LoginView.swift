@@ -8,28 +8,41 @@
 
 import UIKit
 import ObjectMapper
-
-// TODO: try to merged initGoogle and initFacebook
+import FBSDKLoginKit
 
 class LoginView: UIViewController, FBSDKLoginButtonDelegate {
+    
+    var connectionType: ConnectionType? = nil
+    var networkManager: NetworkManager? = nil
+    var connectionManager: ConnectionManager? = nil
+    var fileManager: FileManager? = nil
+    var navigationManager: NavigationManager? = nil
+    var ipfsManager: IpfsManager? = nil
+    var plistManager: PListManager? = nil
 
-    var managers: AppDataManagers = AppDataManagers()
-    let plistManager: PListManager = PListManager()
+    let port: Int = 7641//8001
+    let host: String = "localhost"
     
     @IBOutlet weak var FBLoginButton: FBSDKLoginButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.configureFacebook()
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewDidLoad()
         
         self.configureFacebook()
         
-        let lastConnextionType = self.plistManager.getValueWithKey("connextionType")
-        print("[LoginView] Last connexion type : \(lastConnextionType). Trying to auto log if possible...")
+        let lastConnectionType = self.plistManager?.getValueWithKey("connectionType")
+        print("[LoginView] Last connexion type : \(lastConnectionType). Trying to auto log if possible...")
         
-        if (lastConnextionType == ConnexionType.GOOGLE.rawValue) {
+        if (lastConnectionType == ConnectionType.GOOGLE.rawValue) {
             self.initGoogle()
-        } else if (lastConnextionType == ConnexionType.FACEBOOK.rawValue && FBSDKAccessToken.currentAccessToken() != nil) {
-         	// TODO: check expiration of Facebook token
+        } else if (lastConnectionType == ConnectionType.FACEBOOK.rawValue && FBSDKAccessToken.currentAccessToken() != nil) {
+            // TODO: check expiration of Facebook token
             self.initFacebook()
         }
     }
@@ -44,8 +57,14 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         let navigationController = tabBarController.viewControllers![0] as! UINavigationController
         let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
         
-        listView.navigationItem.title = self.managers.navigationManager!.rootDirTitle
-        listView.managers = self.managers
+        listView.navigationItem.title = self.navigationManager?.rootDirTitle
+
+        listView.connectionType = self.connectionType
+        listView.networkManager = self.networkManager
+        listView.connectionManager = self.connectionManager
+        listView.fileManager = self.fileManager
+        listView.navigationManager = self.navigationManager
+        listView.ipfsManager = self.ipfsManager
     }
     
     func moveToTabBarController() {
@@ -53,23 +72,70 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         self.presentViewController(tabBarController, animated: true, completion: nil)
     }
     
-    @IBAction func logoutSegue(segue: UIStoryboardSegue) {
-        if (managers.connexionType! == ConnexionType.FACEBOOK) {
+    func logout() {
+        print("[LoginView] Logging out...")
+        
+        if (self.connectionType != nil && self.connectionType! == ConnectionType.FACEBOOK) {
             let loginManager = FBSDKLoginManager()
             loginManager.logOut()
-        } else if (managers.connexionType! == ConnexionType.GOOGLE) {
-            managers.connexionManager?.forgetTokens()
+        } else if (self.connectionType != nil && self.connectionType! == ConnectionType.GOOGLE) {
+            self.connectionManager?.forgetTokens()
         }
         
-        // TODO: send logout request
+		self.networkManager?.close()
+        self.connectionType = nil
+        self.networkManager = nil
+        self.connectionManager = nil
+        self.fileManager = nil
+        self.navigationManager = nil
+        self.ipfsManager = nil
         
-        self.managers.connexionType = nil
-        self.managers.networkManager = nil
-        self.managers.connexionManager = nil
-        self.managers.fileManager = nil
-        self.managers.navigationManager = nil
+        self.plistManager?.addValueForKey("connectionType", value: ConnectionType.NONE.rawValue)
+    }
+    
+    func logoutToLoginView() {
+        self.navigationController?.popToRootViewControllerAnimated(true)
+        self.logout()
+    }
+    
+    func loginFunction() {
+        let connectionType = self.connectionType?.rawValue
         
-        self.plistManager.addValueForKey("connextionType", value: ConnexionType.NONE.rawValue)
+        let accessToken: String? = connectionType.map { type in
+            if (type == ConnectionType.GOOGLE.rawValue) {
+                return (self.connectionManager?.oauth2?.accessToken())!
+            } else {
+                return FBSDKAccessToken.currentAccessToken().tokenString
+            }
+        }
+        
+        self.networkManager?.join(connectionType!, accessToken: accessToken!) { _ in
+			//
+        }
+    }
+    
+    @IBAction func logoutSegue(segue: UIStoryboardSegue) {
+		self.logout()
+    }
+    
+    func initConnection(host: String, port: Int, path: String, allItems: [String:File]) {
+        if (self.fileManager == nil) {
+            self.fileManager = FileManager(path: path) // Path to local synch dir
+        }
+        
+        if (self.navigationManager == nil) {
+            self.navigationManager = NavigationManager(rootDirTitle: "StoreIt", allItems: [:])
+        }
+        
+        if (self.networkManager == nil) {
+            self.networkManager = NetworkManager(host: host, port: port, navigationManager: self.navigationManager!)
+        }
+        
+        if (self.ipfsManager == nil) {
+            self.ipfsManager = IpfsManager(host: "127.0.0.1", port: 5001)
+        }
+    	
+        self.networkManager?.initConnection(self.loginFunction, logoutFunction: self.logoutToLoginView)
     }
     
     // MARK: Login with Facebook
@@ -80,28 +146,19 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     }
     
     func initFacebook() {
-        if (self.managers.networkManager == nil) {
-            self.managers.networkManager = NetworkManager(host: "localhost", port: 8001);
-        }
+        self.connectionType = ConnectionType.FACEBOOK
+        self.plistManager?.addValueForKey("connectionType", value: ConnectionType.FACEBOOK.rawValue)
         
-        if (self.managers.fileManager == nil) {
-            self.managers.fileManager = FileManager(path: "/Users/gjura_r/Desktop/demo/") // Path to synch dir
-        }
-        
-        if (self.managers.navigationManager == nil) {
-            self.managers.navigationManager = NavigationManager(rootDirTitle: "StoreIt", allItems: (self.managers.fileManager?.getSyncDirTree())!)
-        }
-        self.managers.connexionType = ConnexionType.FACEBOOK
-        self.plistManager.addValueForKey("connextionType", value: ConnexionType.FACEBOOK.rawValue)
+        self.initConnection(self.host, port: self.port, path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
         self.performSegueWithIdentifier("StoreItSynchDirSegue", sender: nil)
     }
     
     func loginButton(loginButton: FBSDKLoginButton!, didCompleteWithResult result: FBSDKLoginManagerLoginResult!, error: NSError!) {
         if ((error) != nil) {
-            self.managers.connexionType = nil
+            self.logout()
         }
         else if result.isCancelled {
-            self.managers.connexionType = nil
+            self.logout()
         }
         else {
             if result.grantedPermissions.contains("email"){
@@ -111,39 +168,28 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     }
     
     func loginButtonWillLogin(loginButton: FBSDKLoginButton!) -> Bool {
-        self.managers.connexionType = ConnexionType.FACEBOOK
+        self.connectionType = ConnectionType.FACEBOOK
         return true
     }
     
     func loginButtonDidLogOut(loginButton: FBSDKLoginButton!) {
+        self.logout()
     }
     
     // MARK: Login with Google
     
     func initGoogle() {
-        if (self.managers.networkManager == nil) {
-            self.managers.networkManager = NetworkManager(host: "localhost", port: 8001);
+        if (self.connectionManager == nil) {
+            self.connectionType = ConnectionType.GOOGLE
+            self.connectionManager = ConnectionManager(connectionType: ConnectionType.GOOGLE)
+            self.plistManager?.addValueForKey("connectionType", value: ConnectionType.GOOGLE.rawValue)
         }
-        
-        if (self.managers.connexionManager == nil) {
-            self.managers.connexionType = ConnexionType.GOOGLE
-            self.managers.connexionManager = ConnexionManager(connexionType: ConnexionType.GOOGLE)
-            self.plistManager.addValueForKey("connextionType", value: ConnexionType.GOOGLE.rawValue)
-        }
-        
-        if (self.managers.fileManager == nil) {
-            self.managers.fileManager = FileManager(path: "/Users/gjura_r/Desktop/demo/") // Path to synch dir
-        }
-        
-        if (self.managers.navigationManager == nil) {
-            self.managers.navigationManager = NavigationManager(rootDirTitle: "StoreIt", allItems: (self.managers.fileManager?.getSyncDirTree())!)
-        }
-        
-        self.managers.connexionManager?.authorize(self)
+
+        self.connectionManager?.authorize(self)
     }
     
     @IBAction func login(sender: AnyObject) {
-		self.initGoogle()
+    	self.initGoogle()
     }
 
 }

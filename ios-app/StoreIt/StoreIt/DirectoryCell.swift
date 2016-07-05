@@ -11,5 +11,4 @@ import UIKit
 class DirectoryCell: UITableViewCell {
     
     @IBOutlet weak var itemName: UILabel!
-    
 }

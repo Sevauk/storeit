@@ -11,5 +11,4 @@ import UIKit
 class FillCell: UITableViewCell {
     
     @IBOutlet weak var itemName: UILabel!
-    
 }
