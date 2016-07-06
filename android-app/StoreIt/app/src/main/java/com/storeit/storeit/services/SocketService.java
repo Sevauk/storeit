@@ -97,6 +97,8 @@ public class SocketService extends Service {
                                         mFileCommandHandler.handleFUPT(fileCommand);
                                         break;
                                     }
+                                        case CommandManager.FMOVE:
+                                            break;
                                     default:
                                         Log.v(LOGTAG, "Invalid command received :/");
                                         break;

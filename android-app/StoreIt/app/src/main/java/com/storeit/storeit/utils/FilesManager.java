@@ -248,10 +248,10 @@ public class FilesManager {
         if (parent != null) {
             parent.getFiles().remove(StoreitFile.getFileName(path));
 
-        saveJson();
-    }
+            saveJson();
+        }
 
-}
+    }
 
     public void addFile(StoreitFile file, StoreitFile parent) {
         StoreitFile p = getFileByName(parent.getPath(), mRootFile);
@@ -286,6 +286,28 @@ public class FilesManager {
             toUpdate.setIsDir(file.isDirectory());
             toUpdate.setMetadata(file.getMetadata());
             toUpdate.setPath(file.getPath());
+        }
+    }
+
+    public void moveFile(String src, String dst) {
+        StoreitFile storeitFile = getFileByName(src, mRootFile);
+
+        if (storeitFile != null) {
+            File srcParent = new File(src);
+            File dstParent = new File(dst);
+
+            if (srcParent.getParent() != null && dstParent.getParent() != null // Rename file
+                    && srcParent.getParent().equals(dstParent.getParent())) {
+                storeitFile.setPath(dst);
+            } else { // Move File
+                StoreitFile newFile = new StoreitFile(dst, storeitFile.getIPFSHash(), // copy
+                        storeitFile.isDirectory());
+                StoreitFile parentFile = getParentFile(mRootFile, dstParent.getParent());
+                removeFile(src); // Remove the old file
+                if (parentFile != null)
+                    parentFile.addFile(newFile); // Add the new renamed file
+            }
+            saveJson();
         }
     }
 }

@@ -45,6 +45,7 @@ import com.storeit.storeit.protocol.FileCommandHandler;
 import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
+import com.storeit.storeit.protocol.command.FileMoveCommand;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -441,11 +442,16 @@ public class MainActivity extends AppCompatActivity {
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container); // Get the current fragment
         if (currentFragment instanceof FileViewerFragment) {
 
+            FileViewerFragment f = (FileViewerFragment)currentFragment;
+            f.getAdapter().reloadFiles();
+
+            /*
             FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
             fragTransaction.detach(currentFragment);
             fragTransaction.attach(currentFragment);
             fragTransaction.commit();
             Log.v("MainActivity", "tu fois quoi??");
+            */
         }
         Log.v("MainActivity", "Lamentable fail??");
     }
@@ -483,6 +489,18 @@ public class MainActivity extends AppCompatActivity {
         public void handleFUPT(FileCommand command) {
             Log.v("MainActivity", "FUPT");
             filesManager.updateFile(command.getFiles());
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    refreshFileExplorer();
+                }
+            });
+        }
+
+        @Override
+        public void handleFMOV(FileMoveCommand command) {
+            Log.v("MainActivity", "FMOV");
+            filesManager.moveFile(command.getSrc(), command.getDst());
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

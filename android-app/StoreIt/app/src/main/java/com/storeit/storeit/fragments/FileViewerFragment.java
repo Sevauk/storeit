@@ -38,6 +38,10 @@ public class FileViewerFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private RecyclerView explorersRecyclerView;
 
+    public ExplorerAdapter getAdapter() {
+        return adapter;
+    }
+
     public FileViewerFragment() {
 
     }
@@ -163,6 +167,8 @@ public class FileViewerFragment extends Fragment {
 
             case R.id.action_rename_file:
                 Log.v("FileVIewerFragment", "Rename");
+                manager.moveFile(file.getPath(), file.getPath() + "titi");
+                adapter.reloadFiles();
                 break;
         }
 

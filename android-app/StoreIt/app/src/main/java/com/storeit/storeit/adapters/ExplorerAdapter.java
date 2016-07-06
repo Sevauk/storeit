@@ -208,4 +208,18 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
         mFiles = files.toArray(new StoreitFile[files.size()]);
         notifyDataSetChanged();
     }
+
+    public void reloadFiles() {
+        StoreitFile currentFile = getCurrentFile();
+        StoreitFile newFile = manager.getFileByName(currentFile.getPath(), manager.getRoot());
+
+        ArrayList<StoreitFile> files = new ArrayList<>();
+
+        for (Map.Entry<String, StoreitFile> entry : newFile.getFiles().entrySet()) { // list all files from current folder
+            files.add(entry.getValue());
+        }
+
+        mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
+        notifyDataSetChanged();
+    }
 }

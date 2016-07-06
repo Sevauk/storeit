@@ -8,12 +8,13 @@ import com.google.gson.JsonParser;
  */
 public class CommandManager {
 
-    public final static int RESP = 0, FDEL = 1, FADD = 2, FUPT = 3;
+    public final static int RESP = 0, FDEL = 1, FADD = 2, FUPT = 3, FMOVE = 4;
     private static final String[] cmds = {
             "RESP",
             "FDEL",
             "FADD",
-            "FUPT"
+            "FUPT",
+            "FMOVE"
     };
 
     public static int getCommandType(String cmd) {
