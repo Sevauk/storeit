@@ -151,7 +151,7 @@ public class FilesManager {
             if (entry.getValue().getIPFSHash() != null && entry.getValue().getIPFSHash().equals(hash))
                 return entry.getValue();
             else if (entry.getValue().isDirectory())
-                recursiveSearch(hash, entry.getValue());
+                return recursiveSearch(hash, entry.getValue());
         }
         return null;
     }
@@ -164,7 +164,7 @@ public class FilesManager {
             if (entry.getValue().getPath().equals(name))
                 return entry.getValue();
             else if (entry.getValue().isDirectory())
-                recursiveSearch(name, entry.getValue());
+                return recursiveSearchName(name, entry.getValue());
         }
         return null;
     }

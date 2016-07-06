@@ -1,9 +1,12 @@
 package com.storeit.storeit.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,10 +19,12 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.adapters.ExplorerAdapter;
+import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 import com.storeit.storeit.R;
@@ -166,13 +171,41 @@ public class FileViewerFragment extends Fragment {
                 }
 
             case R.id.action_rename_file:
+                renameFile(manager, file);
                 Log.v("FileVIewerFragment", "Rename");
-                manager.moveFile(file.getPath(), file.getPath() + "titi");
-                adapter.reloadFiles();
                 break;
         }
 
         return super.onContextItemSelected(item);
+    }
+
+    private void renameFile(final FilesManager manager, final StoreitFile file) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        builder.setTitle("Save picture");
+        View dialogView = inflater.inflate(R.layout.dialog_name_file, null);
+        builder.setView(dialogView);
+
+        final EditText input = (EditText) dialogView.findViewById(R.id.dialog_file_name_input);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                String fileName = input.getText().toString();
+                File f = new File(file.getPath()); // Get parent path
+
+                String finalName = f.getParent() + File.separator + fileName;
+                manager.moveFile(file.getPath(), finalName.replace("//", "/"));
+                adapter.reloadFiles();
+            }
+        }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        }).show();
     }
 
     public interface OnFragmentInteractionListener {
