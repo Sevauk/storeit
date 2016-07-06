@@ -10,10 +10,10 @@ public class FileDeleteCommand {
     private String command;
     private Parameters parameters;
 
-    public FileDeleteCommand(int uid, String command, String files) {
+    public FileDeleteCommand(int uid, String command, StoreitFile files) {
         this.uid = uid;
         this.command = command;
-        this.parameters = new Parameters(files);
+        this.parameters = new Parameters(files.getPath());
     }
 
     public String getFiles() {

@@ -210,6 +210,7 @@ public class FilesManager {
         }
     }
 
+    /*
     public void removeFile(StoreitFile file) {
         File parentFile = new File(file.getPath());
         String parentPath = parentFile.getParentFile().getAbsolutePath();
@@ -227,6 +228,30 @@ public class FilesManager {
             saveJson();
         }
     }
+*/
+
+    public void removeFile(String path) {
+        File parentFile = new File(path);
+        String parentPath = parentFile.getParentFile().getAbsolutePath();
+        StoreitFile parent = getParentFile(mRootFile, parentPath);
+
+        StoreitFile stFileToDelete = getFileByName(path, mRootFile); // get storeitfile for hash
+        if (stFileToDelete != null && !stFileToDelete.isDirectory() && stFileToDelete.getIPFSHash() != null) {
+            File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + stFileToDelete.getIPFSHash());
+            if (fileToDelete.exists()) {
+                if (!fileToDelete.delete()) {
+                    Log.e(LOGTAG, "Error while deleting " + fileToDelete);
+                }
+            }
+        }
+
+        if (parent != null) {
+            parent.getFiles().remove(StoreitFile.getFileName(path));
+
+        saveJson();
+    }
+
+}
 
     public void addFile(StoreitFile file, StoreitFile parent) {
         StoreitFile p = getFileByName(parent.getPath(), mRootFile);

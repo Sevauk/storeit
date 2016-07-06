@@ -33,6 +33,11 @@ public class StoreitFile {
         return file.getName();
     }
 
+    public static String getFileName(String path) {
+        File file = new File(path);
+        return file.getName();
+    }
+
     public HashMap<String, StoreitFile> getFiles() {
         return files;
     }

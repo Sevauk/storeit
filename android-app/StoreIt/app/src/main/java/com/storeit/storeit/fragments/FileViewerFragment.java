@@ -149,7 +149,7 @@ public class FileViewerFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.action_delete_file:
                 Log.v("FileViewerFragment", "Delete");
-                manager.removeFile(file);
+                manager.removeFile(file.getPath());
                 adapter.removeFile(position);
                 service.sendFDEL(file);
                 break;

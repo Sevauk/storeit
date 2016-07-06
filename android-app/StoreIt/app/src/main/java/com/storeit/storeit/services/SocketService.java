@@ -19,9 +19,11 @@ import com.storeit.storeit.protocol.LoginHandler;
 import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.CommandManager;
 import com.storeit.storeit.protocol.command.FileCommand;
+import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.JoinCommand;
 import com.storeit.storeit.protocol.command.Response;
 
+import java.io.File;
 import java.io.IOException;
 
 /*
@@ -77,7 +79,7 @@ public class SocketService extends Service {
                                     case CommandManager.FDEL:
                                         if (mFileCommandHandler != null) {
                                             Gson gson = new Gson();
-                                            FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
+                                            FileDeleteCommand fileCommand = gson.fromJson(message, FileDeleteCommand.class);
                                             mFileCommandHandler.handleFDEL(fileCommand);
                                         }
                                         break;
@@ -130,7 +132,7 @@ public class SocketService extends Service {
 
     public void sendFDEL(StoreitFile newFile) {
         Gson gson = new Gson();
-        FileCommand cmd = new FileCommand(uid, "FDEL", newFile);
+        FileDeleteCommand cmd = new FileDeleteCommand(uid, "FDEL", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
         lastCmd = "FDEL";

@@ -44,6 +44,7 @@ import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.protocol.FileCommandHandler;
 import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.FileCommand;
+import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -455,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FileCommandHandler mFileCommandHandler = new FileCommandHandler() {
         @Override
-        public void handleFDEL(FileCommand command) {
+        public void handleFDEL(FileDeleteCommand command) {
             Log.v("MainActivity", "FDEL");
             filesManager.removeFile(command.getFiles());
             runOnUiThread(new Runnable() {
