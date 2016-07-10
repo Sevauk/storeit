@@ -49,6 +49,17 @@ class WebSocketManager {
         }
     }
     
+    func removeRowAtIndex(index: Int) {
+        if self.list == nil {
+            self.list = self.getTableView()
+        }
+        
+        let indexPath = NSIndexPath(forRow: index, inSection: 0)
+    	list?.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+        
+        print(navigationManager.items)
+    }
+    
     func eventsInitializer(loginFunction: () -> Void, logoutFunction: () -> Void) {
         self.ws.onConnect = {
         	print("[Client.WebSocketManager] WebSocket is connected to \(self.url)")
@@ -96,11 +107,23 @@ class WebSocketManager {
                                     let files = self.uidFactory.getObjectForUid(uid) as! [File]
                                     
                                     for file in files {
-                                        self.navigationManager.insertFileObject(file)
+                                        let updateElement = UpdateElement(file: file)
+                                        
+                                        self.navigationManager.updateTree(updateElement)
                                         self.updateListView()
                                     }
                                 }
-                                
+                                // FDEL
+                                else if (commandType == cmdInfos.FDEL) {
+                                	let paths = self.uidFactory.getObjectForUid(uid) as! [String]
+                                	
+                                    for path in paths {
+                                        let updateElement = UpdateElement(path: path)
+
+                                        let index = self.navigationManager.updateTree(updateElement)
+                                        self.removeRowAtIndex(index)
+                                    }
+                                }
                             }
                         }
                         

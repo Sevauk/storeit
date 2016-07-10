@@ -136,6 +136,17 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             return cell
         }
     }
+
+    
+    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+        if editingStyle == UITableViewCellEditingStyle.Delete {
+            if let selectedFile = navigationManager?.getSelectedFileAtRow(indexPath) {
+                if let pathsToDelete: [String] = fileManager?.getFilePathsInFileObject(selectedFile, paths: []) {
+                    self.networkManager?.fdel(pathsToDelete, completion: nil)
+                }
+            }
+        }
+    }
     
     // MARK: Action sheet creation and management
     
@@ -186,14 +197,9 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             
             let relativePath = self.navigationManager?.buildPath(input.text!)
             let newDirectory: File = self.fileManager!.createDir(relativePath!, metadata: "", IPFSHash: "")
+
+            self.networkManager?.fadd([newDirectory], completion: nil)
             
-            self.networkManager?.fadd([newDirectory]) { _ in
-                self.navigationManager?.insertFileObject(newDirectory)
-                
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.list.reloadData()
-            	}
-            }
         }))
         
         self.presentViewController(alert, animated: true, completion: nil)

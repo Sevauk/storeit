@@ -31,6 +31,28 @@ class FileManager {
         
     }
     
+     func getFilePathsInFileObject(file: File, paths: [String]) -> [String] {
+        var newPaths = paths
+
+        // Simple file or empty dir
+        if (!file.isDir || (file.isDir && file.files.isEmpty)) {
+            newPaths.append(file.path)
+        }
+        // Not empty dir
+        else {
+            for (_, file) in file.files {
+                print(file.path)
+                if file.isDir {
+                    newPaths.appendContentsOf(getFilePathsInFileObject(file, paths: newPaths))
+                } else {
+                    newPaths.append(file.path)
+                }
+            }
+        }
+        
+        return newPaths
+    }
+    
     func getSyncDirTree() -> [String: File] {
         return self.buildTree(self.rootDirPath)
     }

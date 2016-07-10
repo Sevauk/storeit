@@ -8,6 +8,29 @@
 
 import Foundation
 
+enum UpdateType {
+    case ADD
+    case DELETE
+}
+
+struct UpdateElement {
+    let fileToAdd: File?
+    let pathToDelete: String?
+    let updateType: UpdateType
+    
+    init(file: File) {
+        fileToAdd = file
+        pathToDelete = nil
+        updateType = UpdateType.ADD
+    }
+    
+    init(path: String) {
+     	fileToAdd = nil
+        pathToDelete = path
+        updateType = UpdateType.DELETE
+    }
+}
+
 class NavigationManager {
     
     let rootDirTitle: String
@@ -32,16 +55,28 @@ class NavigationManager {
         self.items = Array(allItems.keys)
     }
     
-    private func setItemsAndCheckIndexes(newElement: (String, File), indexes: [String]) -> Bool{
-        // If the file to add is on the current directory (the focused one on the list view) == we need to refresh
+    // If the update is on the current directory (the focused one on the list view), we need to refresh
+    private func updateCurrentItems(fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
+        var index: Int = 0
+        
         if (indexes == self.indexes) {
-        	self.items.append(newElement.0)
-            self.currentDirectory[newElement.0] = newElement.1
-
-            return true
+            switch updateElement.updateType {
+                case .ADD:
+                    self.items.append(fileName)
+                    self.currentDirectory[fileName] = updateElement.fileToAdd!
+                	index = self.items.count - 1
+                case .DELETE:
+                    let tmpIndex = items.indexOf(fileName)
+                    
+                    if (tmpIndex != nil) {
+                        index = tmpIndex!
+                        self.items.removeAtIndex(index)
+                        self.currentDirectory.removeValueForKey(fileName)
+                    }
+                }
         }
         
-        return false
+        return index
     }
 
     func buildPath(fileName: String) -> String {
@@ -91,34 +126,50 @@ class NavigationManager {
         return newTree
     }
     
-    private func insertInTree(inout storeit: [String:File], newFile: File, path: [String]) {
+    private func insertUpdateInTree(inout storeit: [String:File], updateElement: UpdateElement, path: [String]) {
         let keys: [String] = Array(storeit.keys)
         
         for key in keys {
             let firstElementOfPath = path.first!
             
             if (key == firstElementOfPath) {
-                insertInTree(&storeit[key]!.files, newFile: newFile, path: Array(path.dropFirst()))
+                insertUpdateInTree(&storeit[key]!.files, updateElement: updateElement, path: Array(path.dropFirst()))
             }
         }
         
         if (path.count == 1) {
-            storeit[path.first!] = newFile
+            let fileName = path.first!
+            
+            switch updateElement.updateType {
+                case .ADD:
+                    storeit[fileName] = updateElement.fileToAdd!
+                    
+                case .DELETE:
+                    storeit.removeValueForKey(fileName)
+            }
         }
     }
     
-    func insertFileObject(file: File) -> Bool {
-        let path = Array(file.path.componentsSeparatedByString("/").dropFirst())
+    func updateTree(updateElement: UpdateElement) -> Int {
+        let path: String?
         
-        self.insertInTree(&self.storeItSynchDir, newFile: file, path: path)
+        switch updateElement.updateType {
+            case .ADD:
+            	path = updateElement.fileToAdd?.path
+            case .DELETE:
+            	path = updateElement.pathToDelete
+            }
         
-        let needUpdate = self.setItemsAndCheckIndexes((path.last!, file), indexes: Array(path.dropLast()))
+        var index = 0
         
-        return needUpdate
-    }
-    
-    func updateFileObject() {
+        if let unwrapPath = path {
+            let splitPath = Array(unwrapPath.componentsSeparatedByString("/").dropFirst())
+            
+            self.insertUpdateInTree(&self.storeItSynchDir, updateElement: updateElement, path: splitPath)
+            index = self.updateCurrentItems(splitPath.last!, updateElement: updateElement, indexes: Array(splitPath.dropLast()))
+        }
         
+        return index
     }
     
     func getSelectedFileAtRow(indexPath: NSIndexPath) -> File {
