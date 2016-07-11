@@ -150,6 +150,9 @@ public class SocketService extends Service {
         Gson gson = new Gson();
         FileMoveCommand cmd = new FileMoveCommand(uid, "FMOV", src, dst);
         webSocket.sendText(gson.toJson(cmd));
+
+        Log.v("FMOV", gson.toJson(cmd));
+
         uid++;
         lastCmd = "FMOV";
     }
