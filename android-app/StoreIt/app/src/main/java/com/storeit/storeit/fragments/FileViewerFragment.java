@@ -197,8 +197,11 @@ public class FileViewerFragment extends Fragment {
                 File f = new File(file.getPath()); // Get parent path
 
                 String finalName = f.getParent() + File.separator + fileName;
-                manager.moveFile(file.getPath(), finalName.replace("//", "/"));
+                finalName =  finalName.replace("//", "/");
+                manager.moveFile(file.getPath(), finalName);
                 adapter.reloadFiles();
+
+                ((MainActivity) getActivity()).getSocketService().sendFMOV(file.getPath(), finalName);
             }
         }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
             @Override

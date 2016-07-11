@@ -7,7 +7,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
-
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
@@ -20,10 +19,9 @@ import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.CommandManager;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
+import com.storeit.storeit.protocol.command.FileMoveCommand;
 import com.storeit.storeit.protocol.command.JoinCommand;
 import com.storeit.storeit.protocol.command.Response;
-
-import java.io.File;
 import java.io.IOException;
 
 /*
@@ -146,6 +144,14 @@ public class SocketService extends Service {
         webSocket.sendText(gson.toJson(cmd));
         uid++;
         lastCmd = "FUPT";
+    }
+
+    public void sendFMOV(String src, String dst) {
+        Gson gson = new Gson();
+        FileMoveCommand cmd = new FileMoveCommand(uid, "FMOV", src, dst);
+        webSocket.sendText(gson.toJson(cmd));
+        uid++;
+        lastCmd = "FMOV";
     }
 
     public void setmLoginHandler(LoginHandler handler) {

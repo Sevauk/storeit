@@ -25,11 +25,11 @@ public class FileMoveCommand {
 
     class Parameters {
         String src;
-        String dst;
+        String dest;
 
         public  Parameters(String src, String dst){
             this.src = src;
-            this.dst = dst;
+            this.dest = dst;
         }
 
         public String getSrc() {
@@ -37,7 +37,7 @@ public class FileMoveCommand {
         }
 
         public String getDst() {
-            return dst;
+            return dest;
         }
     }
 }
