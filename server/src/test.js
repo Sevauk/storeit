@@ -1,10 +1,11 @@
-import {logger} from './log.js'
+import {logger} from './common/log.js'
 
 logger.transports.console.level = 'error'
 
 import {expect} from 'chai'
 import WebSocket from 'ws'
-import * as api from './protocol-objects'
+import * as fs from 'fs'
+import * as api from './common/protocol-objects.js'
 import * as user from './user.js'
 import './ws.js'
 
@@ -43,6 +44,8 @@ const expectOkResponse = (data) => {
   const obj = JSON.parse(data)
 
   expect(obj.code).to.equal(0)
+  if (obj.code !== 0)
+    console.log(obj.stack)
 }
 
 const expectUsualJoinResponse = (data) => {
@@ -72,6 +75,8 @@ describe('OAuth login/registering', () => {
 */
 
 describe('simple connection', () => {
+
+  fs.unlinkSync('./storeit-users/adrien.morel@me.com')
 
   it('should get JOIN response', (done) => {
     fakeA = new fakeUser('developer', (data) => {

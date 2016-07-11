@@ -1,8 +1,8 @@
 import * as ws from 'ws'
-import {logger} from './log.js'
+import {logger} from './common/log.js'
 import * as proto from './parse.js'
 import * as user from './user.js'
-import * as protoObjs from './protocol-objects.js'
+import * as protoObjs from './common/protocol-objects.js'
 
 const PORT = 7641
 
@@ -47,7 +47,8 @@ class Client {
   }
 
   answerFailure(commandUid, err) {
-    this.sendObj(new protoObjs.Response(err.code, err.msg, commandUid))
+    logger.debug('sending error to client ' + err.msg)
+    this.sendObj(new protoObjs.Response(err.code, err.msg, commandUid, err.trace))
   }
 }
 

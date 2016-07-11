@@ -1,10 +1,17 @@
 let uid = 0
 
-export const Error = {
+export const ApiError = {
   BADCREDENTIALS: {code: 1, msg: 'Invalid credentials'},
   BADSCOPE: {code: 2, msg: 'Bad OAuth scope'},
   UNKNOWNAUTHTYPE: {code: 3, msg: 'Unknown authentication method'},
   SERVERERROR: {code: 4, msg: 'The server failed'},
+  BADTREE: {code: 5, msg: 'The tree does not match server reprensentation. Login again.'},
+  BADREQUEST: {code: 6, msg: 'The request is invalid'}
+}
+
+export const errWithStack = (err) => {
+  err.trace = new Error().stack
+  return err
 }
 
 export class Command {
@@ -16,13 +23,16 @@ export class Command {
   }
 }
 
+const debug = true
+
 export class Response {
-  constructor(code, text, uid, parameters) {
-    this.code = code,
-    this.text = text,
-    this.commandUid = uid,
+  constructor(code, text, uid, parameters, stack) {
+    this.code = code
+    this.text = text
+    this.commandUid = uid
     this.parameters = parameters
     this.command = "RESP"
+    if (debug) this.stack = stack
   }
 }
 

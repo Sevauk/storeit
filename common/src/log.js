@@ -1,4 +1,4 @@
-import winston from '../../desktop-app/node_modules/winston'
+import winston from 'winston'
 
 export const logger = new winston.Logger({
   transports: [

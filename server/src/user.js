@@ -1,8 +1,8 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import * as api from './protocol-objects.js'
-import * as tree from './tree.js'
-import {logger} from './log.js'
+import * as api from './common/protocol-objects.js'
+import * as tree from './common/tree.js'
+import {logger} from './common/log.js'
 
 let usersDir = 'storeit-users' + path.sep
 
@@ -47,8 +47,9 @@ export class User {
 
   setTrees(trees, action) {
     for (const treeIncoming of trees) {
-      tree.setTree(this.home, treeIncoming.path, (treeParent, name) =>
+      const tri = tree.setTree(this.home, treeIncoming.path, (treeParent, name) =>
         action(treeParent, treeIncoming, name))
+      if (tri) return tri
     }
   }
 
@@ -65,30 +66,39 @@ export class User {
   }
 
   renameFile(src, dest) {
-    const takenTree = tree.setTree(this.home, src, (treeParent, name) => {
+
+    let takenTree = tree.setTree(this.home, src, (treeParent, name) => {
       const tree = treeParent.files[name]
       delete treeParent.files[name]
       return tree
     })
 
-    tree.setTree(this.home, dest, (treeParent, name) => {
+    if (takenTree.code) {
+      return takenTree
+    }
+
+    return tree.setTree(this.home, dest, (treeParent, name) => {
+
       treeParent.files[name] = takenTree
+
+      takenTree.path = dest
 
       const rec = (tree, name, currentPath) => {
 
         const sep = currentPath === '/' ? '' : path.sep
         tree.path = currentPath + sep + name
 
-        if (!tree.files) {
+        if (!tree.files)
           return
-        }
 
         for (const file of Object.keys(tree.files)) {
-          rec(tree.files[file], file, tree.path)
+          const err = rec(tree.files[file], file, tree.path)
+          if (err) return err
         }
       }
 
-      rec(takenTree, name, treeParent.path)
+      return rec(takenTree, name, treeParent.path)
+
     })
 
   }
@@ -96,11 +106,12 @@ export class User {
   delTree(paths) {
     for (const p of paths) {
       if (typeof p !== 'string') {
-        // TODO: send error response
-        logger.debug('client sent bad request')
+        return api.errWithStack(api.ApiError.BADREQUEST)
       }
       else {
-        tree.setTree(this.home, p, (tree, name) => delete tree.files[name])
+        const err = tree.setTree(this.home, p, (tree, name) => delete tree.files[name])
+        if (err !== true)
+          return err
       }
     }
   }
