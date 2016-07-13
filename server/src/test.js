@@ -8,7 +8,13 @@ import * as fs from 'fs'
 import * as api from './common/protocol-objects.js'
 import * as user from './user.js'
 import * as tool from './tool.js'
+import * as store from './store.js'
 import './ws.js'
+
+const USERHASHES = [
+  'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT',
+  'QmSdZaa9KWGBc9m8mFwUiZGo2YkrQgxoUoRU7EB4VmeQzp',
+]
 
 class fakeUser {
 
@@ -32,7 +38,8 @@ class fakeUser {
   join() {
     this.send(new api.Command('JOIN', {
       authType: 'fb',
-      accessToken: this.accessToken
+      accessToken: this.accessToken,
+      hashes: USERHASHES
     }))
   }
 
@@ -67,20 +74,14 @@ const expectErrorResponse = (data) => {
 let fakeA = undefined
 let fakeB = undefined
 
-/*
-describe('OAuth login/registering', () => {
-  it('should connect with google', () => {
-    fakeGoogle = new fakeUser()
-  })
-})
-*/
-
 describe('simple connection', () => {
 
   fs.unlinkSync('./storeit-users/adrien.morel@me.com')
 
   it('should get JOIN response', (done) => {
     fakeA = new fakeUser('developer', (data) => {
+      expect('0' in store.storeTable.get(USERHASHES[0])).to.equal(true)
+      expect(USERHASHES[0] in store.storeTable.get('0')).to.equal(true)
       expectUsualJoinResponse(data)
       done()
     })
@@ -114,6 +115,7 @@ describe('protocol file commands', () => {
       setTimeout(() => {
         expect(user.getConnectionCount()).to.equal(1)
         expect(user.getUserCount()).to.equal(1)
+        expect(Object.keys(store.storeTable.map1).length).to.equal(1)
         done()
       }, 10) // wait for server to take action
     })
@@ -290,7 +292,7 @@ describe('internal server tools', () => {
       hash1: {'jamies.lannister@me.com': null},
       hash3: {'toto@hotmail.fr': null, 'james.bond@me.com': null},
     })
-    
+
     done()
   })
 })

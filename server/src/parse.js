@@ -2,6 +2,7 @@ import {logger} from './common/log.js'
 import * as user from './user.js'
 import * as protoObjs from './common/protocol-objects'
 import * as auth from './auth.js'
+import * as store from './store.js'
 
 const sendWelcome = (socket, usr, commandUid) => {
   socket.sendObj(new protoObjs.Response(0, 'welcome', commandUid, {
@@ -28,6 +29,7 @@ const join = function(command, arg, socket, handlerFn) {
             if (err) {
               return handlerFn(protoObjs.ApiError.SERVERERROR)
             }
+            store.processHash(socket, arg)
             sendWelcome(socket, usrAgain, command.uid, handlerFn)
           })
         })
@@ -36,6 +38,7 @@ const join = function(command, arg, socket, handlerFn) {
         return handlerFn(err)
       }
       else {
+        store.processHash(socket, arg)
         sendWelcome(socket, usr, command.uid, handlerFn)
       }
     })

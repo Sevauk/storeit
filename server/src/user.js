@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as api from './common/protocol-objects.js'
 import * as tree from './common/tree.js'
+import * as store from './store.js'
 import {logger} from './common/log.js'
 
 let usersDir = 'storeit-users' + path.sep
@@ -170,6 +171,7 @@ export const disconnectSocket = (client) => {
   }
 
   delete sockets[client.uid]
+  store.storeTable.remove(client.uid)
   logger.info(`${user.email} has disconnected. ${getStat()}`)
 }
 
