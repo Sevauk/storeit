@@ -1,4 +1,5 @@
-/* This is a two-ways hash map. For example:
+/*
+This is a two-ways hash map. For example:
 
 map1:
 
@@ -26,9 +27,9 @@ export class TwoHashMap {
 
   subAdd(map, value1, value2) {
     if (map[value1] === undefined) {
-      map[value1] = {}
+      map[value1] = new Set()
     }
-    map[value1][value2] = null
+    map[value1].add(value2)
   }
 
   add(value1, value2) {
@@ -46,10 +47,7 @@ export class TwoHashMap {
   }
 
   subTest(map, value1, value2) {
-    if (value1 in map) {
-      return value2 in map[value1]
-    }
-    return false
+    return value1 in map ? map[value1].has(value2) : false
   }
 
   test(value1, value2) {
@@ -60,13 +58,24 @@ export class TwoHashMap {
 
   wipe(mapA, mapB, value) {
     if (value in mapA) {
-      for (const item of Object.keys(mapA[value])) {
-        delete mapB[item][value]
-        if (Object.keys(mapB[item]).length === 0)
+      for (const item of mapA[value]) {
+        mapB[item].delete(value)
+        if (mapB[item].size === 0)
           delete mapB[item]
       }
       delete mapA[value]
     }
+  }
+
+  countSub(map, value) {
+    return value in map ? map[value].size : 0
+  }
+
+  count(value) {
+    const count = this.countSub(this.map1, value)
+    if (count !== 0)
+      return count
+    return this.countSub(this.map2, value)
   }
 
   remove(value) {

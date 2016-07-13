@@ -80,8 +80,9 @@ describe('simple connection', () => {
 
   it('should get JOIN response', (done) => {
     fakeA = new fakeUser('developer', (data) => {
-      expect('0' in store.storeTable.get(USERHASHES[0])).to.equal(true)
-      expect(USERHASHES[0] in store.storeTable.get('0')).to.equal(true)
+
+      expect(store.storeTable.get(USERHASHES[0]).has(0)).to.equal(true)
+      expect(store.storeTable.get(0).has(USERHASHES[0])).to.equal(true)
       expectUsualJoinResponse(data)
       done()
     })
@@ -262,12 +263,12 @@ describe('internal server tools', () => {
     table.add('jamies.lannister@me.com', 'hash8')
     table.add('jamies.lannister@me.com', 'hash1')
 
-    expect('hash4' in table.get('james.bond@me.com')).to.equal(true)
-    expect('adrien.morel@me.com' in table.get('hash2')).to.equal(true)
+    expect(table.get('james.bond@me.com').has('hash4')).to.equal(true)
+    expect(table.get('hash2').has('adrien.morel@me.com')).to.equal(true)
 
     table.remove('hash2')
 
-    expect('hash2' in table.get('james.bond@me.com')).to.equal(false)
+    expect(table.get('james.bond@me.com').has('hash2')).to.equal(false)
 
     table.remove('hash4')
 
@@ -280,7 +281,7 @@ describe('internal server tools', () => {
     table.remove('hash8')
 
     expect(table.test('toto@hotmail.fr', 'hash3')).to.equal(true)
-    expect(Object.keys(table.get('hash3')).length).to.equal(3)
+    expect(table.count('hash3')).to.equal(3)
     expect(table.test('jamies.lannister@me.com', 'hash1')).to.equal(true)
     expect(table.test('jamies.lannister@me.com', 'hash8')).to.equal(false)
     expect(table.test('hash1', 'jamies.lannister@me.com')).to.equal(true)
@@ -289,8 +290,8 @@ describe('internal server tools', () => {
     table.remove('adrien.morel@me.com')
 
     expect(table.map2).to.deep.equal({
-      hash1: {'jamies.lannister@me.com': null},
-      hash3: {'toto@hotmail.fr': null, 'james.bond@me.com': null},
+      hash1: new Set(['jamies.lannister@me.com']),
+      hash3: new Set(['toto@hotmail.fr', 'james.bond@me.com']),
     })
 
     done()
