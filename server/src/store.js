@@ -2,6 +2,7 @@ import * as tool from './tool.js'
 import * as store from './store.js'
 import * as user from './user.js'
 import * as api from './common/protocol-objects.js'
+import * as tree from './common/tree.js'
 import {logger} from './common/log.js'
 
 export const storeTable = new tool.TwoHashMap()
@@ -54,4 +55,11 @@ export const removeSocket = (socket) => {
   for (const chunk of offlineChunks) {
     keepChunkAlive(chunk)
   }
+}
+
+
+export const keepTreeAlive = (treeCurrent) => {
+  tree.forEachHash(treeCurrent, (hash) => {
+    store.keepChunkAlive(hash)
+  })
 }

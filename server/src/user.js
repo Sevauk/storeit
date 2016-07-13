@@ -55,14 +55,18 @@ export class User {
   }
 
   addTree(trees) {
-    return this.setTrees(trees, (treeParent, tree, name) => {
-      treeParent.files[name] = tree
+    return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+      treeParent.files[name] = treeCurrent
+
+      store.keepTreeAlive(treeCurrent)
     })
   }
 
   uptTree(trees) {
-    return this.setTrees(trees, (treeParent, tree, name) => {
-      treeParent.files[name] = tree
+    return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+      treeParent.files[name] = treeCurrent
+
+      store.keepTreeAlive(treeCurrent)
     })
   }
 
@@ -114,11 +118,17 @@ export class User {
         return api.errWithStack(api.ApiError.BADREQUEST)
       }
       else {
-        const err = tree.setTree(this.home, p, (tree, name) => {
-          if (!tree.files) {
+        const err = tree.setTree(this.home, p, (treeCurrent, name) => {
+          if (!treeCurrent.files) {
             return api.errWithStack(api.ApiError.ENOENT)
           }
-          return delete tree.files[name]
+
+          tree.forEachHash(tree, (hash) => {
+            // TODO: implement a way to remove hash if it is not needed by anyone anymore
+            // use probably a hashmap of all the hashes as keys and clients that need them as value
+          })
+
+          return delete treeCurrent.files[name]
         })
         if (err !== true) {
           return err
