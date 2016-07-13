@@ -1,13 +1,12 @@
-import {logger} from './log.js'
+import {logger} from './common/log.js'
 import * as user from './user.js'
-import * as protoObjs from './protocol-objects'
+import * as protoObjs from './common/protocol-objects'
 import * as auth from './auth.js'
 
-const sendWelcome = (socket, usr, commandUid, handlerFn) => {
+const sendWelcome = (socket, usr, commandUid) => {
   socket.sendObj(new protoObjs.Response(0, 'welcome', commandUid, {
     home: usr.home
   }))
-  handlerFn()
 }
 
 const join = function(command, arg, socket, handlerFn) {
@@ -23,11 +22,11 @@ const join = function(command, arg, socket, handlerFn) {
       if (err && err.code === "ENOENT") {
         user.createUser(email, (err) => {
           if (err) {
-            return handlerFn(protoObjs.Error.SERVERERROR)
+            return handlerFn(protoObjs.ApiError.SERVERERROR)
           }
           user.connectUser(email, socket, (err, usrAgain) => {
             if (err) {
-              return handlerFn(protoObjs.Error.SERVERERROR)
+              return handlerFn(protoObjs.ApiError.SERVERERROR)
             }
             sendWelcome(socket, usrAgain, command.uid, handlerFn)
           })
@@ -58,23 +57,33 @@ const recast = (command, client) => {
   client.answerSuccess(uid)
 }
 
+const sendErrIfErr = (uid, socket, err) => {
+  if (err) {
+    socket.answerFailure(uid, err)
+  }
+}
+
 const add = (command, arg, client) => {
-  client.getUser().addTree(arg.files)
+  const err = client.getUser().addTree(arg.files)
+  if (err) return err
   recast(command, client)
 }
 
 const upt = (command, arg, client) => {
-  client.getUser().uptTree(arg.files)
+  const err = client.getUser().uptTree(arg.files)
+  if (err) return err
   recast(command, client)
 }
 
 const mov = (command, arg, client) => {
-  client.getUser().renameFile(arg.src, arg.dest)
+  const err = client.getUser().renameFile(arg.src, arg.dest)
+  if (err) return err
   recast(command, client)
 }
 
 const del = (command, arg, client) => {
-  client.getUser().delTree(arg.files)
+  const err = client.getUser().delTree(arg.files)
+  if (err) return err
   recast(command, client)
 }
 
@@ -91,10 +100,8 @@ export const parse = function(msg, client) {
   }
 
   // TODO: catch the goddam exception
-  hmap[command.command](command, command.parameters, client, (err) => {
-    if (err) {
-      logger.debug('sending failure response: ' + err)
-      client.answerFailure(command.uid, err)
-    }
+  const err = hmap[command.command](command, command.parameters, client, (err) => {
+    if (err) client.answerFailure(command.uid, err)
   })
+  if (err) client.answerFailure(command.uid, err)
 }

@@ -1,3 +1,4 @@
 build/
 node_modules/
+storeit-users/
 npm-debug.log

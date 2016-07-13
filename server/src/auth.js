@@ -1,6 +1,6 @@
 import {oauth2} from 'googleapis'
 import request from 'request'
-import * as protocol from './protocol-objects.js'
+import * as protocol from './common/protocol-objects.js'
 
 const oauth = oauth2('v2')
 
@@ -12,11 +12,11 @@ export const verifyUserToken = (authService, accessToken, handlerFn) => {
   if (authService === 'gg') {
     return oauth.userinfo.get({'access_token': accessToken}, (err, response) => {
       if (err) {
-        return handlerFn(protocol.Error.BADCREDENTIALS)
+        return handlerFn(protocol.ApiError.BADCREDENTIALS)
       }
 
       if (response.email === undefined) {
-        return handlerFn(protocol.Error.BADSCOPE)
+        return handlerFn(protocol.ApiError.BADSCOPE)
       }
       return handlerFn(null, response.email)
     })
@@ -25,17 +25,17 @@ export const verifyUserToken = (authService, accessToken, handlerFn) => {
     return request('https://graph.facebook.com/me?access_token=' + accessToken + '&fields=email', (err, response, body) => {
 
       if (response.statusCode !== 200) {
-        return handlerFn(protocol.Error.SERVERERROR)
+        return handlerFn(protocol.ApiError.SERVERERROR)
       }
 
       const parsed = JSON.parse(body)
       if (parsed.email === undefined) {
-        return handlerFn(protocol.Error.BADSCOPE)
+        return handlerFn(protocol.ApiError.BADSCOPE)
       }
       handlerFn(null, parsed.email)
     })
   }
   else {
-    handlerFn(protocol.Error.UNKNOWNAUTHTYPE, undefined)
+    handlerFn(protocol.ApiError.UNKNOWNAUTHTYPE)
   }
 }
