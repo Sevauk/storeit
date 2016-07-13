@@ -114,7 +114,7 @@ export class User {
         return api.errWithStack(api.ApiError.BADREQUEST)
       }
       else {
-          const err = tree.setTree(this.home, p, (tree, name) => {
+        const err = tree.setTree(this.home, p, (tree, name) => {
           if (!tree.files) {
             return api.errWithStack(api.ApiError.ENOENT)
           }

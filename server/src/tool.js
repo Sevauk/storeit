@@ -82,4 +82,17 @@ export class TwoHashMap {
     this.wipe(this.map1, this.map2, value)
     this.wipe(this.map2, this.map1, value)
   }
+
+  selectA(dontHave, howMany) {
+
+    const selected = new Set()
+    for (const item of Object.keys(this.map1)) {
+      if (this.map2[dontHave].has(item))
+        continue
+      selected.add(item)
+      if (--howMany <= 0)
+        break
+    }
+    return selected
+  }
 }

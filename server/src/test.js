@@ -260,8 +260,13 @@ describe('internal server tools', () => {
     table.add('james.bond@me.com', 'hash2')
     table.add('james.bond@me.com', 'hash4')
     table.add('jamie.lannister@me.com', 'hash2')
-    table.add('jamies.lannister@me.com', 'hash8')
-    table.add('jamies.lannister@me.com', 'hash1')
+    table.add('jamie.lannister@me.com', 'hash8')
+    table.add('jamie.lannister@me.com', 'hash1')
+
+    const selectUser = table.selectA('hash8', 2)
+    expect(selectUser.size).to.equal(2)
+    expect(selectUser.has('james.bond@me.com')).to.equal(true)
+    expect(selectUser.has('adrien.morel@me.com')).to.equal(true)
 
     expect(table.get('james.bond@me.com').has('hash4')).to.equal(true)
     expect(table.get('hash2').has('adrien.morel@me.com')).to.equal(true)
@@ -282,15 +287,15 @@ describe('internal server tools', () => {
 
     expect(table.test('toto@hotmail.fr', 'hash3')).to.equal(true)
     expect(table.count('hash3')).to.equal(3)
-    expect(table.test('jamies.lannister@me.com', 'hash1')).to.equal(true)
-    expect(table.test('jamies.lannister@me.com', 'hash8')).to.equal(false)
-    expect(table.test('hash1', 'jamies.lannister@me.com')).to.equal(true)
+    expect(table.test('jamie.lannister@me.com', 'hash1')).to.equal(true)
+    expect(table.test('jamie.lannister@me.com', 'hash8')).to.equal(false)
+    expect(table.test('hash1', 'jamie.lannister@me.com')).to.equal(true)
     expect(table.test('hash1', 'adrien.morel@me.com')).to.equal(true)
 
     table.remove('adrien.morel@me.com')
 
     expect(table.map2).to.deep.equal({
-      hash1: new Set(['jamies.lannister@me.com']),
+      hash1: new Set(['jamie.lannister@me.com']),
       hash3: new Set(['toto@hotmail.fr', 'james.bond@me.com']),
     })
 
