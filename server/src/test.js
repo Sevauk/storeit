@@ -7,6 +7,7 @@ import WebSocket from 'ws'
 import * as fs from 'fs'
 import * as api from './common/protocol-objects.js'
 import * as user from './user.js'
+import * as tool from './tool.js'
 import './ws.js'
 
 class fakeUser {
@@ -242,5 +243,54 @@ describe('protocol file commands', () => {
     fakeA.send(new api.Command('FDEL', {
       files: ['/foo/newdir/anotherdir', '/readme.txt']
     }))
+  })
+})
+
+describe('internal server tools', () => {
+
+  it('test of our double lookup hash table', (done) => {
+    const table = new tool.TwoHashMap()
+
+    table.add('adrien.morel@me.com', 'hash1')
+    table.add('adrien.morel@me.com', 'hash2')
+    table.add('adrien.morel@me.com', 'hash3')
+    table.add('james.bond@me.com', 'hash2')
+    table.add('james.bond@me.com', 'hash4')
+    table.add('jamie.lannister@me.com', 'hash2')
+    table.add('jamies.lannister@me.com', 'hash8')
+    table.add('jamies.lannister@me.com', 'hash1')
+
+    expect('hash4' in table.get('james.bond@me.com')).to.equal(true)
+    expect('adrien.morel@me.com' in table.get('hash2')).to.equal(true)
+
+    table.remove('hash2')
+
+    expect('hash2' in table.get('james.bond@me.com')).to.equal(false)
+
+    table.remove('hash4')
+
+    expect(table.get('james.bond@me.com')).to.equal(undefined)
+    expect(table.get('hash4')).to.equal(undefined)
+
+
+    table.add('toto@hotmail.fr', 'hash3')
+    table.add('james.bond@me.com', 'hash3')
+    table.remove('hash8')
+
+    expect(table.test('toto@hotmail.fr', 'hash3')).to.equal(true)
+    expect(Object.keys(table.get('hash3')).length).to.equal(3)
+    expect(table.test('jamies.lannister@me.com', 'hash1')).to.equal(true)
+    expect(table.test('jamies.lannister@me.com', 'hash8')).to.equal(false)
+    expect(table.test('hash1', 'jamies.lannister@me.com')).to.equal(true)
+    expect(table.test('hash1', 'adrien.morel@me.com')).to.equal(true)
+
+    table.remove('adrien.morel@me.com')
+
+    expect(table.map2).to.deep.equal({
+      hash1: {'jamies.lannister@me.com': null},
+      hash3: {'toto@hotmail.fr': null, 'james.bond@me.com': null},
+    })
+    
+    done()
   })
 })
