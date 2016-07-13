@@ -120,7 +120,7 @@ describe('protocol file commands', () => {
     fakeB.leave()
   })
 
-  const userTree = user.makeBasicHome()
+  let userTree = user.makeBasicHome()
 
   const checkUserTree = () => {
     expect(userTree).to.deep.equal(user.users['adrien.morel@me.com'].home)
@@ -169,6 +169,8 @@ describe('protocol file commands', () => {
 
   })
 
+  let oldTree = null
+
   it('should FMOV correctly (directory move)', (done) => {
 
     let responseCount = 1
@@ -196,6 +198,8 @@ describe('protocol file commands', () => {
       ]
     }))
 
+    oldTree = JSON.parse(JSON.stringify(userTree))
+
     const tree = userTree.files['foo'].files['newdir']
     delete userTree.files['foo'].files['newdir']
     userTree.files['newdir'] = tree
@@ -210,6 +214,21 @@ describe('protocol file commands', () => {
     }))
   })
 
+  it('should FMOV correctly (another directory move)', (done) => {
+    fakeA.msgHandler = (data) => {
+      expectOkResponse(data)
+      checkUserTree()
+      done()
+    }
+
+    userTree = oldTree
+
+    fakeA.send(new api.Command('FMOV', {
+      src: '/newdir',
+      dest: '/foo/newdir'
+    }))
+  })
+
   it('should FDEL correctly', (done) => {
 
     fakeA.msgHandler = (data) => {
@@ -218,10 +237,10 @@ describe('protocol file commands', () => {
       done()
     }
 
-    delete userTree.files['newdir'].files['anotherdir']
+    delete userTree.files['foo'].files['newdir'].files['anotherdir']
     delete userTree.files['readme.txt']
     fakeA.send(new api.Command('FDEL', {
-      files: ['/newdir/anotherdir', '/readme.txt']
+      files: ['/foo/newdir/anotherdir', '/readme.txt']
     }))
   })
 })

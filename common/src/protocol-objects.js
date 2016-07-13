@@ -7,7 +7,9 @@ export const ApiError = {
   SERVERERROR: {code: 4, msg: 'The server failed'},
   BADTREE: {code: 5, msg: 'The tree does not match server reprensentation. Login again.'},
   BADREQUEST: {code: 6, msg: 'The request structure is invalid'},
-  BADPARAMETERS: {code: 7, msg: 'The request parameters are invalid'}
+  BADPARAMETERS: {code: 7, msg: 'The request parameters are invalid'},
+  UNKNOWNREQUEST: {code: 8, msg: 'The request is unknown'},
+  ENOENT: {code: 9, msg: 'No such file or directory'}
 }
 
 export const errWithStack = (err) => {

@@ -99,6 +99,10 @@ export const parse = function(msg, client) {
     'FDEL': del
   }
 
+  if (!command.command in hmap) {
+    return client.answerFailure(command.uid, ApiError.UNKNOWNREQUEST)
+  }
+
   // TODO: catch the goddam exception
   const err = hmap[command.command](command, command.parameters, client, (err) => {
     if (err) client.answerFailure(command.uid, err)

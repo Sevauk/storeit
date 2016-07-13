@@ -76,7 +76,7 @@ export class User {
     if (!takenTree) {
       return api.errWithStack(api.ApiError.BADPARAMETERS)
     }
-    
+
     if (takenTree.code) {
       return takenTree
     }
@@ -113,9 +113,15 @@ export class User {
         return api.errWithStack(api.ApiError.BADREQUEST)
       }
       else {
-        const err = tree.setTree(this.home, p, (tree, name) => delete tree.files[name])
-        if (err !== true)
+          const err = tree.setTree(this.home, p, (tree, name) => {
+          if (!tree.files) {
+            return api.errWithStack(api.ApiError.ENOENT)
+          }
+          return delete tree.files[name]
+        })
+        if (err !== true) {
           return err
+        }
       }
     }
   }
