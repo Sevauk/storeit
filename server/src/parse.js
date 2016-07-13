@@ -20,7 +20,7 @@ const join = function(command, arg, socket, handlerFn) {
     }
 
     user.connectUser(email, socket, (err, usr) => {
-      if (err && err.code === "ENOENT") {
+      if (err && err.code === 'ENOENT') {
         user.createUser(email, (err) => {
           if (err) {
             return handlerFn(protoObjs.ApiError.SERVERERROR)
@@ -90,6 +90,18 @@ const del = (command, arg, client) => {
   recast(command, client)
 }
 
+const resp = (command, arg, client) => {
+
+  if (!command.commandUid) {
+    return logger.debug('client sent invalid response')
+  }
+
+  if (client.responseHandlers[command.commandUid]) {
+    client.responseHandlers[command.commandUid](code, text)
+    delete client.responseHandlers[command.commandUid]
+  }
+}
+
 export const parse = function(msg, client) {
 
   const command = JSON.parse(msg)
@@ -99,11 +111,12 @@ export const parse = function(msg, client) {
     'FADD': add,
     'FUPT': upt,
     'FMOV': mov,
-    'FDEL': del
+    'FDEL': del,
+    'RESP': resp,
   }
 
-  if (!command.command in hmap) {
-    return client.answerFailure(command.uid, ApiError.UNKNOWNREQUEST)
+  if (!(command.command in hmap)) {
+    return client.answerFailure(command.uid, protoObjs.ApiError.UNKNOWNREQUEST)
   }
 
   // TODO: catch the goddam exception

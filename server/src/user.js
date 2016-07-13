@@ -171,8 +171,15 @@ export const disconnectSocket = (client) => {
   }
 
   delete sockets[client.uid]
-  store.storeTable.remove(client.uid)
+  store.removeSocket(client)
   logger.info(`${user.email} has disconnected. ${getStat()}`)
+}
+
+export const getSocketFromUid = (uid) => {
+  const uidStr = uid.toString()
+  if (!sockets[uidStr])
+    return null
+  return sockets[uidStr].sockets[uidStr]
 }
 
 export const connectUser = (email, client, handlerFn) => {

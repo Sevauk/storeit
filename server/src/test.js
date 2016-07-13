@@ -31,7 +31,10 @@ class fakeUser {
     this.msgHandler = msgHandler
 
     this.ws.on('message', (data) => {
-      this.msgHandler(data)
+      const obj = JSON.parse(data)
+
+      if (obj.command === 'RESP')
+        this.msgHandler(obj)
     })
   }
 
@@ -48,25 +51,26 @@ class fakeUser {
   }
 }
 
-const expectOkResponse = (data) => {
-  const obj = JSON.parse(data)
+const expectOkResponse = (obj) => {
 
-  expect(obj.code).to.equal(0)
-  if (obj.code !== 0)
-    console.log(obj.stack)
+  try {
+    expect(obj.code).to.equal(0)
+  }
+  catch (e) {
+    console.log(e)
+    if (obj) {
+      console.log(obj)
+    }
+  }
 }
 
-const expectUsualJoinResponse = (data) => {
+const expectUsualJoinResponse = (obj) => {
 
-  const obj = JSON.parse(data)
-
-  expectOkResponse(data)
+  expectOkResponse(obj)
   expect(obj.parameters.home.path).to.equal('/')
 }
 
-const expectErrorResponse = (data) => {
-  const obj = JSON.parse(data)
-
+const expectErrorResponse = (obj) => {
   expect(obj.code).to.not.equal(0)
   expect(obj.command).to.equal('RESP')
 }
