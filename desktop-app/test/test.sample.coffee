@@ -1,4 +1,5 @@
 (require 'chai').should()
+require './watcher'
 
 describe 'Sample test', ->
   it 'should make a stupid addition', ->
