@@ -17,47 +17,32 @@ class WebSocketManager {
     let navigationManager: NavigationManager
     
     var uidFactory: UidFactory
-
-    var list: UITableView?
     
     init(host: String, port: Int, uidFactory: UidFactory, navigationManager: NavigationManager) {
         self.url = NSURL(string: "ws://\(host):\(port)/")!
         self.ws = WebSocket(url: url)
         self.navigationManager = navigationManager
         self.uidFactory = uidFactory
-        self.list = nil
     }
     
-    func getTableView() -> UITableView? {
-        // TODO: find a maybe better way to get StoreItSynchDirectoryView
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        let mainNavigationController = appDelegate.window?.rootViewController as! UINavigationController
-        let tabBarController = mainNavigationController.viewControllers[1] as! UITabBarController
-        let navigationController = tabBarController.viewControllers![0] as! UINavigationController
-        let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
-        
-        return listView.list
+    func closeMoveToolbar() {
+        self.navigationManager.moveToolBar?.hidden = true
     }
     
-    func updateListView() {
-        if self.list == nil {
-            self.list = self.getTableView()
-        }
-
-        dispatch_async(dispatch_get_main_queue()) {
-            self.list?.reloadData()
+    func updateList() {
+        if let list = self.navigationManager.list {
+            dispatch_async(dispatch_get_main_queue()) {
+                list.reloadData()
+            }
         }
     }
     
     func removeRowAtIndex(index: Int) {
-        if self.list == nil {
-            self.list = self.getTableView()
+        if let list = self.navigationManager.list {
+            let indexPath = NSIndexPath(forRow: index, inSection: 0)
+            
+            list.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
         }
-        
-        let indexPath = NSIndexPath(forRow: index, inSection: 0)
-    	list?.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
-        
-        print(navigationManager.items)
     }
     
     func eventsInitializer(loginFunction: () -> Void, logoutFunction: () -> Void) {
@@ -89,7 +74,7 @@ class WebSocketManager {
                                 
                                 if let files = home?.files {
                                     self.navigationManager.setItems(files)
-                                    self.updateListView()
+                                    self.updateList()
                                 }
                             }
                         }
@@ -110,7 +95,7 @@ class WebSocketManager {
                                         let updateElement = UpdateElement(file: file)
                                         
                                         self.navigationManager.updateTree(updateElement)
-                                        self.updateListView()
+                                        self.updateList()
                                     }
                                 }
                                 // FDEL
@@ -119,11 +104,27 @@ class WebSocketManager {
                                 	
                                     for path in paths {
                                         let updateElement = UpdateElement(path: path)
-
                                         let index = self.navigationManager.updateTree(updateElement)
+                                        
                                         self.removeRowAtIndex(index)
                                     }
                                 }
+                                
+                                // FMOVE
+                                else if (commandType == cmdInfos.FMOV) {
+                                	let movingOptions = self.uidFactory.getObjectForUid(uid) as! MovingOptions
+                                    let updateElementForDeletion = UpdateElement(path: movingOptions.src!)
+                                    let updateElementForAddition = UpdateElement(file: movingOptions.file!)
+                                    
+                                    self.navigationManager.updateTree(updateElementForDeletion)
+                                    self.navigationManager.updateTree(updateElementForAddition)
+                                    
+                                    self.navigationManager.movingOptions = MovingOptions()
+                                    
+                                    self.closeMoveToolbar()
+                                    self.updateList()
+                                }
+
                             }
                         }
                         

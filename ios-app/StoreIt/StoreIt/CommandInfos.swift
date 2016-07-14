@@ -16,7 +16,7 @@ struct CommandInfos {
     let FDEL = "FDEL"
     let FADD = "FADD"
     let FUPT = "FUPT"
-    let FMOV = "FMOVE"
+    let FMOV = "FMOV"
 
     var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV] }
     

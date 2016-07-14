@@ -13,6 +13,14 @@ enum UpdateType {
     case DELETE
 }
 
+class MovingOptions {
+    var isMoving: Bool = false
+    var src: String?
+    var dest: String?
+    var file: File?
+}
+
+
 struct UpdateElement {
     let fileToAdd: File?
     let pathToDelete: String?
@@ -31,6 +39,7 @@ struct UpdateElement {
     }
 }
 
+
 class NavigationManager {
     
     let rootDirTitle: String
@@ -40,6 +49,11 @@ class NavigationManager {
     
     var items: [String]
     private var currentDirectory: [String: File]
+    
+    var list: UITableView?
+    var moveToolBar: UIToolbar?
+    
+	var movingOptions = MovingOptions()
     
     init(rootDirTitle: String, allItems: [String: File]) {
         self.rootDirTitle = rootDirTitle
@@ -58,7 +72,7 @@ class NavigationManager {
     // If the update is on the current directory (the focused one on the list view), we need to refresh
     private func updateCurrentItems(fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
         var index: Int = 0
-        
+
         if (indexes == self.indexes) {
             switch updateElement.updateType {
                 case .ADD:
@@ -75,8 +89,11 @@ class NavigationManager {
                     }
                 }
         }
-        
         return index
+    }
+    
+    func buildCurrentDirectoryPath() -> String {
+        return "/\(self.indexes.joinWithSeparator("/"))"
     }
 
     func buildPath(fileName: String) -> String {
@@ -90,7 +107,7 @@ class NavigationManager {
         return path
     }
     
-    func getFileObjectAtIndex() -> [String: File] {
+    func getFileObjectsAtIndex() -> [String: File] {
         let cpyIndexes = self.indexes
         var cpyStoreItSynchDir: [String: File] = self.storeItSynchDir
         
@@ -102,6 +119,24 @@ class NavigationManager {
         }
         
         return self.storeItSynchDir
+    }
+    
+    func getFileObjInCurrentDir(path: String) -> File? {
+        let fileName = path.componentsSeparatedByString("/").last!
+        return currentDirectory[fileName]
+    }
+    
+    func getFileObjByPath(path: String) -> File? {
+        var components = path.componentsSeparatedByString("/").dropFirst()
+        var cpyStoreItSynchDir: [String: File] = self.storeItSynchDir
+
+        while (components.count != 1) {
+            let first = components.first!
+            cpyStoreItSynchDir = (cpyStoreItSynchDir[first]?.files)!
+            components = components.dropFirst()
+        }
+
+        return cpyStoreItSynchDir[components.first!]
     }
     
     private func rebuildTree(newFile: File, currDir: [String:File], path: [String]) -> [String:File] {
@@ -130,10 +165,10 @@ class NavigationManager {
         let keys: [String] = Array(storeit.keys)
         
         for key in keys {
-            let firstElementOfPath = path.first!
-            
-            if (key == firstElementOfPath) {
-                insertUpdateInTree(&storeit[key]!.files, updateElement: updateElement, path: Array(path.dropFirst()))
+            if let firstElementOfPath = path.first {
+                if (key == firstElementOfPath) {
+                    insertUpdateInTree(&storeit[key]!.files, updateElement: updateElement, path: Array(path.dropFirst()))
+                }
             }
         }
         
@@ -164,7 +199,6 @@ class NavigationManager {
         
         if let unwrapPath = path {
             let splitPath = Array(unwrapPath.componentsSeparatedByString("/").dropFirst())
-            
             self.insertUpdateInTree(&self.storeItSynchDir, updateElement: updateElement, path: splitPath)
             index = self.updateCurrentItems(splitPath.last!, updateElement: updateElement, indexes: Array(splitPath.dropLast()))
         }
@@ -193,7 +227,7 @@ class NavigationManager {
         let targetName = self.getTargetName(target)
         
         self.indexes.append(targetName)
-        self.currentDirectory = self.getFileObjectAtIndex()
+        self.currentDirectory = self.getFileObjectsAtIndex()
         self.items = Array(target.files.keys)
 
         return targetName
@@ -201,7 +235,7 @@ class NavigationManager {
     
     func goPreviousDir() {
         self.indexes.popLast()
-        self.currentDirectory = self.getFileObjectAtIndex()
+        self.currentDirectory = self.getFileObjectsAtIndex()
         self.items = Array(self.currentDirectory.keys)
     }
     

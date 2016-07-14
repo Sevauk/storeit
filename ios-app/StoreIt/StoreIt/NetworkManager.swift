@@ -78,4 +78,14 @@ class NetworkManager {
         self.WSManager.sendRequest(jsonFuptCommand!, completion: completion)
     }
     
+    func fmove(movingOptions: MovingOptions, completion: (() -> ())?) {
+        let parameters = FmovParameters(src: movingOptions.src!, dest: movingOptions.dest!)
+        let fmovCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.FMOV, parameters: parameters)
+        let jsonFmovCommand = Mapper().toJSONString(fmovCommand)
+        
+        self.uidFactory.addNewWaitingCommand(cmdInfos.FMOV, objects: movingOptions)
+        
+        self.WSManager.sendRequest(jsonFmovCommand!, completion: completion)
+    }
+    
 }

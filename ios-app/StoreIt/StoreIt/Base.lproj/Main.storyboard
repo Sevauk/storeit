@@ -100,7 +100,7 @@
                             <constraint firstItem="beB-rn-Xlg" firstAttribute="top" secondItem="ago-Qi-m57" secondAttribute="bottom" constant="60" id="zLZ-fQ-gP9"/>
                         </constraints>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Item" id="RaQ-aQ-2qY"/>
+                    <tabBarItem key="tabBarItem" title="Profil" id="RaQ-aQ-2qY"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="WiX-RC-CxC" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <exit id="4tw-pq-wux" userLabel="Exit" sceneMemberID="exit"/>
@@ -176,11 +176,11 @@
             </objects>
             <point key="canvasLocation" x="796" y="-428"/>
         </scene>
-        <!--Item-->
+        <!--Dossier StoreIt-->
         <scene sceneID="1Xa-cG-M6I">
             <objects>
                 <navigationController id="yzH-Dm-ieM" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Item" id="H3d-e6-xqj"/>
+                    <tabBarItem key="tabBarItem" title="Dossier StoreIt" id="H3d-e6-xqj"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="nf0-De-ASy">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -221,20 +221,30 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Eet-Vy-MsS">
-                                                    <rect key="frame" x="28" y="10" width="544" height="21"/>
+                                                    <rect key="frame" x="28" y="10" width="496" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vld-hp-yXn">
+                                                    <rect key="frame" x="532" y="6" width="38" height="30"/>
+                                                    <state key="normal" title="Move"/>
+                                                    <connections>
+                                                        <action selector="beginMoveAction:" destination="8WT-j1-5R7" eventType="touchUpInside" id="bDE-UR-Qey"/>
+                                                    </connections>
+                                                </button>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerY" secondItem="od4-5O-pHa" secondAttribute="centerY" id="340-mh-i08"/>
+                                                <constraint firstItem="vld-hp-yXn" firstAttribute="baseline" secondItem="Eet-Vy-MsS" secondAttribute="baseline" id="8bR-td-9kc"/>
                                                 <constraint firstItem="Eet-Vy-MsS" firstAttribute="leading" secondItem="od4-5O-pHa" secondAttribute="leadingMargin" constant="20" id="DF4-3E-pue"/>
-                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerX" secondItem="od4-5O-pHa" secondAttribute="centerX" id="aDe-oM-ab7"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="vld-hp-yXn" secondAttribute="trailing" constant="22" id="Q8a-tx-yDf"/>
+                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerX" secondItem="od4-5O-pHa" secondAttribute="centerX" constant="-24" id="aDe-oM-ab7"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="itemName" destination="Eet-Vy-MsS" id="5qe-jC-SaA"/>
+                                            <outlet property="moveButton" destination="vld-hp-yXn" id="Q3k-jt-5pV"/>
                                             <segue destination="8WT-j1-5R7" kind="show" identifier="nextDirSegue" animates="NO" id="22C-oH-eAI"/>
                                         </connections>
                                     </tableViewCell>
@@ -246,32 +256,61 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QxY-hc-CM0">
-                                                    <rect key="frame" x="27" y="10" width="547" height="21"/>
+                                                    <rect key="frame" x="27" y="10" width="497" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
+                                                    <rect key="frame" x="532" y="6" width="38" height="30"/>
+                                                    <state key="normal" title="Move"/>
+                                                    <connections>
+                                                        <action selector="beginMoveAction:" destination="8WT-j1-5R7" eventType="touchUpInside" id="ziI-gF-ylT"/>
+                                                    </connections>
+                                                </button>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="E3b-TD-tbm" firstAttribute="baseline" secondItem="QxY-hc-CM0" secondAttribute="baseline" id="5E2-yT-fU6"/>
                                                 <constraint firstItem="QxY-hc-CM0" firstAttribute="centerY" secondItem="Mst-rY-CTU" secondAttribute="centerY" id="Dw1-uQ-S06"/>
                                                 <constraint firstItem="QxY-hc-CM0" firstAttribute="leading" secondItem="Mst-rY-CTU" secondAttribute="leadingMargin" constant="19" id="Eve-tH-Y8Q"/>
-                                                <constraint firstItem="QxY-hc-CM0" firstAttribute="centerX" secondItem="Mst-rY-CTU" secondAttribute="centerX" id="aN9-lH-gNH"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="E3b-TD-tbm" secondAttribute="trailing" constant="22" id="UNV-4G-eIC"/>
+                                                <constraint firstItem="QxY-hc-CM0" firstAttribute="centerX" secondItem="Mst-rY-CTU" secondAttribute="centerX" constant="-24.5" id="aN9-lH-gNH"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="itemName" destination="QxY-hc-CM0" id="FNK-Tt-tTD"/>
+                                            <outlet property="moveButton" destination="E3b-TD-tbm" id="MfJ-uz-Pef"/>
                                             <segue destination="Zeh-eu-bbm" kind="show" identifier="showFileSegue" animates="NO" id="BwH-I2-qrw"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lSG-A4-8Rg">
+                                <rect key="frame" x="0.0" y="512" width="600" height="44"/>
+                                <items>
+                                    <barButtonItem title="Déplacer ici" id="TbE-Lg-VuX">
+                                        <connections>
+                                            <action selector="moveInCurrentDirectory:" destination="8WT-j1-5R7" id="7VD-Wa-vwa"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="lQH-mi-o8S"/>
+                                    <barButtonItem title="Annuler" id="xGH-Rw-7XL">
+                                        <connections>
+                                            <action selector="cancelMove:" destination="8WT-j1-5R7" id="9hj-bw-ek8"/>
+                                        </connections>
+                                    </barButtonItem>
+                                </items>
+                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="2DC-Ug-Ua6" firstAttribute="top" secondItem="8og-Uk-HRO" secondAttribute="bottom" id="Jml-Mu-pZ0"/>
-                            <constraint firstAttribute="bottom" secondItem="2DC-Ug-Ua6" secondAttribute="bottom" id="fis-TE-0gP"/>
-                            <constraint firstItem="2DC-Ug-Ua6" firstAttribute="leading" secondItem="CcL-LK-0if" secondAttribute="leading" id="kOH-dg-Lfo"/>
-                            <constraint firstAttribute="trailing" secondItem="2DC-Ug-Ua6" secondAttribute="trailing" id="vN7-Hh-EbN"/>
+                            <constraint firstItem="2DC-Ug-Ua6" firstAttribute="trailing" secondItem="lSG-A4-8Rg" secondAttribute="trailing" id="Ayp-6a-2d7"/>
+                            <constraint firstItem="2DC-Ug-Ua6" firstAttribute="leading" secondItem="lSG-A4-8Rg" secondAttribute="leading" id="Idq-Ce-jgO"/>
+                            <constraint firstItem="tg8-Or-8oJ" firstAttribute="top" secondItem="lSG-A4-8Rg" secondAttribute="bottom" id="aA2-0E-1fi"/>
+                            <constraint firstItem="2DC-Ug-Ua6" firstAttribute="top" secondItem="8og-Uk-HRO" secondAttribute="bottom" id="dIR-Xc-Qd6"/>
+                            <constraint firstItem="2DC-Ug-Ua6" firstAttribute="leading" secondItem="CcL-LK-0if" secondAttribute="leading" id="f3X-hZ-S2c"/>
+                            <constraint firstAttribute="trailing" secondItem="2DC-Ug-Ua6" secondAttribute="trailing" id="rOK-nE-bzb"/>
+                            <constraint firstAttribute="bottom" secondItem="2DC-Ug-Ua6" secondAttribute="bottom" id="zHF-mz-X9H"/>
                         </constraints>
                     </view>
                     <tabBarItem key="tabBarItem" title="Item" id="LZY-Ty-zno"/>
@@ -280,6 +319,7 @@
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="list" destination="2DC-Ug-Ua6" id="lqj-Ff-fXJ"/>
+                        <outlet property="moveToolBar" destination="lSG-A4-8Rg" id="g5o-l0-dmG"/>
                         <outlet property="tabBarItem" destination="LZY-Ty-zno" id="kVQ-J3-WoE"/>
                     </connections>
                 </viewController>
@@ -323,7 +363,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Item" id="FMe-TU-7wG"/>
+                    <tabBarItem key="tabBarItem" title="Paramètres" id="FMe-TU-7wG"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hXx-U8-KGa" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

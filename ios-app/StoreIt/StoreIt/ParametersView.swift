@@ -13,8 +13,4 @@ import UIKit
 
 class ParametersView: UIViewController {
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        self.tabBarItem = UITabBarItem(title: "Paramètres", image: nil, tag: 2)
-    }
 }

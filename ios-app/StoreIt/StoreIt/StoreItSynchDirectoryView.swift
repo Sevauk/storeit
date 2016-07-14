@@ -9,13 +9,13 @@
 import UIKit
 import Photos
 import ObjectMapper
-import PreviewTransition
 
 // TODO: maybe import interface texts from a file for different languages ?
 
 class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     @IBOutlet weak var list: UITableView!
+    @IBOutlet weak var moveToolBar: UIToolbar!
     
     var storeitActionSheet: StoreitActionSheet?
     
@@ -38,14 +38,6 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         self.list.dataSource = self
 
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: #selector(uploadOptions))
-
-        // if we're at root dir, we can't go back to login view with back navigation controller button
-        
-        if (self.navigationItem.title == navigationManager!.rootDirTitle) {
-            self.navigationItem.hidesBackButton = true
-        } else {
-            self.navigationItem.hidesBackButton = false
-        }
         
         self.storeitActionSheet = StoreitActionSheet(title: "Choisissez une option", message: nil)
         self.addActionsToActionSheet()
@@ -57,6 +49,15 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         if (parent == nil) {
             self.navigationManager?.goPreviousDir()
         }
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+    	self.moveToolBar.hidden = !(self.navigationManager?.movingOptions.isMoving)!
+        
+        self.navigationManager?.list = self.list
+        self.navigationManager?.moveToolBar = self.moveToolBar
+        self.list.reloadData()
     }
     
     override func didReceiveMemoryWarning() {
@@ -87,6 +88,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             listView.fileManager = self.fileManager
             listView.navigationManager = self.navigationManager
             listView.ipfsManager = self.ipfsManager
+            listView.navigationManager?.movingOptions.isMoving = (self.navigationManager?.movingOptions.isMoving)!
         }
         else if (segue.identifier == "showFileSegue") {
             let fileView = segue.destinationViewController as! FileView
@@ -129,10 +131,12 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         if (isDir) {
             let cell = self.list.dequeueReusableCellWithIdentifier(CellIdentifiers.Directory.rawValue) as! DirectoryCell
             cell.itemName.text = "\(items[indexPath.row])"
+            cell.moveButton.tag = indexPath.row
             return cell
         } else {
             let cell = self.list.dequeueReusableCellWithIdentifier(CellIdentifiers.File.rawValue) as! FillCell
             cell.itemName.text = "\(items[indexPath.row])"
+            cell.moveButton.tag = indexPath.row
             return cell
         }
     }
@@ -141,9 +145,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         if editingStyle == UITableViewCellEditingStyle.Delete {
             if let selectedFile = navigationManager?.getSelectedFileAtRow(indexPath) {
-                if let pathsToDelete: [String] = fileManager?.getFilePathsInFileObject(selectedFile, paths: []) {
-                    self.networkManager?.fdel(pathsToDelete, completion: nil)
-                }
+                self.networkManager?.fdel([selectedFile.path], completion: nil)
             }
         }
     }
@@ -161,6 +163,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
                 {
                     let filePath = info![NSString(string: "PHImageFileURLKey")] as! NSURL
                     
+                    // Maybe begin some loading in interface here...
                     self.ipfsManager?.add(filePath) {
                         (
                         let data, let response, let error) in
@@ -239,5 +242,37 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     
     func uploadOptions() {
         self.presentViewController(self.storeitActionSheet!.storeitActionSheet, animated: true, completion: nil)
+    }
+    
+    // MARK: move feature
+    
+    @IBAction func beginMoveAction(sender: AnyObject) {
+        if let index = sender.tag {
+            if let selectedFile = navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
+                self.moveToolBar.hidden = false
+                self.navigationManager?.movingOptions.isMoving = true
+                self.navigationManager?.movingOptions.src = selectedFile.path
+                self.navigationManager?.movingOptions.file = self.navigationManager?.getFileObjInCurrentDir(selectedFile.path)
+            }
+        }
+    }
+    
+    @IBAction func moveInCurrentDirectory(sender: AnyObject) {
+        if let src = navigationManager?.movingOptions.src {
+            let targetPath = navigationManager?.buildCurrentDirectoryPath()
+			let fileName = src.componentsSeparatedByString("/").last!
+            let dest = "\(targetPath!)\(targetPath?.characters.last! == "/" ? "" : "/" )\(fileName)"
+            
+            self.navigationManager?.movingOptions.file?.path = dest
+            self.navigationManager?.movingOptions.dest = dest
+            
+            self.networkManager?.fmove((self.navigationManager?.movingOptions)!, completion: nil)
+        }
+        
+    }
+    
+    @IBAction func cancelMove(sender: AnyObject) {
+        self.moveToolBar.hidden = true
+        self.navigationManager?.movingOptions = MovingOptions()
     }
 }

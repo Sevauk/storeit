@@ -41,7 +41,6 @@ class FileManager {
         // Not empty dir
         else {
             for (_, file) in file.files {
-                print(file.path)
                 if file.isDir {
                     newPaths.appendContentsOf(getFilePathsInFileObject(file, paths: newPaths))
                 } else {
