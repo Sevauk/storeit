@@ -211,10 +211,8 @@ This object describe a file or a directory.
 	"metadata": metadata,
 	"IPFSHash": "IPFS hash of all the data in the file",
 	"isDir": true,
-	"files": [
-		FILEObject,
-		FILEObject,
-		// ...
-	]
-}
-```
+	"files": {
+		"foo.txt": FILEObject,
+		"someDirectory": FILEObject,
+	}
+}```
