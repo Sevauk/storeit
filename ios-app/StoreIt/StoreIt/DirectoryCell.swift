@@ -9,6 +9,6 @@
 import UIKit
 
 class DirectoryCell: UITableViewCell {
-    @IBOutlet weak var moveButton: UIButton!
+    @IBOutlet weak var contextualMenu: UIButton!
     @IBOutlet weak var itemName: UILabel!
 }

@@ -8,9 +8,13 @@
 
 import Foundation
 
+typealias src = String
+typealias dest = String
+
 enum UpdateType {
     case ADD
     case DELETE
+    case RENAME
 }
 
 class MovingOptions {
@@ -22,20 +26,27 @@ class MovingOptions {
 
 
 struct UpdateElement {
-    let fileToAdd: File?
-    let pathToDelete: String?
+    
     let updateType: UpdateType
     
+    var fileToAdd: File? = nil
+    var pathToDelete: String? = nil
+    var pathToRenameWith: (src, dest)? = nil
+    
     init(file: File) {
-        fileToAdd = file
-        pathToDelete = nil
         updateType = UpdateType.ADD
+        fileToAdd = file
     }
     
     init(path: String) {
-     	fileToAdd = nil
+     	updateType = UpdateType.DELETE
         pathToDelete = path
-        updateType = UpdateType.DELETE
+        
+    }
+    
+    init(src: String, dest: String) {
+        updateType = UpdateType.RENAME
+        pathToRenameWith = (src, dest)
     }
 }
 
@@ -87,7 +98,24 @@ class NavigationManager {
                         self.items.removeAtIndex(index)
                         self.currentDirectory.removeValueForKey(fileName)
                     }
+            	case .RENAME:
+                    let tmpIndex = items.indexOf(fileName)
+
+                    if (tmpIndex != nil) {
+                        if let newFileName = updateElement.pathToRenameWith?.1.componentsSeparatedByString("/").last {
+                            index = tmpIndex!
+                            
+                            // Remove old item
+                            self.items.removeAtIndex(index)
+                            let file = self.currentDirectory.removeValueForKey(fileName)
+                            
+                            // Add new item
+                            self.items.insert(newFileName, atIndex: index)
+                            self.currentDirectory[newFileName] = file
+                            self.currentDirectory[newFileName]?.path = (updateElement.pathToRenameWith?.1)!
+                        }
                 }
+            }
         }
         return index
     }
@@ -178,9 +206,17 @@ class NavigationManager {
             switch updateElement.updateType {
                 case .ADD:
                     storeit[fileName] = updateElement.fileToAdd!
-                    
                 case .DELETE:
                     storeit.removeValueForKey(fileName)
+                case .RENAME:
+                    let file = storeit.removeValueForKey(fileName)
+                    
+                    if let newPath = updateElement.pathToRenameWith?.1 {
+                        if let newName = newPath.componentsSeparatedByString("/").last {
+                            storeit[newName] = file
+                            storeit[newName]?.path = newPath
+                        }
+                    }
             }
         }
     }
@@ -193,12 +229,15 @@ class NavigationManager {
             	path = updateElement.fileToAdd?.path
             case .DELETE:
             	path = updateElement.pathToDelete
-            }
+            case .RENAME:
+            	path = updateElement.pathToRenameWith?.0
+        }
         
         var index = 0
         
         if let unwrapPath = path {
             let splitPath = Array(unwrapPath.componentsSeparatedByString("/").dropFirst())
+            
             self.insertUpdateInTree(&self.storeItSynchDir, updateElement: updateElement, path: splitPath)
             index = self.updateCurrentItems(splitPath.last!, updateElement: updateElement, indexes: Array(splitPath.dropLast()))
         }

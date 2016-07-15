@@ -113,15 +113,21 @@ class WebSocketManager {
                                 // FMOVE
                                 else if (commandType == cmdInfos.FMOV) {
                                 	let movingOptions = self.uidFactory.getObjectForUid(uid) as! MovingOptions
-                                    let updateElementForDeletion = UpdateElement(path: movingOptions.src!)
-                                    let updateElementForAddition = UpdateElement(file: movingOptions.file!)
                                     
-                                    self.navigationManager.updateTree(updateElementForDeletion)
-                                    self.navigationManager.updateTree(updateElementForAddition)
-                                    
-                                    self.navigationManager.movingOptions = MovingOptions()
-                                    
-                                    self.closeMoveToolbar()
+                                    if (movingOptions.isMoving) {
+                                        let updateElementForDeletion = UpdateElement(path: movingOptions.src!)
+                                        let updateElementForAddition = UpdateElement(file: movingOptions.file!)
+                                        
+                                        self.navigationManager.updateTree(updateElementForDeletion)
+                                        self.navigationManager.updateTree(updateElementForAddition)
+                                        
+                                        self.navigationManager.movingOptions = MovingOptions()
+                                        
+                                        self.closeMoveToolbar()
+                                    } else {
+                                    	let updateElementForRename = UpdateElement(src: movingOptions.src!, dest: movingOptions.dest!)
+                                        self.navigationManager.updateTree(updateElementForRename)
+                                    }
                                     self.updateList()
                                 }
 

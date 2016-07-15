@@ -17,6 +17,11 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     @IBOutlet weak var list: UITableView!
     @IBOutlet weak var moveToolBar: UIToolbar!
     
+    // Last opened action sheet (used to determined which cell is selected when tapping button)
+    // TODO: maybe find a better way
+    var lastSelectedActionSheetForFile: Int?
+    
+    var contextualMenuActionSheet: ContextualMenuActionSheet?
     var storeitActionSheet: StoreitActionSheet?
     
     var connectionType: ConnectionType? = nil
@@ -39,8 +44,11 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
 
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: #selector(uploadOptions))
         
+        // TODO: Generic class for action sheets !!!
         self.storeitActionSheet = StoreitActionSheet(title: "Choisissez une option", message: nil)
-        self.addActionsToActionSheet()
+        self.contextualMenuActionSheet = ContextualMenuActionSheet(title: "Choisissez une option", message: nil)
+
+        self.addActionsToActionSheets()
     }
     
     // function triggered when back button of navigation bar is pressed
@@ -131,12 +139,12 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         if (isDir) {
             let cell = self.list.dequeueReusableCellWithIdentifier(CellIdentifiers.Directory.rawValue) as! DirectoryCell
             cell.itemName.text = "\(items[indexPath.row])"
-            cell.moveButton.tag = indexPath.row
+            cell.contextualMenu.tag = indexPath.row
             return cell
         } else {
             let cell = self.list.dequeueReusableCellWithIdentifier(CellIdentifiers.File.rawValue) as! FillCell
             cell.itemName.text = "\(items[indexPath.row])"
-            cell.moveButton.tag = indexPath.row
+            cell.contextualMenu.tag = indexPath.row
             return cell
         }
     }
@@ -233,29 +241,86 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         }
     }
     
-    func addActionsToActionSheet() {
-        self.storeitActionSheet!.addActionToUploadActionSheet("Annuler", style: .Cancel, handler: nil)
-        self.storeitActionSheet!.addActionToUploadActionSheet("Créer un dossier", style: .Default, handler: createNewDirectory)
-        self.storeitActionSheet!.addActionToUploadActionSheet("Importer depuis mes photos et vidéos", style: .Default, handler: pickImageFromLibrary)
-        self.storeitActionSheet!.addActionToUploadActionSheet("Prendre avec l'appareil photo", style: .Default, handler: takeImageWithCamera)
+    func moveFile(action: UIAlertAction) -> Void {
+        if let index = self.lastSelectedActionSheetForFile {
+        	if let selectedFile = self.navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
+                self.moveToolBar.hidden = false
+                self.navigationManager?.movingOptions.isMoving = true
+                self.navigationManager?.movingOptions.src = selectedFile.path
+                self.navigationManager?.movingOptions.file = self.navigationManager?.getFileObjInCurrentDir(selectedFile.path)
+            
+                self.lastSelectedActionSheetForFile = nil
+            }
+        }
+    }
+    
+    func deleteFile(action: UIAlertAction) -> Void {
+        
+    }
+    
+    func renameFile(action: UIAlertAction) -> Void {
+        let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .Alert)
+        
+        alert.addTextFieldWithConfigurationHandler(nil)
+        
+        alert.addAction(UIAlertAction(title: "Annuler", style: .Cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
+            let input = alert.textFields![0] as UITextField
+            
+            // TODO: check input
+	
+            if let text = input.text {
+                if let index = self.lastSelectedActionSheetForFile {
+                    if let selectedFile = self.navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
+                        
+                        var components = selectedFile.path.componentsSeparatedByString("/").dropFirst()
+                        components = components.dropLast()
+                        components.append(text)
+                        
+                        let newPath = "/" + components.joinWithSeparator("/")
+                        self.navigationManager?.movingOptions.src = selectedFile.path
+                        self.navigationManager?.movingOptions.dest = newPath
+                        
+                        self.networkManager?.fmove((self.navigationManager?.movingOptions)!, completion: nil)
+                        
+                        self.lastSelectedActionSheetForFile = nil
+                    }
+                }
+            }
+        }))
+        
+        self.presentViewController(alert, animated: true, completion: nil)
+    }
+    
+    func addActionsToActionSheets() {
+        self.storeitActionSheet?.addActionToUploadActionSheet("Annuler", style: .Cancel, handler: nil)
+        self.storeitActionSheet?.addActionToUploadActionSheet("Créer un dossier", style: .Default, handler: createNewDirectory)
+        self.storeitActionSheet?.addActionToUploadActionSheet("Importer depuis mes photos et vidéos", style: .Default, handler: pickImageFromLibrary)
+        self.storeitActionSheet?.addActionToUploadActionSheet("Prendre avec l'appareil photo", style: .Default, handler: takeImageWithCamera)
+        
+        self.contextualMenuActionSheet?.addActionToFileActionSheet("Annuler", style: .Cancel) { _ in
+            self.lastSelectedActionSheetForFile = nil
+        }
+        self.contextualMenuActionSheet?.addActionToFileActionSheet("Renommer", style: .Default, handler: renameFile)
+        self.contextualMenuActionSheet?.addActionToFileActionSheet("Déplacer", style: .Default, handler: moveFile)
+        self.contextualMenuActionSheet?.addActionToFileActionSheet("Supprimer", style: .Default, handler: deleteFile)
     }
     
     func uploadOptions() {
         self.presentViewController(self.storeitActionSheet!.storeitActionSheet, animated: true, completion: nil)
     }
     
-    // MARK: move feature
-    
-    @IBAction func beginMoveAction(sender: AnyObject) {
-        if let index = sender.tag {
-            if let selectedFile = navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
-                self.moveToolBar.hidden = false
-                self.navigationManager?.movingOptions.isMoving = true
-                self.navigationManager?.movingOptions.src = selectedFile.path
-                self.navigationManager?.movingOptions.file = self.navigationManager?.getFileObjInCurrentDir(selectedFile.path)
-            }
-        }
+    func openContextualMenu() {
+        self.presentViewController(self.contextualMenuActionSheet!.contextualMenuActionSheet, animated: true, completion: nil)
     }
+    
+    @IBAction func openContextualMenu(sender: AnyObject) {
+        self.lastSelectedActionSheetForFile = sender.tag
+        self.openContextualMenu()
+    }
+    
+    
+    // MARK: move feature
     
     @IBAction func moveInCurrentDirectory(sender: AnyObject) {
         if let src = navigationManager?.movingOptions.src {

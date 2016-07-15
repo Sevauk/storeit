@@ -227,10 +227,10 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vld-hp-yXn">
-                                                    <rect key="frame" x="532" y="6" width="38" height="30"/>
-                                                    <state key="normal" title="Move"/>
+                                                    <rect key="frame" x="540" y="6" width="30" height="30"/>
+                                                    <state key="normal" title="Opt"/>
                                                     <connections>
-                                                        <action selector="beginMoveAction:" destination="8WT-j1-5R7" eventType="touchUpInside" id="bDE-UR-Qey"/>
+                                                        <action selector="openContextualMenu:" destination="8WT-j1-5R7" eventType="touchUpInside" id="jxA-Et-OZM"/>
                                                     </connections>
                                                 </button>
                                             </subviews>
@@ -243,8 +243,8 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="contextualMenu" destination="vld-hp-yXn" id="tg9-dh-Pg3"/>
                                             <outlet property="itemName" destination="Eet-Vy-MsS" id="5qe-jC-SaA"/>
-                                            <outlet property="moveButton" destination="vld-hp-yXn" id="Q3k-jt-5pV"/>
                                             <segue destination="8WT-j1-5R7" kind="show" identifier="nextDirSegue" animates="NO" id="22C-oH-eAI"/>
                                         </connections>
                                     </tableViewCell>
@@ -262,10 +262,10 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
-                                                    <rect key="frame" x="532" y="6" width="38" height="30"/>
-                                                    <state key="normal" title="Move"/>
+                                                    <rect key="frame" x="540" y="6" width="30" height="30"/>
+                                                    <state key="normal" title="Opt"/>
                                                     <connections>
-                                                        <action selector="beginMoveAction:" destination="8WT-j1-5R7" eventType="touchUpInside" id="ziI-gF-ylT"/>
+                                                        <action selector="openContextualMenu:" destination="8WT-j1-5R7" eventType="touchUpInside" id="GFN-zo-K0L"/>
                                                     </connections>
                                                 </button>
                                             </subviews>
@@ -278,8 +278,8 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="contextualMenu" destination="E3b-TD-tbm" id="NUS-g1-3fc"/>
                                             <outlet property="itemName" destination="QxY-hc-CM0" id="FNK-Tt-tTD"/>
-                                            <outlet property="moveButton" destination="E3b-TD-tbm" id="MfJ-uz-Pef"/>
                                             <segue destination="Zeh-eu-bbm" kind="show" identifier="showFileSegue" animates="NO" id="BwH-I2-qrw"/>
                                         </connections>
                                     </tableViewCell>
