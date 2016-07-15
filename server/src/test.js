@@ -80,7 +80,12 @@ let fakeB = undefined
 
 describe('simple connection', () => {
 
-  fs.unlinkSync('./storeit-users/adrien.morel@me.com')
+  try {
+    fs.unlinkSync('./storeit-users/adrien.morel@me.com')
+  }
+  catch (err) {
+    console.log('nothing to remove')
+  }
 
   it('should get JOIN response', (done) => {
     fakeA = new fakeUser('developer', (data) => {

@@ -6,9 +6,14 @@ const oauth = oauth2('v2')
 
 export const verifyUserToken = (authService, accessToken, handlerFn) => {
 
-  if (accessToken === 'developer') {
-    return handlerFn(null, 'adrien.morel@me.com')
+  const devlpr = 'developer'
+  if (accessToken.substr(0, devlpr.length) === 'developer') {
+    let idx = parseInt(accessToken.substr(devlpr.length))
+    if (isNaN(idx))
+      idx = ''
+    return handlerFn(null, 'adrien.morel' + idx + '@me.com')
   }
+
   if (authService === 'gg') {
     return oauth.userinfo.get({'access_token': accessToken}, (err, response) => {
       if (err) {

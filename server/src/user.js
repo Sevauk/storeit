@@ -5,11 +5,19 @@ import * as tree from './common/tree.js'
 import * as store from './store.js'
 import {logger} from './common/log.js'
 
-let usersDir = 'storeit-users' + path.sep
+let usersDir = null
 
 export const setUsersDir = (name) => {
   usersDir = name
+  try {
+    fs.mkdirSync(name)
+  }
+  catch(e) {
+    logger.debug('userdir already there')
+  }
 }
+
+setUsersDir('storeit-users' + path.sep)
 
 export const makeBasicHome = () => {
 
