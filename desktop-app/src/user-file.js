@@ -1,14 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import {logger} from '../lib/log'
 
 let storeDir = './storeit'
 
 export let makeFullPath = (filePath) => path.join(storeDir, filePath)
-
-let setStoreDir = (dirPath) => {
-  storeDir = dirPath
-}
 
 let fileCreate = (filePath) => {
   return new Promise((resolve, reject) => {
@@ -49,7 +44,12 @@ let fileMove = (src, dst) => {
 }
 
 export default {
-  setStoreDir,
+  setStoreDir(dirPath) {
+    storeDir = dirPath
+  },
+  getStoreDir() {
+    return storeDir
+  },
   create: fileCreate,
   // update: fileUpdate,
   del: fileDelete,

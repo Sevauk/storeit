@@ -3,7 +3,8 @@ import WebSocket from 'ws'
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file'
 import {logger} from '../lib/log'
-import {Command} from '../lib/protocol-objects'
+import Watcher from './watcher'
+import {Command, FileObj} from '../lib/protocol-objects'
 
 const MAX_RECO_TIME = 4
 
@@ -11,9 +12,10 @@ export default class Client {
 
   constructor() {
     this.recoTime = 1
-    this.customHandlers = {}
+    this.responseHandlers = {} // custom server response handlers
     this.connect()
-
+    this.fsWatcher = new Watcher(userFile.getStoreDir())
+    this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
   auth(type) {
@@ -63,16 +65,16 @@ export default class Client {
 
   addResponseHandler(uid, listener) {
     logger.debug('attaching response handler for command', uid)
-    this.customHandlers[uid] = listener
+    this.responseHandlers[uid] = listener
   }
 
   handleResponse(res) {
-    let handler = this.customHandlers[res.commandUid]
+    let handler = this.responseHandlers[res.commandUid]
     if (handler != null) {
-      this.customHandlers[res.commandUid] = null
+      this.responseHandlers[res.commandUid] = null
     }
     else {
-      handler = this['recv' + res.command] // set to default handler
+      handler = this[`recv${res.command}`] // set to default handler
     }
 
     if (handler == null) {
@@ -134,7 +136,8 @@ export default class Client {
   }
 
   sendFADD(files) {
-
+    // TODO: IPFS add here
+    // then: get IPFSHash
     return this.send('FADD', {files})
   }
 
@@ -148,6 +151,17 @@ export default class Client {
 
   sendFMOV(src, dst) {
     return this.send('FMOV', {src, dst})
+  }
+
+  handleFsEvent(ev) {
+    let handler = this[`send${ev.type}`]
+    if (handler) {
+      let file = new FileObj() // TODO
+      return handler(file)
+
+      // TODO: manage FMOV
+    }
+    else logger.warn(`[FileWatcher] unhandled event ${ev}`)
   }
 
   getRemoteTree(files) {

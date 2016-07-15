@@ -6,45 +6,46 @@ const STORE_NAME = '.storeit'
 export class EventType {
   constructor(type, path, stats={}) {
     this.path = path
-    this.stats = stats
+    this.meta = stats
     switch (type) {
     case 'add':
       Object.assign(this, {
-        fileKind: 'file',
-        type: 'add'
+        isDir: false,
+        type: 'FADD'
       })
       break
     case 'addDir':
       Object.assign(this, {
-        fileKind: 'directory',
-        type: 'add'
+        isDir: true,
+        type: 'FADD'
       })
       break
     case 'unlink':
       Object.assign(this, {
-        fileKind: 'file',
-        type: 'remove'
+        isDir: false,
+        type: 'FDEL'
       })
       break
     case 'unlinkDir':
       Object.assign(this, {
-        fileKind: 'directory',
-        type: 'remove'
+        isDir: true,
+        type: 'FDEL'
       })
       break
     case 'change':
       Object.assign({
-        fileKind: 'file',
-        type: 'update'
+        isDir: false,
+        type: 'FUPT'
       })
       break
     default:
+      logger.error('error here')
       throw {msg: 'Unexpected error occured'}
     }
   }
 }
 
-class Watcher {
+export default class Watcher {
   constructor(dirPath) {
     this.handlers = {}
     this.ignoredEvents = []
@@ -61,9 +62,10 @@ class Watcher {
       this.watcher
         .on('add', (path, stats) => this.listener('add', path, stats))
         .on('change', (path, stats) => this.listener('change', path, stats))
-        .on('unlink', (path, stats) => this.listener('unlink', stats))
-        .on('addDir', (path, stats) => this.listener('addDir', stats))
-        .on('unlinkDir', (path, stats) => this.listener('unlinkDir', stats))
+        .on('unlink', (path, stats) => this.listener('unlink', path, stats))
+        .on('addDir', (path, stats) => this.listener('addDir', path, stats))
+        .on('unlinkDir', (path, stats) =>
+          this.listener('unlinkDir', path, stats))
     })
   }
 
@@ -72,9 +74,7 @@ class Watcher {
     logger.log(`[FileWatcher] ${ev.type.toUpperCase()} ${ev.fileKind} ${path}`)
 
     if (!this.ignoreEvent(ev)) {
-      let handler = this.handlers[ev.type]
-      if (handler) return handler(ev)
-      else logger.warn(`[FileWatcher] unhandled event ${ev}`)
+      return this.handler(ev)
     }
     return null
   }
@@ -83,8 +83,8 @@ class Watcher {
     return false
   }
 
-  setListener(eventType, listener) {
-    this.handlers[eventType] = listener
+  setEventHandler(listener) {
+    this.handler = listener
   }
 
   pushIgnoreEvent(ev) {
