@@ -141,8 +141,8 @@ describe('protocol file commands', () => {
 
   it('should FADD correctly', (done) => {
 
-    const FADDContent = api.makeFileObj('/foo', null, {
-      'bar.txt': api.makeFileObj('/foo/bar.txt')
+    const FADDContent = new api.FileObj('/foo', null, {
+      'bar.txt': new api.FileObj('/foo/bar.txt')
     })
 
     fakeA.msgHandler = (data) => {
@@ -196,10 +196,10 @@ describe('protocol file commands', () => {
       }
     }
 
-    const FADDContent = api.makeFileObj('/foo/newdir', null, {
-      'anotherdir': api.makeFileObj('/foo/newdir/anotherdir', null, {
-        'foobar.txt': api.makeFileObj('/foo/newdir/anotherdir/foobar.txt'),
-        'girl.mov': api.makeFileObj('/foo/newdir/anotherdir/girl.mov')
+    const FADDContent = new api.FileObj('/foo/newdir', null, {
+      'anotherdir': new api.FileObj('/foo/newdir/anotherdir', null, {
+        'foobar.txt': new api.FileObj('/foo/newdir/anotherdir/foobar.txt'),
+        'girl.mov': new api.FileObj('/foo/newdir/anotherdir/girl.mov')
       })
     })
 

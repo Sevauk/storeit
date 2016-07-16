@@ -22,8 +22,8 @@ setUsersDir('storeit-users' + path.sep)
 export const makeBasicHome = () => {
 
   const readmeHash = 'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT'
-  return api.makeFileObj('/', null, {
-    'readme.txt': api.makeFileObj('/readme.txt', readmeHash)
+  return new api.FileObj('/', null, {
+    'readme.txt': new api.FileObj('/readme.txt', readmeHash)
   })
 }
 
