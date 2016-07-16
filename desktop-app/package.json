@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "main": "main.js",
   "scripts": {
+    "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
+    "postinstall": "shx rm -f .env .tokens.json && shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json",
     "start": "npm run build && node build/main.js",
     "build": "babel src -d build ../common/src",
     "dev": "gulp && nodemon src/main.js --exec babel-node"

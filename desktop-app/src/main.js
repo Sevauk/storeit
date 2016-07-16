@@ -17,18 +17,6 @@ else {
   userfile.storeDir = './storeit'
 }
 
-
-ws.co('test', () => {
-  watcher.watch()
-})
-
-/*
-if (commander.code) {
-  auth.getGoogleToken(commander.code, (tokens) => {
-    ws.co(tokens.access_token)
-  })
-}
-else {
-  auth.googleAuth()
-}
-*/
+let client = new Client()
+client.auth('developer')
+  .then(() => logger.info('joined server'))
