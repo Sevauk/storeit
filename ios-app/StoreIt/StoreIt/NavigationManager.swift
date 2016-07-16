@@ -58,7 +58,7 @@ class NavigationManager {
     private var storeItSynchDir: [String: File]
     private var indexes: [String]
     
-    var items: [String]
+    private var items: [String]
     private var currentDirectory: [String: File]
     
     var list: UITableView?
@@ -80,6 +80,10 @@ class NavigationManager {
         self.items = Array(allItems.keys)
     }
     
+    func getSortedItems() -> [String] {
+        return self.items.sort()
+    }
+    
     // If the update is on the current directory (the focused one on the list view), we need to refresh
     private func updateCurrentItems(fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
         var index: Int = 0
@@ -91,6 +95,7 @@ class NavigationManager {
                     self.currentDirectory[fileName] = updateElement.fileToAdd!
                 	index = self.items.count - 1
                 case .DELETE:
+                    let items = self.getSortedItems()
                     let tmpIndex = items.indexOf(fileName)
                     
                     if (tmpIndex != nil) {
@@ -246,7 +251,8 @@ class NavigationManager {
     }
     
     func getSelectedFileAtRow(indexPath: NSIndexPath) -> File {
-        let selectedRow: String = self.items[indexPath.row]
+        let sortedItems = self.getSortedItems()
+        let selectedRow: String = sortedItems[indexPath.row]
         let selectedFile: File = self.currentDirectory[selectedRow]!
         
         return selectedFile

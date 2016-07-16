@@ -14,6 +14,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="49"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="color" keyPath="selectedImageTintColor">
+                                <color key="value" red="0.38431372549019605" green="0.76078431372549016" blue="0.80000000000000004" alpha="1" colorSpace="calibratedRGB"/>
+                            </userDefinedRuntimeAttribute>
+                        </userDefinedRuntimeAttributes>
                     </tabBar>
                     <connections>
                         <segue destination="yzH-Dm-ieM" kind="relationship" relationship="viewControllers" id="l81-ig-7gs"/>
@@ -23,7 +28,7 @@
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="BQn-tR-hnG" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1553" y="-428"/>
+            <point key="canvasLocation" x="-1551" y="-428"/>
         </scene>
         <!--Profile-->
         <scene sceneID="leS-Sb-KAn">
@@ -100,7 +105,7 @@
                             <constraint firstItem="beB-rn-Xlg" firstAttribute="top" secondItem="ago-Qi-m57" secondAttribute="bottom" constant="60" id="zLZ-fQ-gP9"/>
                         </constraints>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Profil" id="RaQ-aQ-2qY"/>
+                    <tabBarItem key="tabBarItem" title="Profil" image="ic_person" id="RaQ-aQ-2qY"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="WiX-RC-CxC" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <exit id="4tw-pq-wux" userLabel="Exit" sceneMemberID="exit"/>
@@ -180,10 +185,15 @@
         <scene sceneID="1Xa-cG-M6I">
             <objects>
                 <navigationController id="yzH-Dm-ieM" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="Dossier StoreIt" id="H3d-e6-xqj"/>
+                    <tabBarItem key="tabBarItem" title="Dossier StoreIt" image="ic_folder_open.png" id="H3d-e6-xqj"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="nf0-De-ASy">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="barTintColor" red="0.38431372549999998" green="0.76078431369999999" blue="0.80000000000000004" alpha="1" colorSpace="calibratedRGB"/>
+                        <textAttributes key="titleTextAttributes">
+                            <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                        </textAttributes>
                     </navigationBar>
                     <toolbar key="toolbar" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="yE6-Wd-OcD">
                         <rect key="frame" x="0.0" y="556" width="600" height="44"/>
@@ -221,25 +231,33 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Eet-Vy-MsS">
-                                                    <rect key="frame" x="28" y="10" width="496" height="21"/>
+                                                    <rect key="frame" x="52" y="10" width="496" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                                    <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vld-hp-yXn">
-                                                    <rect key="frame" x="540" y="6" width="30" height="30"/>
-                                                    <state key="normal" title="Opt"/>
+                                                <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vld-hp-yXn">
+                                                    <rect key="frame" x="568" y="9" width="24" height="24"/>
+                                                    <state key="normal" image="ic_more_vert"/>
                                                     <connections>
                                                         <action selector="openContextualMenu:" destination="8WT-j1-5R7" eventType="touchUpInside" id="jxA-Et-OZM"/>
                                                     </connections>
                                                 </button>
+                                                <imageView userInteractionEnabled="NO" alpha="0.55000000000000004" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_folder.png" translatesAutoresizingMaskIntoConstraints="NO" id="kyf-nD-gqu">
+                                                    <rect key="frame" x="16" y="6" width="23" height="28"/>
+                                                </imageView>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="leading" secondItem="kyf-nD-gqu" secondAttribute="trailing" constant="13" id="1qG-H0-LpA"/>
                                                 <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerY" secondItem="od4-5O-pHa" secondAttribute="centerY" id="340-mh-i08"/>
-                                                <constraint firstItem="vld-hp-yXn" firstAttribute="baseline" secondItem="Eet-Vy-MsS" secondAttribute="baseline" id="8bR-td-9kc"/>
-                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="leading" secondItem="od4-5O-pHa" secondAttribute="leadingMargin" constant="20" id="DF4-3E-pue"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="vld-hp-yXn" secondAttribute="trailing" constant="22" id="Q8a-tx-yDf"/>
-                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerX" secondItem="od4-5O-pHa" secondAttribute="centerX" constant="-24" id="aDe-oM-ab7"/>
+                                                <constraint firstItem="vld-hp-yXn" firstAttribute="baseline" secondItem="Eet-Vy-MsS" secondAttribute="baseline" constant="7" id="8bR-td-9kc"/>
+                                                <constraint firstItem="kyf-nD-gqu" firstAttribute="leading" secondItem="od4-5O-pHa" secondAttribute="leadingMargin" constant="8" id="BXB-sX-g5d"/>
+                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="leading" secondItem="od4-5O-pHa" secondAttribute="leadingMargin" constant="44" id="DF4-3E-pue"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="vld-hp-yXn" secondAttribute="trailing" id="Q8a-tx-yDf"/>
+                                                <constraint firstItem="vld-hp-yXn" firstAttribute="centerY" secondItem="Eet-Vy-MsS" secondAttribute="centerY" id="QWS-3D-soA"/>
+                                                <constraint firstItem="kyf-nD-gqu" firstAttribute="bottom" secondItem="od4-5O-pHa" secondAttribute="bottomMargin" id="UQW-tb-nTy"/>
+                                                <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerX" secondItem="od4-5O-pHa" secondAttribute="centerX" id="aDe-oM-ab7"/>
+                                                <constraint firstItem="kyf-nD-gqu" firstAttribute="centerY" secondItem="Eet-Vy-MsS" secondAttribute="centerY" id="oFb-z0-RI6"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
@@ -255,26 +273,27 @@
                                             <rect key="frame" x="0.0" y="0.0" width="600" height="42"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QxY-hc-CM0">
-                                                    <rect key="frame" x="27" y="10" width="497" height="21"/>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                                    <nil key="highlightedColor"/>
-                                                </label>
-                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
-                                                    <rect key="frame" x="540" y="6" width="30" height="30"/>
-                                                    <state key="normal" title="Opt"/>
+                                                <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
+                                                    <rect key="frame" x="568" y="10" width="24" height="24"/>
+                                                    <state key="normal" backgroundImage="ic_more_vert"/>
                                                     <connections>
                                                         <action selector="openContextualMenu:" destination="8WT-j1-5R7" eventType="touchUpInside" id="GFN-zo-K0L"/>
                                                     </connections>
                                                 </button>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QxY-hc-CM0">
+                                                    <rect key="frame" x="52" y="10" width="497" height="21"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
                                             </subviews>
                                             <constraints>
-                                                <constraint firstItem="E3b-TD-tbm" firstAttribute="baseline" secondItem="QxY-hc-CM0" secondAttribute="baseline" id="5E2-yT-fU6"/>
+                                                <constraint firstItem="E3b-TD-tbm" firstAttribute="baseline" secondItem="QxY-hc-CM0" secondAttribute="baseline" constant="-20" id="5E2-yT-fU6"/>
+                                                <constraint firstItem="E3b-TD-tbm" firstAttribute="top" secondItem="QxY-hc-CM0" secondAttribute="top" id="AoS-C1-rcU"/>
                                                 <constraint firstItem="QxY-hc-CM0" firstAttribute="centerY" secondItem="Mst-rY-CTU" secondAttribute="centerY" id="Dw1-uQ-S06"/>
-                                                <constraint firstItem="QxY-hc-CM0" firstAttribute="leading" secondItem="Mst-rY-CTU" secondAttribute="leadingMargin" constant="19" id="Eve-tH-Y8Q"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="E3b-TD-tbm" secondAttribute="trailing" constant="22" id="UNV-4G-eIC"/>
-                                                <constraint firstItem="QxY-hc-CM0" firstAttribute="centerX" secondItem="Mst-rY-CTU" secondAttribute="centerX" constant="-24.5" id="aN9-lH-gNH"/>
+                                                <constraint firstItem="QxY-hc-CM0" firstAttribute="leading" secondItem="Mst-rY-CTU" secondAttribute="leadingMargin" constant="44" id="Eve-tH-Y8Q"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="E3b-TD-tbm" secondAttribute="trailing" id="UNV-4G-eIC"/>
+                                                <constraint firstItem="QxY-hc-CM0" firstAttribute="centerX" secondItem="Mst-rY-CTU" secondAttribute="centerX" constant="0.5" id="aN9-lH-gNH"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
@@ -300,6 +319,8 @@
                                         </connections>
                                     </barButtonItem>
                                 </items>
+                                <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="barTintColor" red="0.38431372549999998" green="0.76078431369999999" blue="0.80000000000000004" alpha="1" colorSpace="calibratedRGB"/>
                             </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -363,13 +384,20 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Paramètres" id="FMe-TU-7wG"/>
+                    <tabBarItem key="tabBarItem" title="Paramètres" image="ic_settings" id="FMe-TU-7wG"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hXx-U8-KGa" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-1088" y="499"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="ic_folder.png" width="24" height="24"/>
+        <image name="ic_folder_open.png" width="24" height="24"/>
+        <image name="ic_more_vert" width="24" height="24"/>
+        <image name="ic_person" width="24" height="24"/>
+        <image name="ic_settings" width="24" height="24"/>
+    </resources>
     <inferredMetricsTieBreakers>
         <segue reference="CNq-Bk-ve8"/>
     </inferredMetricsTieBreakers>

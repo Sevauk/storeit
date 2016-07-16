@@ -21,8 +21,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     // TODO: maybe find a better way
     var lastSelectedActionSheetForFile: Int?
     
-    var contextualMenuActionSheet: ContextualMenuActionSheet?
-    var storeitActionSheet: StoreitActionSheet?
+    var actionSheetsManager: ActionSheetsManager?
     
     var connectionType: ConnectionType? = nil
     var networkManager: NetworkManager? = nil
@@ -44,11 +43,13 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
 
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: #selector(uploadOptions))
         
-        // TODO: Generic class for action sheets !!!
-        self.storeitActionSheet = StoreitActionSheet(title: "Choisissez une option", message: nil)
-        self.contextualMenuActionSheet = ContextualMenuActionSheet(title: "Choisissez une option", message: nil)
-
-        self.addActionsToActionSheets()
+        if (self.actionSheetsManager == nil) {
+        	self.actionSheetsManager = ActionSheetsManager()
+            self.actionSheetsManager!.addNewActionSheet(ActionSheets.UPLOAD, title: "Ajout d'un nouvel élément", message: nil)
+            self.actionSheetsManager!.addNewActionSheet(ActionSheets.DIR_OPT, title: "Dossier", message: "Que voulez-vous faire ?")
+            self.actionSheetsManager!.addNewActionSheet(ActionSheets.FILE_OPT, title: "Fichier", message: "Que voulez-vous faire ?")
+            self.addActionsToActionSheets()
+        }
     }
     
     // function triggered when back button of navigation bar is pressed
@@ -81,39 +82,46 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
 
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
-        let target: File? = sender as? File
+        //let target: File? = sender as? File
 
-        if (segue.identifier == "nextDirSegue") {
-        
-            let listView = (segue.destinationViewController as! StoreItSynchDirectoryView)
-            let targetPath = (self.navigationManager?.goToNextDir(target!))!
-            
-            listView.navigationItem.title = targetPath
-            
-            listView.connectionType = self.connectionType
-            listView.networkManager = self.networkManager
-            listView.connectionManager = self.connectionManager
-            listView.fileManager = self.fileManager
-            listView.navigationManager = self.navigationManager
-            listView.ipfsManager = self.ipfsManager
-            listView.navigationManager?.movingOptions.isMoving = (self.navigationManager?.movingOptions.isMoving)!
-        }
-        else if (segue.identifier == "showFileSegue") {
-            let fileView = segue.destinationViewController as! FileView
-            fileView.navigationItem.title = self.navigationManager?.getTargetName(target!)
-
-            self.ipfsManager?.get(target!.IPFSHash) { data in
-                //print("[IPFS.GET] received data: \(data)")
-                fileView.data = data
+        if let target: File = sender as? File {
+            if (segue.identifier == "nextDirSegue") {
+                
+                let listView = (segue.destinationViewController as! StoreItSynchDirectoryView)
+                let targetPath = (self.navigationManager?.goToNextDir(target))!
+                
+                listView.navigationItem.title = targetPath
+                
+                listView.actionSheetsManager = self.actionSheetsManager
+                listView.connectionType = self.connectionType
+                listView.networkManager = self.networkManager
+                listView.connectionManager = self.connectionManager
+                listView.fileManager = self.fileManager
+                listView.navigationManager = self.navigationManager
+                listView.ipfsManager = self.ipfsManager
+                listView.navigationManager?.movingOptions.isMoving = (self.navigationManager?.movingOptions.isMoving)!
             }
-            
+            else if (segue.identifier == "showFileSegue") {
+                let fileView = segue.destinationViewController as! FileView
+                
+                fileView.file = target
+                fileView.networkManager = self.networkManager
+                fileView.actionSheetsManager = self.actionSheetsManager
+                
+                fileView.navigationItem.title = self.navigationManager?.getTargetName(target)
+                
+                self.ipfsManager?.get(target.IPFSHash) { data in
+                    //print("[IPFS.GET] received data: \(data)")
+                    fileView.data = data
+                }
+            }
         }
     }
 
 	// MARK: Creation and management of table cells
     
 	func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return (self.navigationManager?.items.count)!
+        return (self.navigationManager?.getSortedItems().count)!
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -134,8 +142,8 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     
     func createItemCellAtIndexPath(indexPath: NSIndexPath) -> UITableViewCell {
         let isDir: Bool = (self.navigationManager?.isSelectedFileAtRowADir(indexPath))!
-        let items: [String] = (self.navigationManager?.items)!
-        
+        let items: [String] = (self.navigationManager?.getSortedItems())!
+                
         if (isDir) {
             let cell = self.list.dequeueReusableCellWithIdentifier(CellIdentifiers.Directory.rawValue) as! DirectoryCell
             cell.itemName.text = "\(items[indexPath.row])"
@@ -149,15 +157,6 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         }
     }
 
-    
-    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == UITableViewCellEditingStyle.Delete {
-            if let selectedFile = navigationManager?.getSelectedFileAtRow(indexPath) {
-                self.networkManager?.fdel([selectedFile.path], completion: nil)
-            }
-        }
-    }
-    
     // MARK: Action sheet creation and management
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [NSObject : AnyObject]!) {
@@ -255,7 +254,11 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     }
     
     func deleteFile(action: UIAlertAction) -> Void {
-        
+        if let index = self.lastSelectedActionSheetForFile {
+            if let selectedFile = navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
+                self.networkManager?.fdel([selectedFile.path], completion: nil)
+            }
+        }
     }
     
     func renameFile(action: UIAlertAction) -> Void {
@@ -291,27 +294,58 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         
         self.presentViewController(alert, animated: true, completion: nil)
     }
-    
+
     func addActionsToActionSheets() {
-        self.storeitActionSheet?.addActionToUploadActionSheet("Annuler", style: .Cancel, handler: nil)
-        self.storeitActionSheet?.addActionToUploadActionSheet("Créer un dossier", style: .Default, handler: createNewDirectory)
-        self.storeitActionSheet?.addActionToUploadActionSheet("Importer depuis mes photos et vidéos", style: .Default, handler: pickImageFromLibrary)
-        self.storeitActionSheet?.addActionToUploadActionSheet("Prendre avec l'appareil photo", style: .Default, handler: takeImageWithCamera)
-        
-        self.contextualMenuActionSheet?.addActionToFileActionSheet("Annuler", style: .Cancel) { _ in
-            self.lastSelectedActionSheetForFile = nil
+        if let ASManager = self.actionSheetsManager {
+
+            // Main Action Sheet (Upload)
+            let uploadAS = ActionSheets.UPLOAD
+            var uploadActions: [String:((UIAlertAction) -> Void)?] = [:]
+            
+            uploadActions["Créer un dossier"] = createNewDirectory
+            uploadActions["Importer depuis mes photos et vidéos"] = pickImageFromLibrary
+            uploadActions["Prendre avec l'appareil photo"] = takeImageWithCamera
+            
+            // Dir actions Action Sheet
+            let dirAS = ActionSheets.DIR_OPT
+            var fileActions: [String:((UIAlertAction) -> Void)?] = [:]
+            
+            fileActions["Renommer"] = renameFile
+            fileActions["Déplacer"] = moveFile
+            fileActions["Supprimer"] = deleteFile
+            
+            // File actions Action Sheet
+            let fileAS = ActionSheets.FILE_OPT
+            
+            fileActions["Télécharger dans la pellicule"] = nil
+            
+            ASManager.addActionsToActionSheet(uploadAS, actions: uploadActions, cancelHandler: nil)
+            ASManager.addActionsToActionSheet(dirAS, actions: fileActions) { _ in
+                self.lastSelectedActionSheetForFile = nil
+            }
+            ASManager.addActionsToActionSheet(fileAS, actions: fileActions) { _ in
+                self.lastSelectedActionSheetForFile = nil
+            }
         }
-        self.contextualMenuActionSheet?.addActionToFileActionSheet("Renommer", style: .Default, handler: renameFile)
-        self.contextualMenuActionSheet?.addActionToFileActionSheet("Déplacer", style: .Default, handler: moveFile)
-        self.contextualMenuActionSheet?.addActionToFileActionSheet("Supprimer", style: .Default, handler: deleteFile)
     }
     
     func uploadOptions() {
-        self.presentViewController(self.storeitActionSheet!.storeitActionSheet, animated: true, completion: nil)
+        if let actionSheet = self.actionSheetsManager?.getActionSheet(ActionSheets.UPLOAD) {
+            self.presentViewController(actionSheet, animated: true, completion: nil)
+
+        }
     }
     
     func openContextualMenu() {
-        self.presentViewController(self.contextualMenuActionSheet!.contextualMenuActionSheet, animated: true, completion: nil)
+        if let index = self.lastSelectedActionSheetForFile {
+            if let isDir = self.navigationManager?.isSelectedFileAtRowADir(NSIndexPath(forRow: index, inSection: 0)) {
+                let actionSheetType: ActionSheets = isDir ? ActionSheets.DIR_OPT : ActionSheets.FILE_OPT
+                
+                if let actionSheet = self.actionSheetsManager?.getActionSheet(actionSheetType) {
+                    self.presentViewController(actionSheet, animated: true, completion: nil)
+                }
+            }
+        }
     }
     
     @IBAction func openContextualMenu(sender: AnyObject) {
