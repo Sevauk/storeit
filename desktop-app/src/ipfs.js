@@ -1,6 +1,7 @@
 import ipfs from 'ipfs-api'
 import * as usr from './user-file.js'
 import * as fs from 'fs'
+import {logger} from '../lib/log'
 
 let node = null
 
@@ -11,7 +12,7 @@ const co = (onCo) => {
     if (onCo) {
       onCo()
     }
-  }, 1000);
+  }, 1000)
 }
 
 co()
@@ -19,6 +20,11 @@ co()
 export const add = (file, handlerFn) => {
   node.add(file, handlerFn)
 }
+
+export const rm = () => {
+  logger.warn('ipfs rm TODO')
+}
+
 
 export const get = (hash, file, handlerFn) => {
 
@@ -31,11 +37,11 @@ export const get = (hash, file, handlerFn) => {
 
     let data = []
 
-    res.on("data", (chunk) => {
+    res.on('data', (chunk) => {
       data.push(chunk)
     })
 
-    res.on("end", () => {
+    res.on('end', () => {
       data = Buffer.concat(data)
       fs.writeFile(file, data, null, (err) => {
         if (err) {

@@ -4,7 +4,8 @@ import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
-import {Command, FileObj} from '../lib/protocol-objects'
+import {Command, Response, FileObj} from '../lib/protocol-objects'
+import * as store from './store.js'
 
 const MAX_RECO_TIME = 4
 
@@ -15,6 +16,7 @@ export default class Client {
     this.responseHandlers = {} // custom server response handlers
     this.connect()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
+    logger.error(this)
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
@@ -29,6 +31,8 @@ export default class Client {
       service = new GoogleService()
       type = 'gg'
       break
+    case 'developer':
+      return this.developer()
     default:
       return this.login() // TODO
     }
@@ -40,6 +44,10 @@ export default class Client {
       )
   }
 
+  developer() {
+    return this.join('gg', 'developer')
+  }
+
   login() {
     throw {msg: 'StoreIt auth not implemented yet'}
   }
@@ -48,7 +56,10 @@ export default class Client {
     const {SERVER_HOST, SERVER_PORT} = process.env
     this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
-    this.sock.on('open', () => this.recoTime = 1)
+    this.sock.on('open', () => {
+      this.auth('developer')
+      this.recoTime = 1
+    })
     this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('socket error occured'))
     this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
@@ -77,28 +88,47 @@ export default class Client {
       handler = this[`recv${res.command}`] // set to default handler
     }
 
-    if (handler == null) {
+    if (handler === null) {
       logger.error(`received unhandled response: ${JSON.stringify(res)}`)
       return null
     }
     else {
-      return handler(res.parameters)
+      return handler(res.parameters, res)
     }
   }
 
+  answerSuccess(uid) {
+    return this.sendObject(new Response(0, '', uid))
+  }
+
+  answerFailure(uid, code=1, msg='error') {
+    return this.sendObject(new Response(code, msg, uid))
+  }
+
   send(cmd, params) {
-    logger.info(`sending command ${cmd}`)
     let data = new Command(cmd, params)
+    return this.sendObject(data, params)
+  }
+
+  sendObject(obj, params) {
+    logger.info(`sending object ${JSON.stringify(obj)}`)
 
     return new Promise((resolve, reject) =>
-      this.sock.send(JSON.stringify(data), (err) =>
-        !err ? resolve(data) : reject(err)
-      )
+      this.sock.send(JSON.stringify(obj), (err) => {
+        if (err)
+          return reject(err)
+        this.addResponseHandler(obj.uid, (params, command) => {
+          if (command.code === 0)
+            return resolve(params)
+          return reject(command)
+        })
+      })
     )
   }
 
   join(authType, accessToken) {
     return this.send('JOIN', {authType, accessToken})
+      .then((params) => logger.info(`tree is ${JSON.stringify(params.home)}`)) // TODO receive tree/home
   }
 
   recvFADD(params) {
@@ -110,6 +140,10 @@ export default class Client {
           // TODO ipfs get
         })
     }
+  }
+
+  recvRESP(params, command) {
+    logger.info(`received ${command.code === 0 ? 'successful' : `failure ${command.code}`} response`)
   }
 
   recvFUPT(params) {
@@ -133,6 +167,13 @@ export default class Client {
     logger.info(`received FMOV => ${JSON.stringify(params)}`)
     return userFile.move(params.src, params.dest)
       .then((file) => logger.info(`moved file ${file.src} to ${file.dst}`))
+  }
+
+  recvFSTR(params) {
+    logger.info(`received FMOV => ${JSON.stringify(params)}`)
+    return store.FSTR(params.hash, params.keep)
+      .then(() => this.answerSuccess())
+      .catch((err) => logger.error(err))
   }
 
   sendFADD(files) {

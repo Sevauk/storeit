@@ -22,9 +22,3 @@ else {
 }
 
 let client = new Client()
-<<<<<<< HEAD
-client.auth('developer')
-=======
-client.auth('google')
->>>>>>> 151c9584c68e91f26855e064f1c105eef0b09cce
-  .then(() => logger.info('joined server'))
