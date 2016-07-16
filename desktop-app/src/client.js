@@ -198,7 +198,7 @@ export default class Client {
     let handler = this[`send${ev.type}`]
     if (handler) {
       let file = new FileObj() // TODO
-      return handler(file)
+      return handler.call(this, file)
 
       // TODO: manage FMOV
     }
