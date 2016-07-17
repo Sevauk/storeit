@@ -33,7 +33,7 @@ export class EventType {
       })
       break
     case 'change':
-      Object.assign({
+      Object.assign(this, {
         isDir: false,
         type: 'FUPT'
       })
