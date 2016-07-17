@@ -51,6 +51,10 @@ This is the first request to make whenever a client wants to get online.
 	"parameters": {
 		"authType": "fb", // fb for facebook and gg for google
 		"accessToken": "34j8b4jhb343hbKJH54",
+		"hosting": [
+			'QmNMNRCgNBvkdXyXuVa2cHwTJJ9wtJQht1Njx1pqNBC9cV',
+			'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG'
+		]
 	}
 }
 ```
@@ -178,6 +182,24 @@ DO:
 }
 ```
 
+
+###### FSTR
+
+From the server to a client
+Store an IPFS object
+
+```javascript
+{
+	"uid": 7668,
+	"command": "FSTR",
+	"parameters": {
+		"hash": "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+		"keep": true|false
+	}
+}
+```
+
+If the "keep" parameter is false, the object should be deleted. Otherwise it should be downloaded from IPFS and stored in the local repository.
 
 ##### 2.4 FILE object
 

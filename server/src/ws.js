@@ -42,6 +42,12 @@ class Client {
     this.sendText(JSON.stringify(obj))
   }
 
+  sendCmd(name, parameters, handlerResponse) {
+    const command = new protoObjs.Command(name, parameters)
+    this.sendObj(command)
+    this.responseHandlers[command.uid] = handlerResponse
+  }
+
   answerSuccess(commandUid) {
     this.sendObj(new protoObjs.Response(0, 'success', commandUid))
   }

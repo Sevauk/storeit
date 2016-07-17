@@ -2,6 +2,7 @@ import {logger} from './common/log.js'
 import * as user from './user.js'
 import * as protoObjs from './common/protocol-objects'
 import * as auth from './auth.js'
+import * as store from './store.js'
 
 const sendWelcome = (socket, usr, commandUid) => {
   socket.sendObj(new protoObjs.Response(0, 'welcome', commandUid, {
@@ -19,7 +20,7 @@ const join = function(command, arg, socket, handlerFn) {
     }
 
     user.connectUser(email, socket, (err, usr) => {
-      if (err && err.code === "ENOENT") {
+      if (err && err.code === 'ENOENT') {
         user.createUser(email, (err) => {
           if (err) {
             return handlerFn(protoObjs.ApiError.SERVERERROR)
@@ -28,6 +29,7 @@ const join = function(command, arg, socket, handlerFn) {
             if (err) {
               return handlerFn(protoObjs.ApiError.SERVERERROR)
             }
+            store.processHash(socket, arg)
             sendWelcome(socket, usrAgain, command.uid, handlerFn)
           })
         })
@@ -36,6 +38,7 @@ const join = function(command, arg, socket, handlerFn) {
         return handlerFn(err)
       }
       else {
+        store.processHash(socket, arg)
         sendWelcome(socket, usr, command.uid, handlerFn)
       }
     })
@@ -87,6 +90,18 @@ const del = (command, arg, client) => {
   recast(command, client)
 }
 
+const resp = (command, arg, client) => {
+
+  if (!command.commandUid) {
+    return logger.debug('client sent invalid response')
+  }
+
+  if (client.responseHandlers[command.commandUid]) {
+    client.responseHandlers[command.commandUid](code, text)
+    delete client.responseHandlers[command.commandUid]
+  }
+}
+
 export const parse = function(msg, client) {
 
   const command = JSON.parse(msg)
@@ -96,7 +111,12 @@ export const parse = function(msg, client) {
     'FADD': add,
     'FUPT': upt,
     'FMOV': mov,
-    'FDEL': del
+    'FDEL': del,
+    'RESP': resp,
+  }
+
+  if (!(command.command in hmap)) {
+    return client.answerFailure(command.uid, protoObjs.ApiError.UNKNOWNREQUEST)
   }
 
   // TODO: catch the goddam exception

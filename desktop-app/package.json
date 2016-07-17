@@ -3,23 +3,46 @@
   "version": "0.0.1",
   "main": "main.js",
   "scripts": {
+    "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
+    "postinstall": "shx rm -f .env .tokens.json && shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json",
     "start": "npm run build && node build/main.js",
-    "build": "babel src -d build ../common/src",
-    "dev": "gulp && nodemon src/main.js --exec babel-node"
+    "test": "npm run build && npm run bdd",
+    "dev": "concurrently -r -k 'gulp' 'node-inspector' 'npm run nodemon'",
+    "build:lib": "babel ../lib/js/src -s -d ./lib",
+    "build": "npm run build:lib && babel src -s -d build",
+    "nodemon": "npm run build:lib && nodemon src/main.js --debug --watch src --exec babel-node",
+    "mock-server": "nodemon test/mock/server.js --watch test/mock --exec babel-node",
+    "bdd": "mocha --compilers coffee:coffee-script/register --require source-map-support/register"
   },
   "dependencies": {
     "babel-cli": "^6.7.7",
     "babel-preset-es2015": "^6.6.0",
     "babel-preset-stage-3": "^6.5.0",
     "commander": "^2.9.0",
+    "dotenv": "^2.0.0",
+    "express": "^4.14.0",
+    "fbgraph": "^1.2.0",
     "googleapis": "^7.1.0",
     "idb-plus-blob-store": "^1.0.0",
     "ipfs": "^0.4.10",
     "ipfs-api": "^3.0.0",
-    "openurl": "^1.1.1",
+    "open": "0.0.5",
     "readline": "^1.3.0",
     "recursive-readdir": "^2.0.0",
     "winston": "^2.2.0",
     "ws": "^1.1.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "coffee-script": "^1.10.0",
+    "concurrently": "^2.1.0",
+    "eslint-plugin-import": "^1.9.2",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^2.0.0",
+    "mocha": "^2.5.3",
+    "node-inspector": "^0.12.8",
+    "nodemon": "^1.9.2",
+    "shx": "^0.1.2",
+    "source-map-support": "^0.4.0"
   }
 }
