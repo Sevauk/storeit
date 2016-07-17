@@ -1,34 +1,26 @@
+import Promise from 'bluebird'
+global.Promise = Promise
+
 import commander from 'commander'
-import * as userfile from './user-file.js'
-import * as ws from './ws.js'
-import * as auth from './auth.js'
-import * as watcher from './watcher.js'
+import dotenv from 'dotenv'
+dotenv.config()
+
+import Client from './client'
+import userFile from './user-file'
+import {logger} from '../lib/log'
 
 commander
   .version('0.0.1')
   .option('-d, --store <name>', 'set the user synced directory (default is ./storeit')
-  .option('-c, --code <code>', 'set the google auth code')
   .parse(process.argv)
 
 if (commander.store) {
-  userfile.storeDir = commander.store
+  userFile.setStoreDir(commander.store)
 }
 else {
-  userfile.storeDir = './storeit'
+  userFile.setStoreDir('./storeit')
 }
 
-
-ws.co('test', () => {
-  watcher.watch()
-})
-
-/*
-if (commander.code) {
-  auth.getGoogleToken(commander.code, (tokens) => {
-    ws.co(tokens.access_token)
-  })
-}
-else {
-  auth.googleAuth()
-}
-*/
+let client = new Client()
+client.auth('google')
+  .then(() => logger.info('joined server'))

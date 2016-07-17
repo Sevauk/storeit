@@ -1,38 +1,93 @@
-import * as fs from 'fs'
-import * as usr from './user-file.js'
-import * as tree from './tree.js'
-import * as path from 'path'
-import * as ws from './ws.js'
-import * as api from './protocol-objects.js'
-import * as ipfs from './ipfs.js'
+import chokidar from 'chokidar'
+import {logger} from '../lib/log'
 
-export const watch = () => {
+const STORE_NAME = '.storeit'
 
-  fs.watch(usr.storeDir, {recursive: true}, (event, filename) => {
+export class EventType {
+  constructor(type, path, stats={}) {
+    this.path = path
+    this.meta = stats
+    switch (type) {
+    case 'add':
+      Object.assign(this, {
+        isDir: false,
+        type: 'FADD'
+      })
+      break
+    case 'addDir':
+      Object.assign(this, {
+        isDir: true,
+        type: 'FADD'
+      })
+      break
+    case 'unlink':
+      Object.assign(this, {
+        isDir: false,
+        type: 'FDEL'
+      })
+      break
+    case 'unlinkDir':
+      Object.assign(this, {
+        isDir: true,
+        type: 'FDEL'
+      })
+      break
+    case 'change':
+      Object.assign({
+        isDir: false,
+        type: 'FUPT'
+      })
+      break
+    default:
+      logger.error('error here')
+      throw {msg: 'Unexpected error occured'}
+    }
+  }
+}
 
-    const filenameFromRoot = path.sep + filename
-
-    tree.setTree(usr.home, filenameFromRoot, (tree, fpath) => {
-
-      if (tree === undefined) {
-        return console.log('please reconnect to be in sync')
-      }
-
-      if (tree.files !== undefined && tree.files[fpath] === undefined) {
-
-        ipfs.add(usr.storeDir + path.sep + filename, (err, data) => {
-
-          if (err) {
-            return console.log(err)
-          }
-          const cmd = new api.Command('FADD', {"files" : [api.makeFileObj(filenameFromRoot, data[0].Hash)]})
-          ws.sendCmd(cmd)
-        })
-      }
-      else {
-        console.log("do FUPT")
-      }
+export default class Watcher {
+  constructor(dirPath) {
+    this.handlers = {}
+    this.ignoredEvents = []
+    this.watcher = chokidar.watch(dirPath, {
+      persistent: true,
+      ignored: `.${STORE_NAME}`
     })
-  })
 
+    this.watcher.on('error', error =>
+      logger.error(`[FileWatcher] Error: ${error}`))
+
+    this.watcher.on('ready', () => {
+      logger.info('[FileWatcher]Initial scan complete. Ready for changes')
+      this.watcher
+        .on('add', (path, stats) => this.listener('add', path, stats))
+        .on('change', (path, stats) => this.listener('change', path, stats))
+        .on('unlink', (path, stats) => this.listener('unlink', path, stats))
+        .on('addDir', (path, stats) => this.listener('addDir', path, stats))
+        .on('unlinkDir', (path, stats) =>
+          this.listener('unlinkDir', path, stats))
+    })
+  }
+
+  listener(evType, path, stats) {
+    let ev = new EventType(evType, path, stats)
+    logger.log(`[FileWatcher] ${ev.type.toUpperCase()} ${ev.fileKind} ${path}`)
+
+    if (!this.ignoreEvent(ev)) {
+      return this.handler(ev)
+    }
+    return null
+  }
+
+  ignoreEvent(ev) {
+    return false
+  }
+
+  setEventHandler(listener) {
+    this.handler = listener
+  }
+
+  pushIgnoreEvent(ev) {
+    this.ignoredEvents.push(ev)
+  }
 }

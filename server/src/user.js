@@ -2,19 +2,28 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as api from './common/protocol-objects.js'
 import * as tree from './common/tree.js'
+import * as store from './store.js'
 import {logger} from './common/log.js'
 
-let usersDir = 'storeit-users' + path.sep
+let usersDir = null
 
 export const setUsersDir = (name) => {
   usersDir = name
+  try {
+    fs.mkdirSync(name)
+  }
+  catch(e) {
+    logger.debug('userdir already there')
+  }
 }
+
+setUsersDir('storeit-users' + path.sep)
 
 export const makeBasicHome = () => {
 
   const readmeHash = 'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT'
-  return api.makeFileObj('/', null, {
-    'readme.txt': api.makeFileObj('/readme.txt', readmeHash)
+  return new api.FileObj('/', null, {
+    'readme.txt': new api.FileObj('/readme.txt', readmeHash)
   })
 }
 
@@ -54,14 +63,18 @@ export class User {
   }
 
   addTree(trees) {
-    return this.setTrees(trees, (treeParent, tree, name) => {
-      treeParent.files[name] = tree
+    return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+      treeParent.files[name] = treeCurrent
+
+      store.keepTreeAlive(treeCurrent)
     })
   }
 
   uptTree(trees) {
-    return this.setTrees(trees, (treeParent, tree, name) => {
-      treeParent.files[name] = tree
+    return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+      treeParent.files[name] = treeCurrent
+
+      store.keepTreeAlive(treeCurrent)
     })
   }
 
@@ -113,11 +126,17 @@ export class User {
         return api.errWithStack(api.ApiError.BADREQUEST)
       }
       else {
-          const err = tree.setTree(this.home, p, (tree, name) => {
-          if (!tree.files) {
+        const err = tree.setTree(this.home, p, (treeCurrent, name) => {
+          if (!treeCurrent.files) {
             return api.errWithStack(api.ApiError.ENOENT)
           }
-          return delete tree.files[name]
+
+          tree.forEachHash(tree, (hash) => {
+            // TODO: implement a way to remove hash if it is not needed by anyone anymore
+            // use probably a hashmap of all the hashes as keys and clients that need them as value
+          })
+
+          return delete treeCurrent.files[name]
         })
         if (err !== true) {
           return err
@@ -170,7 +189,15 @@ export const disconnectSocket = (client) => {
   }
 
   delete sockets[client.uid]
+  store.removeSocket(client)
   logger.info(`${user.email} has disconnected. ${getStat()}`)
+}
+
+export const getSocketFromUid = (uid) => {
+  const uidStr = uid.toString()
+  if (!sockets[uidStr])
+    return null
+  return sockets[uidStr].sockets[uidStr]
 }
 
 export const connectUser = (email, client, handlerFn) => {

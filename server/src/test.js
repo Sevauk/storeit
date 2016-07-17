@@ -7,7 +7,14 @@ import WebSocket from 'ws'
 import * as fs from 'fs'
 import * as api from './common/protocol-objects.js'
 import * as user from './user.js'
+import * as tool from './tool.js'
+import * as store from './store.js'
 import './ws.js'
+
+const USERHASHES = [
+  'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT',
+  'QmSdZaa9KWGBc9m8mFwUiZGo2YkrQgxoUoRU7EB4VmeQzp',
+]
 
 class fakeUser {
 
@@ -24,14 +31,18 @@ class fakeUser {
     this.msgHandler = msgHandler
 
     this.ws.on('message', (data) => {
-      this.msgHandler(data)
+      const obj = JSON.parse(data)
+
+      if (obj.command === 'RESP')
+        this.msgHandler(obj)
     })
   }
 
   join() {
     this.send(new api.Command('JOIN', {
       authType: 'fb',
-      accessToken: this.accessToken
+      accessToken: this.accessToken,
+      hashes: USERHASHES
     }))
   }
 
@@ -40,25 +51,26 @@ class fakeUser {
   }
 }
 
-const expectOkResponse = (data) => {
-  const obj = JSON.parse(data)
+const expectOkResponse = (obj) => {
 
-  expect(obj.code).to.equal(0)
-  if (obj.code !== 0)
-    console.log(obj.stack)
+  try {
+    expect(obj.code).to.equal(0)
+  }
+  catch (e) {
+    console.log(e)
+    if (obj) {
+      console.log(obj)
+    }
+  }
 }
 
-const expectUsualJoinResponse = (data) => {
+const expectUsualJoinResponse = (obj) => {
 
-  const obj = JSON.parse(data)
-
-  expectOkResponse(data)
+  expectOkResponse(obj)
   expect(obj.parameters.home.path).to.equal('/')
 }
 
-const expectErrorResponse = (data) => {
-  const obj = JSON.parse(data)
-
+const expectErrorResponse = (obj) => {
   expect(obj.code).to.not.equal(0)
   expect(obj.command).to.equal('RESP')
 }
@@ -66,20 +78,20 @@ const expectErrorResponse = (data) => {
 let fakeA = undefined
 let fakeB = undefined
 
-/*
-describe('OAuth login/registering', () => {
-  it('should connect with google', () => {
-    fakeGoogle = new fakeUser()
-  })
-})
-*/
-
 describe('simple connection', () => {
 
-  fs.unlinkSync('./storeit-users/adrien.morel@me.com')
+  try {
+    fs.unlinkSync('./storeit-users/adrien.morel@me.com')
+  }
+  catch (err) {
+    console.log('nothing to remove')
+  }
 
   it('should get JOIN response', (done) => {
     fakeA = new fakeUser('developer', (data) => {
+
+      expect(store.storeTable.get(USERHASHES[0]).has(0)).to.equal(true)
+      expect(store.storeTable.get(0).has(USERHASHES[0])).to.equal(true)
       expectUsualJoinResponse(data)
       done()
     })
@@ -113,6 +125,7 @@ describe('protocol file commands', () => {
       setTimeout(() => {
         expect(user.getConnectionCount()).to.equal(1)
         expect(user.getUserCount()).to.equal(1)
+        expect(Object.keys(store.storeTable.map1).length).to.equal(1)
         done()
       }, 10) // wait for server to take action
     })
@@ -128,8 +141,8 @@ describe('protocol file commands', () => {
 
   it('should FADD correctly', (done) => {
 
-    const FADDContent = api.makeFileObj('/foo', null, {
-      'bar.txt': api.makeFileObj('/foo/bar.txt')
+    const FADDContent = new api.FileObj('/foo', null, {
+      'bar.txt': new api.FileObj('/foo/bar.txt')
     })
 
     fakeA.msgHandler = (data) => {
@@ -183,10 +196,10 @@ describe('protocol file commands', () => {
       }
     }
 
-    const FADDContent = api.makeFileObj('/foo/newdir', null, {
-      'anotherdir': api.makeFileObj('/foo/newdir/anotherdir', null, {
-        'foobar.txt': api.makeFileObj('/foo/newdir/anotherdir/foobar.txt'),
-        'girl.mov': api.makeFileObj('/foo/newdir/anotherdir/girl.mov')
+    const FADDContent = new api.FileObj('/foo/newdir', null, {
+      'anotherdir': new api.FileObj('/foo/newdir/anotherdir', null, {
+        'foobar.txt': new api.FileObj('/foo/newdir/anotherdir/foobar.txt'),
+        'girl.mov': new api.FileObj('/foo/newdir/anotherdir/girl.mov')
       })
     })
 
@@ -242,5 +255,59 @@ describe('protocol file commands', () => {
     fakeA.send(new api.Command('FDEL', {
       files: ['/foo/newdir/anotherdir', '/readme.txt']
     }))
+  })
+})
+
+describe('internal server tools', () => {
+
+  it('test of our double lookup hash table', (done) => {
+    const table = new tool.TwoHashMap()
+
+    table.add('adrien.morel@me.com', 'hash1')
+    table.add('adrien.morel@me.com', 'hash2')
+    table.add('adrien.morel@me.com', 'hash3')
+    table.add('james.bond@me.com', 'hash2')
+    table.add('james.bond@me.com', 'hash4')
+    table.add('jamie.lannister@me.com', 'hash2')
+    table.add('jamie.lannister@me.com', 'hash8')
+    table.add('jamie.lannister@me.com', 'hash1')
+
+    const selectUser = table.selectA('hash8', 2)
+    expect(selectUser.size).to.equal(2)
+    expect(selectUser.has('james.bond@me.com')).to.equal(true)
+    expect(selectUser.has('adrien.morel@me.com')).to.equal(true)
+
+    expect(table.get('james.bond@me.com').has('hash4')).to.equal(true)
+    expect(table.get('hash2').has('adrien.morel@me.com')).to.equal(true)
+
+    table.remove('hash2')
+
+    expect(table.get('james.bond@me.com').has('hash2')).to.equal(false)
+
+    table.remove('hash4')
+
+    expect(table.get('james.bond@me.com')).to.equal(undefined)
+    expect(table.get('hash4')).to.equal(undefined)
+
+
+    table.add('toto@hotmail.fr', 'hash3')
+    table.add('james.bond@me.com', 'hash3')
+    table.remove('hash8')
+
+    expect(table.test('toto@hotmail.fr', 'hash3')).to.equal(true)
+    expect(table.count('hash3')).to.equal(3)
+    expect(table.test('jamie.lannister@me.com', 'hash1')).to.equal(true)
+    expect(table.test('jamie.lannister@me.com', 'hash8')).to.equal(false)
+    expect(table.test('hash1', 'jamie.lannister@me.com')).to.equal(true)
+    expect(table.test('hash1', 'adrien.morel@me.com')).to.equal(true)
+
+    table.remove('adrien.morel@me.com')
+
+    expect(table.map2).to.deep.equal({
+      hash1: new Set(['jamie.lannister@me.com']),
+      hash3: new Set(['toto@hotmail.fr', 'james.bond@me.com']),
+    })
+
+    done()
   })
 })
