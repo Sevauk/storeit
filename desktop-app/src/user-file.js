@@ -3,27 +3,15 @@ import * as path from 'path'
 
 let storeDir = './storeit'
 
-export let makeFullPath = (filePath) => path.join(storeDir, filePath)
+let makeFullPath = (filePath) => path.join(storeDir, filePath)
 
-let fileCreate = (filePath) => {
+let fileCreate = (filePath, data) => {
   return new Promise((resolve, reject) => {
-    fs.open(makeFullPath(filePath), 'w', (err, fd) => {
-      if (!err) {
-        resolve({
-          path: filePath,
-          fd
-        })
-      }
-      else
-        reject(err)
+    fs.writeFile(makeFullPath(filePath), data, (err) => {
+      !err ? resolve({path: filePath, data}): reject(err)
     })
   })
 }
-
-// let fileUpdate = (filePath) => {
-//   let fullPath = makeFullPath(filePath)
-//
-// }
 
 let fileDelete = (filePath) => {
   return new Promise((resolve, reject) => {
@@ -50,6 +38,7 @@ export default {
   getStoreDir() {
     return storeDir
   },
+  fullPath: makeFullPath,
   create: fileCreate,
   // update: fileUpdate,
   del: fileDelete,

@@ -4,6 +4,7 @@ import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
+import IPFSnode from './ipfs'
 import {Command, FileObj} from '../lib/protocol-objects'
 
 const MAX_RECO_TIME = 4
@@ -13,6 +14,7 @@ export default class Client {
   constructor() {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
+    this.ipfs = new IPFSnode()
     this.connect()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
@@ -103,13 +105,15 @@ export default class Client {
 
   recvFADD(params) {
     logger.info(`received FADD => ${JSON.stringify(params)}`)
+    let status = []
+    console.log(params)
     for (let file of params.files) {
-      userFile.create(file.path)
-        .then((file) => {
-          logger.info(`downloading file ${file.path} from ipfs`)
-          // TODO ipfs get
-        })
+      logger.info(`downloading file ${file.path} from ipfs`)
+      status.push(this.ipfs.get(file.IPFSHash)
+        .then((buf) => userFile.create(file.path, buf))
+        .then(() => this.ipfs.add(file.path)))
     }
+    return Promise.all(status)
   }
 
   recvFUPT(params) {
