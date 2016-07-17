@@ -5,31 +5,32 @@ let storeDir = './storeit'
 
 let makeFullPath = (filePath) => path.join(storeDir, filePath)
 
-let fileCreate = (filePath, data) => {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(makeFullPath(filePath), data, (err) => {
-      !err ? resolve({path: filePath, data}): reject(err)
-    })
-  })
-}
+let dirCreate = (dirPath) => new Promise((resolve, reject) => {
+  fs.mkdir(makeFullPath(dirPath), (err) =>
+    !err? resolve({path: dirPath, isDir: true}) : reject(err)
+  )
+})
 
-let fileDelete = (filePath) => {
-  return new Promise((resolve, reject) => {
-    fs.unlink(makeFullPath(filePath), (err) => {
-      if (!err) resolve({path: filePath})
-      else reject(err)
-    })
+let fileCreate = (filePath, data) => new Promise((resolve, reject) => {
+  fs.writeFile(makeFullPath(filePath), data, (err) => {
+    !err ? resolve({path: filePath, data}): reject(err)
   })
-}
+})
 
-let fileMove = (src, dst) => {
-  return new Promise((resolve, reject) => {
-    fs.rename(makeFullPath(src), makeFullPath(dst), (err) => {
-      if (!err) resolve({src, dst})
-      else reject(err)
-    })
+let fileDelete = (filePath) => new Promise((resolve, reject) => {
+  fs.unlink(makeFullPath(filePath), (err) => {
+    if (!err) resolve({path: filePath})
+    else reject(err)
   })
-}
+})
+
+
+let fileMove = (src, dst) => new Promise((resolve, reject) => {
+  fs.rename(makeFullPath(src), makeFullPath(dst), (err) => {
+    if (!err) resolve({src, dst})
+    else reject(err)
+  })
+})
 
 export default {
   setStoreDir(dirPath) {
@@ -39,8 +40,8 @@ export default {
     return storeDir
   },
   fullPath: makeFullPath,
+  dirCreate,
   create: fileCreate,
-  // update: fileUpdate,
   del: fileDelete,
   move: fileMove
 }
