@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView.LayoutManager mLayoutManager;
     DrawerLayout Drawer;
 
+    ActionBar mActionBar;
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
 
@@ -220,7 +221,10 @@ public class MainActivity extends AppCompatActivity {
         openFragment(new HomeFragment());
         ActionBar bar = getSupportActionBar();
         if (bar != null)
+        {
             bar.setTitle("Home");
+            bar.setDisplayHomeAsUpEnabled(true);
+        }
 
         Intent intent = getIntent();
         String homeJson = intent.getStringExtra("home");
@@ -359,7 +363,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        switch (id)
+        {
+            case R.id.action_settings:
+                break;
+            case android.R.id.home:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

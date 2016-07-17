@@ -8,9 +8,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -36,6 +38,15 @@ import com.storeit.storeit.oauth.GetUsernameTask;
 import com.storeit.storeit.protocol.LoginHandler;
 import com.storeit.storeit.protocol.command.Response;
 import com.storeit.storeit.services.SocketService;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.util.Map;
 
 /*
 * Login Activity
@@ -231,6 +242,10 @@ public class LoginActivity extends Activity {
                 );
             }
         }
+
+        copyIpfs();
+        String ret = launchIpfs("init");
+        Log.v("IPFS", ret);
     }
 
     @Override
@@ -243,6 +258,84 @@ public class LoginActivity extends Activity {
                     Toast.makeText(this, "We need to access sdcard", Toast.LENGTH_SHORT).show();
                 }
                 break;
+        }
+    }
+
+    void copyIpfs() {
+        File file = new File("/data/data/com.storeit.storeit/ipfs"); // Check if ipfs is already copied
+        if (file.exists()) {
+            return;
+        }
+
+
+        try {
+            InputStream is = getAssets().open("ipfs"); // Copy file
+            OutputStream os = new FileOutputStream(file);
+
+            int len = 0;
+            byte[] buffer = new byte[1024];
+            while ((len = is.read(buffer)) > 0) {
+                os.write(buffer, 0, len);
+            }
+            os.close();
+            launchBinary("/system/bin/chmod 751 /data/data/com.storeit.storeit/ipfs"); // chmod
+            launchIpfs("init");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    String launchIpfs(String arg) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("/data/data/com.storeit.storeit/ipfs", arg);
+            Map<String, String> env = pb.environment();
+            env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
+//            pb.directory(new File("/data/data/com.storeit.storeit/"));
+            Process process = pb.start();
+
+            // Reads stdout.
+            // NOTE: You can write to stdin of the command using
+            //       process.getOutputStream().
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+            int read;
+            char[] buffer = new char[4096];
+            StringBuffer output = new StringBuffer();
+            while ((read = reader.read(buffer)) > 0) {
+                output.append(buffer, 0, read);
+            }
+            reader.close();
+            process.waitFor();
+
+            return output.toString();
+        } catch (IOException | InterruptedException e) {
+            return e.getMessage();
+        }
+    }
+
+    String launchBinary(String cmd) {
+        try {
+            Process process = Runtime.getRuntime().exec(cmd); // Run the process
+
+
+            // Reads stdout.
+            // NOTE: You can write to stdin of the command using
+            //       process.getOutputStream().
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+            int read;
+            char[] buffer = new char[4096];
+            StringBuffer output = new StringBuffer();
+            while ((read = reader.read(buffer)) > 0) {
+                output.append(buffer, 0, read);
+            }
+            reader.close();
+            process.waitFor();
+
+            return output.toString();
+        } catch (IOException | InterruptedException e) {
+            return e.getMessage();
         }
     }
 }
