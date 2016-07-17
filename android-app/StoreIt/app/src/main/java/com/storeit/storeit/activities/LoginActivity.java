@@ -46,6 +46,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -244,8 +248,14 @@ public class LoginActivity extends Activity {
         }
 
         copyIpfs();
-        String ret = launchIpfs("init");
-        Log.v("IPFS", ret);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "daemon"));
+            }
+        }).start();
+
     }
 
     @Override
@@ -267,7 +277,6 @@ public class LoginActivity extends Activity {
             return;
         }
 
-
         try {
             InputStream is = getAssets().open("ipfs"); // Copy file
             OutputStream os = new FileOutputStream(file);
@@ -278,64 +287,39 @@ public class LoginActivity extends Activity {
                 os.write(buffer, 0, len);
             }
             os.close();
-            launchBinary("/system/bin/chmod 751 /data/data/com.storeit.storeit/ipfs"); // chmod
-            launchIpfs("init");
+
+            launchCommand(Arrays.asList("/system/bin/chmod",
+                    "751",
+                    "/data/data/com.storeit.storeit/ipfs"));
+            launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "init"));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    String launchIpfs(String arg) {
+    void launchCommand(List<String> args) {
+        ProcessBuilder pb = new ProcessBuilder(args);
+        Map<String, String> env = pb.environment();
+        env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
+
         try {
-            ProcessBuilder pb = new ProcessBuilder("/data/data/com.storeit.storeit/ipfs", arg);
-            Map<String, String> env = pb.environment();
-            env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
-//            pb.directory(new File("/data/data/com.storeit.storeit/"));
             Process process = pb.start();
 
-            // Reads stdout.
-            // NOTE: You can write to stdin of the command using
-            //       process.getOutputStream().
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
             int read;
             char[] buffer = new char[4096];
-            StringBuffer output = new StringBuffer();
+//            StringBuffer output = new StringBuffer();
             while ((read = reader.read(buffer)) > 0) {
-                output.append(buffer, 0, read);
+//                output.append(buffer, 0, read);
+                Log.v("BINARY", String.valueOf(buffer, 0, read));
             }
             reader.close();
             process.waitFor();
 
-            return output.toString();
         } catch (IOException | InterruptedException e) {
-            return e.getMessage();
-        }
-    }
-
-    String launchBinary(String cmd) {
-        try {
-            Process process = Runtime.getRuntime().exec(cmd); // Run the process
-
-
-            // Reads stdout.
-            // NOTE: You can write to stdin of the command using
-            //       process.getOutputStream().
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
-            int read;
-            char[] buffer = new char[4096];
-            StringBuffer output = new StringBuffer();
-            while ((read = reader.read(buffer)) > 0) {
-                output.append(buffer, 0, read);
-            }
-            reader.close();
-            process.waitFor();
-
-            return output.toString();
-        } catch (IOException | InterruptedException e) {
-            return e.getMessage();
+            e.printStackTrace();
         }
     }
 }
