@@ -16,7 +16,6 @@ export default class Client {
     this.responseHandlers = {} // custom server response handlers
     this.connect()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
-    logger.error(this)
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
@@ -118,8 +117,10 @@ export default class Client {
         if (err)
           return reject(err)
         this.addResponseHandler(obj.uid, (params, command) => {
-          if (command.code === 0)
+          if (command.code === 0) {
+            logger.debug('command ' + JSON.stringify(command) + ' is successful')
             return resolve(params)
+          }
           return reject(command)
         })
       })
@@ -179,25 +180,29 @@ export default class Client {
   sendFADD(files) {
     // TODO: IPFS add here
     // then: get IPFSHash
-    return this.send('FADD', {files})
+    return this.send('FADD', {files: [files]})
+      .catch((err) => logger.error(err.text))
   }
 
   sendFUPT(files) {
     return this.send('FUPT', {files})
+      .catch((err) => logger.error(err.text))
   }
 
   sendFDEL(files) {
     return this.send('FDEL', {files})
+      .catch((err) => logger.error(err.text))
   }
 
   sendFMOV(src, dst) {
     return this.send('FMOV', {src, dst})
+      .catch((err) => logger.error(err.text))
   }
 
   handleFsEvent(ev) {
     let handler = this[`send${ev.type}`]
     if (handler) {
-      let file = new FileObj() // TODO
+      let file = new FileObj('/toto.txt', 'QmTjQXpfFjwDaqaSDkFTxH3dfuqAGP3a3jgNWCJKww6Bhr') // TODO
       return handler.call(this, file)
 
       // TODO: manage FMOV
