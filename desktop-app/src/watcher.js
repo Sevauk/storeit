@@ -71,6 +71,11 @@ export default class Watcher {
 
   listener(evType, path, stats) {
     let ev = new EventType(evType, path, stats)
+
+    if (!ev.type) {
+      logger.error('event type is undefined ' + ev)
+      return null
+    }
     logger.log(`[FileWatcher] ${ev.type.toUpperCase()} ${ev.fileKind} ${path}`)
 
     if (!this.ignoreEvent(ev)) {

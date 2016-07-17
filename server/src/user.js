@@ -55,6 +55,11 @@ export class User {
   }
 
   setTrees(trees, action) {
+
+    if (typeof trees[Symbol.iterator] !== 'function') {
+      return api.errWithStack(api.ApiError.BADREQUEST)
+    }
+    
     for (const treeIncoming of trees) {
       const tri = tree.setTree(this.home, treeIncoming.path, (treeParent, name) =>
         action(treeParent, treeIncoming, name))

@@ -4,7 +4,7 @@
   "main": "main.js",
   "scripts": {
     "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
-    "postinstall": "shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json",
+    "postinstall": "shx rm -f .env .tokens.json && shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json",
     "start": "npm run build && node build/main.js",
     "test": "npm run build && npm run bdd",
     "dev": "concurrently -r -k 'gulp' 'node-inspector' 'npm run nodemon'",

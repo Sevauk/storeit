@@ -22,5 +22,3 @@ else {
 }
 
 let client = new Client()
-client.auth('google')
-  .then(() => logger.info('joined server'))
