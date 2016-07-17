@@ -43,13 +43,11 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
 
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: #selector(uploadOptions))
         
-        if (self.actionSheetsManager == nil) {
-        	self.actionSheetsManager = ActionSheetsManager()
-            self.actionSheetsManager!.addNewActionSheet(ActionSheets.UPLOAD, title: "Ajout d'un nouvel élément", message: nil)
-            self.actionSheetsManager!.addNewActionSheet(ActionSheets.DIR_OPT, title: "Dossier", message: "Que voulez-vous faire ?")
-            self.actionSheetsManager!.addNewActionSheet(ActionSheets.FILE_OPT, title: "Fichier", message: "Que voulez-vous faire ?")
-            self.addActionsToActionSheets()
-        }
+        self.actionSheetsManager = ActionSheetsManager()
+        self.actionSheetsManager!.addNewActionSheet(ActionSheets.UPLOAD, title: "Ajout d'un nouvel élément", message: nil)
+        self.actionSheetsManager!.addNewActionSheet(ActionSheets.DIR_OPT, title: "Dossier", message: "Que voulez-vous faire ?")
+        self.actionSheetsManager!.addNewActionSheet(ActionSheets.FILE_OPT, title: "Fichier", message: "Que voulez-vous faire ?")
+        self.addActionsToActionSheets()
     }
     
     // function triggered when back button of navigation bar is pressed
@@ -291,7 +289,6 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
                 }
             }
         }))
-        
         self.presentViewController(alert, animated: true, completion: nil)
     }
 

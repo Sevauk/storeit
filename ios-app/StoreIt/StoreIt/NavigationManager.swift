@@ -15,6 +15,12 @@ enum UpdateType {
     case ADD
     case DELETE
     case RENAME
+    case UPDATE
+}
+
+enum Property {
+    case Metadata
+    case IPFSHash
 }
 
 class MovingOptions {
@@ -32,6 +38,7 @@ struct UpdateElement {
     var fileToAdd: File? = nil
     var pathToDelete: String? = nil
     var pathToRenameWith: (src, dest)? = nil
+    var propertyToUpdate: (Property, File)? = nil
     
     init(file: File) {
         updateType = UpdateType.ADD
@@ -47,6 +54,11 @@ struct UpdateElement {
     init(src: String, dest: String) {
         updateType = UpdateType.RENAME
         pathToRenameWith = (src, dest)
+    }
+    
+    init(property: Property, file: File) {
+        updateType = UpdateType.UPDATE
+        propertyToUpdate = (property, file)
     }
 }
 
@@ -120,6 +132,7 @@ class NavigationManager {
                             self.currentDirectory[newFileName]?.path = (updateElement.pathToRenameWith?.1)!
                         }
                 }
+            case .UPDATE: break // TODO
             }
         }
         return index
@@ -222,6 +235,14 @@ class NavigationManager {
                             storeit[newName]?.path = newPath
                         }
                     }
+            	case .UPDATE:
+                    if let propertyToUpdate = updateElement.propertyToUpdate {
+                        if (propertyToUpdate.0 == Property.IPFSHash) {
+                            storeit[fileName]?.IPFSHash = propertyToUpdate.1.IPFSHash
+                        } else if (propertyToUpdate.0 == Property.Metadata) {
+                            storeit[fileName]?.metadata = propertyToUpdate.1.metadata
+                        }
+                    }
             }
         }
     }
@@ -236,6 +257,8 @@ class NavigationManager {
             	path = updateElement.pathToDelete
             case .RENAME:
             	path = updateElement.pathToRenameWith?.0
+        	case .UPDATE:
+            	path = updateElement.propertyToUpdate?.1.path
         }
         
         var index = 0
