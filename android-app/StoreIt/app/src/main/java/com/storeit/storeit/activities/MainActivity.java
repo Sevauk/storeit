@@ -133,7 +133,9 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setHasFixedSize(true);
 
-        mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, PROFILE, this);
+        String profileUrl = getIntent().getExtras().getString("profile_url");
+
+        mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, profileUrl, this);
         mRecyclerView.setAdapter(mAdapter);
 
 
@@ -489,6 +491,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFADD(FileCommand command) {
             Log.v("MainActivity", "FADD");
             filesManager.addFile(command.getFiles());
+            mBoundService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -501,6 +504,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFUPT(FileCommand command) {
             Log.v("MainActivity", "FUPT");
             filesManager.updateFile(command.getFiles());
+            mBoundService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -513,6 +517,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFMOV(FileMoveCommand command) {
             Log.v("MainActivity", "FMOV");
             filesManager.moveFile(command.getSrc(), command.getDst());
+            mBoundService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

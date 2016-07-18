@@ -83,6 +83,7 @@ public class LoginActivity extends Activity {
                         String homeJson = gson.toJson(joinResponse.getParameters().getHome());
 
                         intent.putExtra("home", homeJson);
+                        intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     } else {
