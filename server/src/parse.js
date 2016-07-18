@@ -100,7 +100,7 @@ const resp = (command, arg, client) => {
   }
 
   const uid = command.commandUid
-  if (uid in client.responsehandlers && client.responseHandlers[uid]) {
+  if (uid in client.responseHandlers && client.responseHandlers[uid]) {
     client.responseHandlers[uid](command.code, command.text)
     delete client.responseHandlers[uid]
   }
