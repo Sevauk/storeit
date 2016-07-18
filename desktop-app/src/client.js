@@ -15,9 +15,9 @@ export default class Client {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
     this.ipfs = new IPFSnode()
-    this.connect()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
+    this.connect()
   }
 
   auth(type) {
@@ -84,7 +84,7 @@ export default class Client {
       return null
     }
     else {
-      return handler(res.parameters)
+      return handler.call(this, res.parameters)
     }
   }
 
@@ -103,22 +103,33 @@ export default class Client {
     return this.send('JOIN', {authType, accessToken})
   }
 
-  recvFADD(params) {
-    logger.info(`received FADD => ${JSON.stringify(params)}`)
+  recvFADD(params, log=true) {
+    if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
+
+    if (!Array.isArray(params.files))
+      params.files = Object.keys(params.files).map((key) => params.files[key])
+
     let status = []
-    console.log(params)
+    let res
     for (let file of params.files) {
-      logger.info(`downloading file ${file.path} from ipfs`)
-      status.push(this.ipfs.get(file.IPFSHash)
-        .then((buf) => userFile.create(file.path, buf))
-        .then(() => this.ipfs.add(file.path)))
+      if (file.isDir) {
+        res = userFile.dirCreate(file.path)
+          .then(() => this.recvFADD({files: file.files}, false))
+      }
+      else {
+        logger.info(`downloading file ${file.path} from ipfs`)
+        res = this.ipfs.get(file.IPFSHash)
+          .then((buf) => userFile.create(file.path, buf))
+          .then(() => this.ipfs.add(file.path))
+      }
+      status.push(res)
     }
     return Promise.all(status)
   }
 
   recvFUPT(params) {
     logger.info(`received FUPT => ${JSON.stringify(params)}`)
-    return this.recvFADD(params)
+    return this.recvFADD(params, false)
   }
 
   recvFDEL(params) {
