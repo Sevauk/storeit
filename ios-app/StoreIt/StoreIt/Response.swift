@@ -11,21 +11,21 @@ import ObjectMapper
 
 class Response : Mappable {
     
-    var code: String
+    var code: Int
     var text: String
     var commandUid: Int
     var command: String
     var parameters: [String:File]?
     
     init() {
-        self.code = ""
+        self.code = -1
         self.text = ""
         self.command = ""
         self.commandUid = -1
         self.parameters = nil
     }
     
-    init(code: String, text: String, commandUid: Int, command: String, parameters: [String: File]) {
+    init(code: Int, text: String, commandUid: Int, command: String, parameters: [String: File]?) {
         self.code = code
         self.text = text
         self.commandUid = commandUid
@@ -34,7 +34,7 @@ class Response : Mappable {
     }
     
     required init?(_ map: Map) {
-        self.code = ""
+        self.code = -1
         self.text = ""
         self.command = ""
         self.commandUid = -1

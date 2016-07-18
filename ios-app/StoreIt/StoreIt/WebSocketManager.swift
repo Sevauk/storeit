@@ -185,7 +185,7 @@ class WebSocketManager {
                 else if (cmdInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
                     
                     // FDEL
-                    if (command.command == "FDEL") {
+                    if (command.command == cmdInfos.FDEL) {
                         let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(request)
                         
                         if let cmd = fdelCmd {
@@ -196,7 +196,7 @@ class WebSocketManager {
                     }
                     
                     // FMOV
-                    else if (command.command == "FMOV") {
+                    else if (command.command == cmdInfos.FMOV) {
                         let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(request)
                         
                         if let cmd = fmovCmd {
@@ -211,17 +211,38 @@ class WebSocketManager {
                             }
                         }
                     }
+                        
+                    else if (command.command == cmdInfos.FSTR) {
+                        // TODO
+                    }
                     
                     // FADD / FUPT
                     else {
                         let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(request)
                         
                         if let files = defaultCmd?.parameters?.files {
-                            if (command.command == "FADD") {
+                            if (command.command == cmdInfos.FADD) {
                             	self.addFiles(files)
-                            } else if (command.command == "FUPT") {
+                            } else if (command.command == cmdInfos.FUPT) {
                                 self.updateFiles(files)
                             }
+                        }
+                    }
+                    
+                    // TODO: Respond to server with response depending of the success of the update in the tree
+                    var response: Response?
+                    var jsonResponse: String?
+                    
+                    if (command.command == cmdInfos.FSTR) {
+                        response = ErrorResponse(code: cmdInfos.NOT_IMPLEMENTED.0, text: cmdInfos.NOT_IMPLEMENTED.1, commandUid: command.commandUid)
+                    } else {
+                        response = SuccessResponse(commandUid: command.commandUid)
+                    }
+                    
+                    if let unwrapResp = response {
+                        jsonResponse = Mapper().toJSONString(unwrapResp)
+                        if let response = jsonResponse {
+                            self.sendRequest(response, completion: nil)
                         }
                     }
                 }

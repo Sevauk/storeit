@@ -55,6 +55,8 @@
 		85FF45D91D390F2900A89436 /* ic_folder_open.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 85FF45D81D390F2900A89436 /* ic_folder_open.imageset */; };
 		85FF45DD1D3A757500A89436 /* ActionSheetsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FF45DC1D3A757500A89436 /* ActionSheetsManager.swift */; };
 		85FF45DF1D3A9E2400A89436 /* ic_settings_white.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 85FF45DE1D3A9E2400A89436 /* ic_settings_white.imageset */; };
+		85FF45E11D3CD50D00A89436 /* SuccessResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FF45E01D3CD50D00A89436 /* SuccessResponse.swift */; };
+		85FF45E31D3CD7E200A89436 /* ErrorResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FF45E21D3CD7E200A89436 /* ErrorResponse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -132,6 +134,8 @@
 		85FF45D81D390F2900A89436 /* ic_folder_open.imageset */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ic_folder_open.imageset; path = ../../../Downloads/ic_folder_open_black_24dp/ios/ic_folder_open.imageset; sourceTree = "<group>"; };
 		85FF45DC1D3A757500A89436 /* ActionSheetsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActionSheetsManager.swift; sourceTree = "<group>"; };
 		85FF45DE1D3A9E2400A89436 /* ic_settings_white.imageset */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ic_settings_white.imageset; path = ../../../Downloads/ic_settings_white_24dp/ios/ic_settings_white.imageset; sourceTree = "<group>"; };
+		85FF45E01D3CD50D00A89436 /* SuccessResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SuccessResponse.swift; sourceTree = "<group>"; };
+		85FF45E21D3CD7E200A89436 /* ErrorResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -302,6 +306,8 @@
 				855AFB3B1D16D643009B81D9 /* Parameters.swift */,
 				855AFB3D1D171080009B81D9 /* ResponseResolver.swift */,
 				85B5A8F21D2C09AE00529533 /* UidFactory.swift */,
+				85FF45E01D3CD50D00A89436 /* SuccessResponse.swift */,
+				85FF45E21D3CD7E200A89436 /* ErrorResponse.swift */,
 			);
 			name = commands;
 			sourceTree = "<group>";
@@ -548,6 +554,7 @@
 				8500F6DE1C970F1C00C69875 /* AppDelegate.swift in Sources */,
 				857D8ED01D1A90D100166738 /* ConnectionType.swift in Sources */,
 				85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */,
+				85FF45E31D3CD7E200A89436 /* ErrorResponse.swift in Sources */,
 				854E27E91CF5C795007DA015 /* StoreitActionSheet.swift in Sources */,
 				855AFB3C1D16D643009B81D9 /* Parameters.swift in Sources */,
 				8596DF0C1CDBDC03008501BD /* ConnectionManager.swift in Sources */,
@@ -557,6 +564,7 @@
 				8500F7111C972B0400C69875 /* NetworkManager.swift in Sources */,
 				85708E821D130ED5001B7415 /* ParametersView.swift in Sources */,
 				855AFB2F1D15CCC6009B81D9 /* CommandInfos.swift in Sources */,
+				85FF45E11D3CD50D00A89436 /* SuccessResponse.swift in Sources */,
 				85708E861D131D21001B7415 /* ProfileView.swift in Sources */,
 				858B096E1D23D9D400CB1190 /* IpfsResponse.swift in Sources */,
 				85FF45DD1D3A757500A89436 /* ActionSheetsManager.swift in Sources */,

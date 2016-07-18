@@ -17,9 +17,28 @@ struct CommandInfos {
     let FADD = "FADD"
     let FUPT = "FUPT"
     let FMOV = "FMOV"
+    let FSTR = "FSTR"
 
-    var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV] }
+    var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV, FSTR] }
     
-    var JOIN_RESPONSE_TEXT = "welcome"
-    var SUCCESS_TEXT = "success"
+    let JOIN_RESPONSE_TEXT = "welcome"
+    let SUCCESS_TEXT = "success"
+    
+    let SUCCESS_CODE = 0
+    
+    // SERVER ERRORS
+    
+    let BAD_CREDENTIALS = (1, "Invalid credentials")
+    let BAD_SCOPE = (2, "Bad OAuth scope")
+    let UNKNOWN_AUTH_TYPE = (3, "Unknown authentication method")
+    let SERVER_ERROR = (4, "The server failed")
+    let BAD_TREE = (5, "The tree does not match server reprensentation. Login again")
+    let BAD_REQUEST = (6, "The request structure is invalid")
+    let BAD_PARAMETERS = (7, "The request parameters are invalid")
+    let UNKNOWN_REQUEST = (8, "The request is unknown")
+    let ENOENT = (9, "No such file or directory")
+    
+    // TODO: CLIENT ERRORS
+    
+    let NOT_IMPLEMENTED = (101, "Command is not implemented yet")
 }
