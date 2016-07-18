@@ -272,7 +272,7 @@ public class FilesManager {
         }
 
         StoreitFile parent = getParentFile(mRootFile, parentPath);
-        if (parent != null) {
+          if (parent != null) {
             parent.addFile(file);
             saveJson();
         }

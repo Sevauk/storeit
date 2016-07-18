@@ -223,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
         if (bar != null)
         {
             bar.setTitle("Home");
-            bar.setDisplayHomeAsUpEnabled(true);
         }
 
         Intent intent = getIntent();
@@ -479,9 +478,11 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    mBoundService.sendRSPONSE();
                     refreshFileExplorer();
                 }
             });
+
         }
 
         @Override
