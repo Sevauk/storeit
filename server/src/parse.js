@@ -100,7 +100,7 @@ const resp = (command, arg, client) => {
   }
 
   const uid = command.commandUid
-  logger.debug(JSON.stringify(client))
+  logger.debug(client.responseHandlers)
   if (client.responseHandlers && uid in client.responseHandlers && client.responseHandlers[uid]) {
     client.responseHandlers[uid](command.code, command.text)
     delete client.responseHandlers[uid]
