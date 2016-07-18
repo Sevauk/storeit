@@ -82,6 +82,12 @@ export class User {
 
   uptTree(trees) {
     return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+
+      if (!treeParent.files) {
+        logger.debug('there is no ' + name + ' in ' + tree.path)
+        return api.errWithStack(api.ApiError.BADTREE)
+      }
+
       treeParent.files[name] = treeCurrent
 
       store.keepTreeAlive(treeCurrent)
@@ -145,7 +151,6 @@ export class User {
             // TODO: implement a way to remove hash if it is not needed by anyone anymore
             // use probably a hashmap of all the hashes as keys and clients that need them as value
           })
-
           return delete treeCurrent.files[name]
         })
         if (err !== true) {

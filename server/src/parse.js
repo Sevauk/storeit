@@ -99,9 +99,11 @@ const resp = (command, arg, client) => {
     return logger.debug('client sent invalid response')
   }
 
-  if (client.responseHandlers[command.commandUid]) {
-    client.responseHandlers[command.commandUid](command.code, command.text)
-    delete client.responseHandlers[command.commandUid]
+  const uid = command.commandUid
+  logger.debug(client.responseHandlers)
+  if (client.responseHandlers && uid in client.responseHandlers && client.responseHandlers[uid]) {
+    client.responseHandlers[uid](command.code, command.text)
+    delete client.responseHandlers[uid]
   }
 }
 

@@ -4,10 +4,11 @@ import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
-import {Command, Response, FileObj} from '../lib/protocol-objects'
+import {Command, Response} from '../lib/protocol-objects'
 import * as store from './store.js'
 import tree from './tree.js'
 import * as path from 'path'
+import IPFSnode from './ipfs'
 
 const MAX_RECO_TIME = 4
 
@@ -16,9 +17,10 @@ export default class Client {
   constructor() {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
-    this.connect()
+    this.ipfs = new IPFSnode()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
+    this.connect()
   }
 
   auth(type) {
@@ -94,7 +96,7 @@ export default class Client {
       return null
     }
     else {
-      return handler(res.parameters, res)
+      return handler.call(this, res.parameters, res)
     }
   }
 
@@ -116,8 +118,10 @@ export default class Client {
 
     return new Promise((resolve, reject) =>
       this.sock.send(JSON.stringify(obj), (err) => {
-        if (err)
+        if (err) {
+          console.log(err)
           return reject(err)
+        }
         this.addResponseHandler(obj.uid, (params, command) => {
           if (command.code === 0) {
             logger.debug('command ' + JSON.stringify(command) + ' is successful')
@@ -134,15 +138,37 @@ export default class Client {
       .then((params) => logger.info(`tree is ${JSON.stringify(params.home)}`)) // TODO receive tree/home
   }
 
-  recvFADD(params) {
-    logger.info(`received FADD => ${JSON.stringify(params)}`)
+  recvFADD(params, log=true) {
+    if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
+
+    if (!Array.isArray(params.files))
+      params.files = Object.keys(params.files).map((key) => params.files[key])
+
+    let status = []
+    let res
     for (let file of params.files) {
-      userFile.create(file.path)
-        .then((file) => {
-          logger.info(`downloading file ${file.path} from ipfs`)
-          // TODO ipfs get
-        })
+
+      logger.debug('ignore ' + file.path)
+      userFile.ignore(file.path)
+      logger.debug(userFile.ignoreSet)
+
+      if (file.isDir) {
+        res = userFile.dirCreate(file.path)
+          .then(() => this.recvFADD({files: file.files}, false))
+      }
+      else {
+        userFile.create(file.path, '') // TODO: show user that we are syncing
+        logger.info(`downloading file ${file.path} from ipfs`)
+        res = this.ipfs.get(file.IPFSHash)
+          .then((buf) => {
+            logger.info(`download of ${file.path} is over`)
+            userFile.create(file.path, buf)
+          })
+          .then(() => this.ipfs.add(file.path))
+      }
+      status.push(res)
     }
+    return Promise.all(status)
   }
 
   recvRESP(params, command) {
@@ -151,7 +177,7 @@ export default class Client {
 
   recvFUPT(params) {
     logger.info(`received FUPT => ${JSON.stringify(params)}`)
-    return this.recvFADD(params)
+    return this.recvFADD(params, false)
   }
 
   recvFDEL(params) {
@@ -180,18 +206,19 @@ export default class Client {
   }
 
   sendFADD(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath)
+    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
     .then((file) => this.send('FADD', {files: [file]}))
     .catch((err) => logger.error('FADD: ' + err.text))
   }
 
   sendFUPT(filePath) {
-    return this.send('FUPT', {files: [filePath]})
+    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
+    .then((file) => this.send('FUPT', {files: [file]}))
     .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {filePath})
+    return this.send('FDEL', {files: [filePath.substr('storeit'.length)]}) // QUICKFIX, no windows
     .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
@@ -203,7 +230,9 @@ export default class Client {
   handleFsEvent(ev) {
     let handler = this[`send${ev.type}`]
     if (handler) {
-      return handler.call(this, ev.path)
+      handler.call(this, ev.path)
+        .then(() => logger.debug('ok'))
+        .catch((err) => logger.debug(err))
 
       // TODO: manage FMOV
     }
