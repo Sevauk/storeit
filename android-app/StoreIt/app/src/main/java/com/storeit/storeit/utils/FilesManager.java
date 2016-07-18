@@ -279,13 +279,13 @@ public class FilesManager {
     }
 
     public void updateFile(StoreitFile file) {
-        StoreitFile toUpdate = getFileByHash(file.getIPFSHash(), mRootFile);
+        StoreitFile toUpdate = getFileByName(file.getPath(), mRootFile);
 
         if (toUpdate != null) {
+            toUpdate.setIPFSHash(file.getIPFSHash());
             toUpdate.setFiles(file.getFiles());
             toUpdate.setIsDir(file.isDirectory());
             toUpdate.setMetadata(file.getMetadata());
-            toUpdate.setPath(file.getPath());
         }
     }
 

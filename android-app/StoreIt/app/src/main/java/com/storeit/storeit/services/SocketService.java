@@ -21,7 +21,9 @@ import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
 import com.storeit.storeit.protocol.command.JoinCommand;
+import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.protocol.command.Response;
+
 import java.io.IOException;
 
 /*
@@ -37,15 +39,12 @@ public class SocketService extends Service {
     public static final String LOGTAG = "SocketService";
 
     private boolean mConnected = false;
-
     private WebSocket webSocket = null;
 
     // Handlers for callback
     private LoginHandler mLoginHandler;
     private FileCommandHandler mFileCommandHandler;
-
     private int uid = 0;
-
     private String lastCmd;
 
     private class SocketManager implements Runnable {
@@ -68,9 +67,9 @@ public class SocketService extends Service {
                                     case CommandManager.RESP:
                                         if (lastCmd.equals("JOIN")){
                                             Gson gson = new Gson();
-                                            Response response = gson.fromJson(message, Response.class);
+                                            JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
                                             if (mLoginHandler != null) {
-                                                mLoginHandler.handleJoin(response);
+                                                mLoginHandler.handleJoin(joinResponse);
                                             }
                                         }
                                         break;
@@ -155,6 +154,11 @@ public class SocketService extends Service {
 
         uid++;
         lastCmd = "FMOV";
+    }
+
+    public void sendRSPONSE() {
+        Gson gson = new Gson();
+        Response response = new Response(0, "OK", uid, "RESP");
     }
 
     public void setmLoginHandler(LoginHandler handler) {

@@ -150,7 +150,7 @@ public class FileViewerFragment extends Fragment {
     public boolean onContextItemSelected(MenuItem item) {
         int position = adapter.getPosition();
 
-        MainActivity activity  = (MainActivity)getActivity();
+        MainActivity activity = (MainActivity) getActivity();
         FilesManager manager = activity.getFilesManager();
         StoreitFile file = adapter.getFileAt(position);
         SocketService service = activity.getSocketService();
@@ -169,7 +169,7 @@ public class FileViewerFragment extends Fragment {
                         Toast.makeText(getContext(), "Error while deleting file", Toast.LENGTH_SHORT).show();
                     }
                 }
-
+                break;
             case R.id.action_rename_file:
                 renameFile(manager, file);
                 Log.v("FileVIewerFragment", "Rename");
@@ -197,7 +197,7 @@ public class FileViewerFragment extends Fragment {
                 File f = new File(file.getPath()); // Get parent path
 
                 String finalName = f.getParent() + File.separator + fileName;
-                finalName =  finalName.replace("//", "/");
+                finalName = finalName.replace("//", "/");
                 ((MainActivity) getActivity()).getSocketService().sendFMOV(file.getPath(), finalName);
                 manager.moveFile(file.getPath(), finalName);
                 adapter.reloadFiles();

@@ -1,20 +1,16 @@
 package com.storeit.storeit.protocol.command;
 
+import com.storeit.storeit.protocol.StoreitFile;
+
 /**
- * Created by louis on 18/07/16.
+ * Created by loulo on 21/06/2016.
  */
-public class Response {
+public class JoinResponse {
     int code;
     String text;
     int commandUid;
     String command;
-
-    public Response(int code, String text, int commandUid, String command) {
-        this.code = code;
-        this.text = text;
-        this.commandUid = commandUid;
-        this.command = command;
-    }
+    Parameters parameters;
 
     public int getCode() {
         return code;
@@ -30,5 +26,17 @@ public class Response {
 
     public String getCommand() {
         return command;
+    }
+
+    public Parameters getParameters() {
+        return parameters;
+    }
+
+    public class Parameters{
+        StoreitFile home;
+
+        public StoreitFile getHome() {
+            return home;
+        }
     }
 }

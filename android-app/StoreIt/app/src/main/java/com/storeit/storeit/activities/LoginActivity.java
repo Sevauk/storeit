@@ -8,12 +8,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -36,7 +33,7 @@ import com.google.gson.Gson;
 import com.storeit.storeit.R;
 import com.storeit.storeit.oauth.GetUsernameTask;
 import com.storeit.storeit.protocol.LoginHandler;
-import com.storeit.storeit.protocol.command.Response;
+import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.services.SocketService;
 
 import java.io.BufferedReader;
@@ -46,8 +43,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -69,14 +64,14 @@ public class LoginActivity extends Activity {
 
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
-        public void handleJoin(final Response response) {
+        public void handleJoin(final JoinResponse joinResponse) {
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (response.getCode() == 0) {
+                    if (joinResponse.getCode() == 0) {
 
-                        // The service will be handled by MainActivit;
+                        // The service will be handled by MainActivity;
                         destroyService = false;
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
@@ -84,13 +79,13 @@ public class LoginActivity extends Activity {
                         // Stringify fileobject in order to pass it to other activity. It will be save on disk
                         // So passing as string is fine
                         Gson gson = new Gson();
-                        String homeJson = gson.toJson(response.getParameters().getHome());
+                        String homeJson = gson.toJson(joinResponse.getParameters().getHome());
 
                         intent.putExtra("home", homeJson);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     } else {
-                        Toast.makeText(LoginActivity.this, response.getText(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(LoginActivity.this, joinResponse.getText(), Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -317,7 +312,6 @@ public class LoginActivity extends Activity {
             }
             reader.close();
             process.waitFor();
-
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
