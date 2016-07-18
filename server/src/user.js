@@ -82,6 +82,12 @@ export class User {
 
   uptTree(trees) {
     return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+
+      if (!treeParent.files) {
+        logger.debug('there is no ' + name + ' in ' + tree.path)
+        return api.errWithStack(api.ApiError.BADTREE)
+      }
+
       treeParent.files[name] = treeCurrent
 
       store.keepTreeAlive(treeCurrent)
