@@ -8,7 +8,7 @@ import {Command, Response, FileObj} from '../lib/protocol-objects'
 import * as store from './store.js'
 import tree from './tree.js'
 import * as path from 'path'
-import IPFSNode from './ipfs'
+import IPFSnode from './ipfs'
 
 const MAX_RECO_TIME = 4
 
