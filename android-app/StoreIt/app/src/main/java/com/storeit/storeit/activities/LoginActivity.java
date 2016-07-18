@@ -15,6 +15,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.facebook.CallbackManager;
@@ -204,6 +205,14 @@ public class LoginActivity extends Activity {
             @Override
             public void onClick(View v) {
                 pickUserAccount();
+            }
+        });
+
+        Button developerButton = (Button)findViewById(R.id.developer_login);
+        developerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mBoundService.sendJOIN("gg", "developer");
             }
         });
 

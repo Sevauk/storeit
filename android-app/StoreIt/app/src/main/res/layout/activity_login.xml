@@ -41,4 +41,11 @@
         android:layout_marginBottom="24dp"
         android:padding="12dp" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Developer login"
+        android:id="@+id/developer_login"
+        android:layout_gravity="center_horizontal" />
+
 </LinearLayout>
