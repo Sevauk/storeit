@@ -76,7 +76,7 @@ export default class Watcher {
       logger.error('event type is undefined ' + ev)
       return null
     }
-    logger.log(`[FileWatcher] ${ev.type.toUpperCase()} ${ev.fileKind} ${path}`)
+    logger.debug(`[FileWatcher] ${JSON.stringify(ev)} ${ev.fileKind} ${path}`)
 
     if (!this.ignoreEvent(ev)) {
       return this.handler(ev)

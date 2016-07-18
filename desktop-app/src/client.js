@@ -1,11 +1,13 @@
 import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
-import userFile from './user-file'
+import userFile from './user-file.js'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
 import {Command, Response, FileObj} from '../lib/protocol-objects'
 import * as store from './store.js'
+import tree from './tree.js'
+import * as path from 'path'
 
 const MAX_RECO_TIME = 4
 
@@ -174,36 +176,36 @@ export default class Client {
     logger.info(`received FMOV => ${JSON.stringify(params)}`)
     return store.FSTR(params.hash, params.keep)
       .then(() => this.answerSuccess())
-      .catch((err) => logger.error(err))
+      .catch((err) => logger.error('FSTR: ' + err))
   }
 
   sendFADD(files) {
     // TODO: IPFS add here
     // then: get IPFSHash
     return this.send('FADD', {files: [files]})
-      .catch((err) => logger.error(err.text))
+      .catch((err) => logger.error('FADD: ' + err.text))
   }
 
   sendFUPT(files) {
     return this.send('FUPT', {files})
-      .catch((err) => logger.error(err.text))
+      .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(files) {
     return this.send('FDEL', {files})
-      .catch((err) => logger.error(err.text))
+      .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
   sendFMOV(src, dst) {
     return this.send('FMOV', {src, dst})
-      .catch((err) => logger.error(err.text))
+      .catch((err) => logger.error('FMOV: ' + err.text))
   }
 
   handleFsEvent(ev) {
     let handler = this[`send${ev.type}`]
     if (handler) {
-      let file = new FileObj('/toto.txt', 'QmTjQXpfFjwDaqaSDkFTxH3dfuqAGP3a3jgNWCJKww6Bhr') // TODO
-      return handler.call(this, file)
+      return tree.createTree(path.resolve('./') + path.sep + ev.path)
+        .then((file) => handler.call(this, file))
 
       // TODO: manage FMOV
     }

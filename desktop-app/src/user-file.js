@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 let storeDir = './storeit'
+let fullPathStoreDir = path.resolve(storeDir)
 
 export let makeFullPath = (filePath) => path.join(storeDir, filePath)
 
@@ -53,7 +54,8 @@ export default {
   create: fileCreate,
   // update: fileUpdate,
   del: fileDelete,
-  move: fileMove
+  move: fileMove,
+  fullPathStoreDir
 }
 
 // const readmeHash = 'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT'
