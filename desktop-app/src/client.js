@@ -4,7 +4,7 @@ import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
-import {Command, Response, FileObj} from '../lib/protocol-objects'
+import {Command, Response} from '../lib/protocol-objects'
 import * as store from './store.js'
 import tree from './tree.js'
 import * as path from 'path'
@@ -96,7 +96,7 @@ export default class Client {
       return null
     }
     else {
-      return handler.call(this, res.parameters)
+      return handler.call(this, res.parameters, res)
     }
   }
 
@@ -118,8 +118,10 @@ export default class Client {
 
     return new Promise((resolve, reject) =>
       this.sock.send(JSON.stringify(obj), (err) => {
-        if (err)
+        if (err) {
+          console.log(err)
           return reject(err)
+        }
         this.addResponseHandler(obj.uid, (params, command) => {
           if (command.code === 0) {
             logger.debug('command ' + JSON.stringify(command) + ' is successful')
