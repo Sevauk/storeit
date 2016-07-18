@@ -16,8 +16,4 @@ commander
 
 if (commander.store) userFile.setStoreDir(commander.store)
 
-let client = new Client()
-
-// client.auth('developer').then(() =>  {
-//   logger.info('joined server')
-// })
+new Client()
