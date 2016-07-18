@@ -186,12 +186,13 @@ export default class Client {
   }
 
   sendFUPT(filePath) {
-    return this.send('FUPT', {files: [filePath]})
+    return tree.createTree(path.resolve('./') + path.sep + filePath)
+    .then((file) => this.send('FUPT', {files: [file]}))
     .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {filePath})
+    return this.send('FDEL', {files: [filePath]})
     .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
