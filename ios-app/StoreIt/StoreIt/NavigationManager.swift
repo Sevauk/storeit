@@ -98,8 +98,9 @@ class NavigationManager {
     
     // If the update is on the current directory (the focused one on the list view), we need to refresh
     private func updateCurrentItems(fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
-        var index: Int = 0
+        var index: Int = -1
 
+        // TODO: find better way for index !!!
         if (indexes == self.indexes) {
             switch updateElement.updateType {
                 case .ADD:
@@ -107,14 +108,20 @@ class NavigationManager {
                     self.currentDirectory[fileName] = updateElement.fileToAdd!
                 	index = self.items.count - 1
                 case .DELETE:
-                    let items = self.getSortedItems()
-                    let tmpIndex = items.indexOf(fileName)
+                    let orderedItems = self.getSortedItems()
+                    let orderedIndex = orderedItems.indexOf(fileName)
                     
-                    if (tmpIndex != nil) {
-                        index = tmpIndex!
-                        self.items.removeAtIndex(index)
-                        self.currentDirectory.removeValueForKey(fileName)
+                    if let unwrapOrderedIndex = orderedIndex {
+                        index = unwrapOrderedIndex
                     }
+                    
+                    let tmpIndex = self.items.indexOf(fileName)
+                    
+                    if let unwrapTmpIndex = tmpIndex {
+                        self.items.removeAtIndex(unwrapTmpIndex)
+                        self.currentDirectory.removeValueForKey(fileName)
+                	}
+
             	case .RENAME:
                     let tmpIndex = items.indexOf(fileName)
 
@@ -261,7 +268,7 @@ class NavigationManager {
             	path = updateElement.propertyToUpdate?.1.path
         }
         
-        var index = 0
+        var index = -1
         
         if let unwrapPath = path {
             let splitPath = Array(unwrapPath.componentsSeparatedByString("/").dropFirst())

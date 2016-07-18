@@ -39,7 +39,8 @@ class NetworkManager {
     }
     
     func join(authType: String, accessToken: String, completion: (() -> ())?) {
-        let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: accessToken)
+        //let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: accessToken)
+        let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: "developer")
         let joinCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.JOIN, parameters: parameters)
         let jsonJoinCommand = Mapper().toJSONString(joinCommand)
         

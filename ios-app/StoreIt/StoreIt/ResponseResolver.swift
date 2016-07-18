@@ -12,15 +12,15 @@ import ObjectMapper
 class ResponseResolver : Mappable {
     
     var command: String
-    var commandUid: Int
+    var uid: Int
     
     required init?(_ map: Map) {
         self.command = ""
-        self.commandUid = -1
+        self.uid = -1
     }
     
     func mapping(map: Map) {
         command <- map["command"]
-        commandUid <- map["commandUid"]
+        uid <- map["uid"]
     }
 }

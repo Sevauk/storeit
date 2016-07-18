@@ -40,7 +40,6 @@ class WebSocketManager {
     private func removeRowAtIndex(index: Int) {
         if let list = self.navigationManager.list {
             let indexPath = NSIndexPath(forRow: index, inSection: 0)
-            
             list.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
         }
     }
@@ -48,9 +47,12 @@ class WebSocketManager {
     private func deletePaths(paths: [String]) {
         for path in paths {
             let updateElement = UpdateElement(path: path)
+                        
             let index = self.navigationManager.updateTree(updateElement)
             
-            self.removeRowAtIndex(index)
+            if (index != -1) {
+                self.removeRowAtIndex(index)
+            }
         }
     }
     
@@ -69,29 +71,38 @@ class WebSocketManager {
     private func renameFile(src: String, dest: String) {
         let updateElementForRename = UpdateElement(src: src, dest: dest)
 
-        self.navigationManager.updateTree(updateElementForRename)
-        self.updateList()
+        let index = self.navigationManager.updateTree(updateElementForRename)
+        
+        if (index != -1) {
+            self.updateList()
+        }
     }
     
     private func moveFile(src: String, file: File) {
         let updateElementForDeletion = UpdateElement(path: src)
         let updateElementForAddition = UpdateElement(file: file)
         
-        self.navigationManager.updateTree(updateElementForDeletion)
-        self.navigationManager.updateTree(updateElementForAddition)
+        let index = self.navigationManager.updateTree(updateElementForDeletion)
+        let index_2 = self.navigationManager.updateTree(updateElementForAddition)
         
         self.navigationManager.movingOptions = MovingOptions()
         
         self.closeMoveToolbar()
-        self.updateList()
+        
+        if (index != -1 || index_2 != -1) {
+            self.updateList()
+        }
     }
 
     private func addFiles(files: [File]) {
         for file in files {
             let updateElement = UpdateElement(file: file)
             
-            self.navigationManager.updateTree(updateElement)
-            self.updateList()
+            let index = self.navigationManager.updateTree(updateElement)
+            
+            if (index != -1) {
+                self.updateList()
+            }
         }
     }
     
@@ -234,9 +245,9 @@ class WebSocketManager {
                     var jsonResponse: String?
                     
                     if (command.command == cmdInfos.FSTR) {
-                        response = ErrorResponse(code: cmdInfos.NOT_IMPLEMENTED.0, text: cmdInfos.NOT_IMPLEMENTED.1, commandUid: command.commandUid)
+                        response = ErrorResponse(code: cmdInfos.NOT_IMPLEMENTED.0, text: cmdInfos.NOT_IMPLEMENTED.1, commandUid: command.uid)
                     } else {
-                        response = SuccessResponse(commandUid: command.commandUid)
+                        response = SuccessResponse(commandUid: command.uid)
                     }
                     
                     if let unwrapResp = response {

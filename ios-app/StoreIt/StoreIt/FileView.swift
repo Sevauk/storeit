@@ -13,7 +13,7 @@ class FileView: UIViewController {
     
     @IBOutlet weak var imageView: UIImageView!
     
-    var data: [UInt8]?
+    var data: [UInt8]? = nil
 
     var actionSheetsManager: ActionSheetsManager? = nil
     var networkManager: NetworkManager? = nil
@@ -60,7 +60,13 @@ class FileView: UIViewController {
     }
     
     func download(action: UIAlertAction) -> Void  {
-        UIImageWriteToSavedPhotosAlbum(UIImage(data: NSData(bytes: data!))!, self, #selector(fileDidDownload), nil)
+        if let unwrapData = self.data {
+            if let image = UIImage(data: NSData(bytes: unwrapData)) {
+                UIImageWriteToSavedPhotosAlbum(image, self, #selector(fileDidDownload), nil)
+            }
+        } else {
+            print("[FileView] Data is empty, cannot download image")
+        }
     }
     
     func deleteFile(action: UIAlertAction) -> Void  {

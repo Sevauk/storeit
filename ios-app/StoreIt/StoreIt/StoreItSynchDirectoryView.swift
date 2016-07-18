@@ -130,7 +130,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let selectedFile: File = (navigationManager?.getSelectedFileAtRow(indexPath))!
         let isDir: Bool = (self.navigationManager?.isSelectedFileAtRowADir(indexPath))!
-        
+        print(self.navigationManager?.getSortedItems())
         if (isDir) {
             self.performSegueWithIdentifier("nextDirSegue", sender: selectedFile)
         } else {
