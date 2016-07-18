@@ -179,33 +179,31 @@ export default class Client {
       .catch((err) => logger.error('FSTR: ' + err))
   }
 
-  sendFADD(files) {
-    // TODO: IPFS add here
-    // then: get IPFSHash
-    return this.send('FADD', {files: [files]})
-      .catch((err) => logger.error('FADD: ' + err.text))
+  sendFADD(filePath) {
+    return tree.createTree(path.resolve('./') + path.sep + filePath)
+    .then((file) => this.send('FADD', {files: [file]}))
+    .catch((err) => logger.error('FADD: ' + err.text))
   }
 
-  sendFUPT(files) {
-    return this.send('FUPT', {files})
-      .catch((err) => logger.error('FUPT: ' + err.text))
+  sendFUPT(filePath) {
+    return this.send('FUPT', {files: [filePath]})
+    .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
-  sendFDEL(files) {
-    return this.send('FDEL', {files})
-      .catch((err) => logger.error('FDEL: ' + err.text))
+  sendFDEL(filePath) {
+    return this.send('FDEL', {filePath})
+    .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
   sendFMOV(src, dst) {
     return this.send('FMOV', {src, dst})
-      .catch((err) => logger.error('FMOV: ' + err.text))
+    .catch((err) => logger.error('FMOV: ' + err.text))
   }
 
   handleFsEvent(ev) {
     let handler = this[`send${ev.type}`]
     if (handler) {
-      return tree.createTree(path.resolve('./') + path.sep + ev.path)
-        .then((file) => handler.call(this, file))
+      return handler.call(this, ev.path)
 
       // TODO: manage FMOV
     }
