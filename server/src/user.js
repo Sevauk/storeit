@@ -145,7 +145,6 @@ export class User {
             // TODO: implement a way to remove hash if it is not needed by anyone anymore
             // use probably a hashmap of all the hashes as keys and clients that need them as value
           })
-
           return delete treeCurrent.files[name]
         })
         if (err !== true) {

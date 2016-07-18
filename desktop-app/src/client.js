@@ -8,6 +8,7 @@ import {Command, Response, FileObj} from '../lib/protocol-objects'
 import * as store from './store.js'
 import tree from './tree.js'
 import * as path from 'path'
+import IPFSNode from './ipfs'
 
 const MAX_RECO_TIME = 4
 
@@ -16,6 +17,7 @@ export default class Client {
   constructor() {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
+    this.ipfs = new IPFSNode()
     this.connect()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
@@ -136,13 +138,16 @@ export default class Client {
 
   recvFADD(params) {
     logger.info(`received FADD => ${JSON.stringify(params)}`)
+    let status = []
+    console.log(params)
     for (let file of params.files) {
-      userFile.create(file.path)
-        .then((file) => {
-          logger.info(`downloading file ${file.path} from ipfs`)
-          // TODO ipfs get
-        })
+      logger.info(`downloading file ${file.path} from ipfs`)
+      status.push(this.ipfs.get(file.IPFSHash)
+        .then((buf) => userFile.create(file.path, buf))
+        .then(() => this.ipfs.add(file.path)))
+        .catch((err) => logger.error(err))
     }
+    return Promise.all(status)
   }
 
   recvRESP(params, command) {
@@ -180,19 +185,19 @@ export default class Client {
   }
 
   sendFADD(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath)
+    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
     .then((file) => this.send('FADD', {files: [file]}))
     .catch((err) => logger.error('FADD: ' + err.text))
   }
 
   sendFUPT(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath)
+    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
     .then((file) => this.send('FUPT', {files: [file]}))
     .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {files: [filePath]})
+    return this.send('FDEL', {files: [filePath.substr('storeit/'.length)]}) // QUICKFIX, no windows
     .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
@@ -204,7 +209,9 @@ export default class Client {
   handleFsEvent(ev) {
     let handler = this[`send${ev.type}`]
     if (handler) {
-      return handler.call(this, ev.path)
+      handler.call(this, ev.path)
+        .then(() => logger.debug('ok'))
+        .catch((err) => logger.debug(err))
 
       // TODO: manage FMOV
     }

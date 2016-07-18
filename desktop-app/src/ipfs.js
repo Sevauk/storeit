@@ -1,57 +1,33 @@
 import ipfs from 'ipfs-api'
-import * as usr from './user-file.js'
-import * as fs from 'fs'
 import {logger} from '../lib/log'
+import usrFile from './user-file.js'
 
-let node = null
+export default class IPFSNode {
+  constructor() {
+    logger.info('connecting to IPFS...')
+    this.connect()
+  }
 
-const co = (onCo) => {
-  console.log('connecting to api...')
-  node = ipfs('/ip4/127.0.0.1/tcp/5001')
-  setTimeout(() => {
-    if (onCo) {
-      onCo()
-    }
-  }, 1000)
-}
+  connect(cb) {
+    this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
+    if (cb) cb()
+  }
 
-co()
+  add(filePath) {
+    return this.node.add(usrFile.fullPath(filePath))
+  }
 
-export const add = (file, handlerFn) => {
-  node.add(file, handlerFn)
-}
-
-export const rm = () => {
-  logger.warn('ipfs rm TODO')
-}
-
-
-export const get = (hash, file, handlerFn) => {
-
-  file = usr.storeDir + '/' + file
-
-  node.cat(hash, (err, res) => {
-    if (err) {
-      return co(() => get(hash, file, handlerFn))
-    }
-
+  get(hash) {
     let data = []
 
-    res.on('data', (chunk) => {
-      data.push(chunk)
+    return this.node.cat(hash)
+    .then((res) => new Promise((resolve) => {
+      res.on('end', () => resolve(Buffer.concat(data)))
+      res.on('data', (chunk) => data.push(chunk))
+    }))
+    .catch((err) => {
+      logger.error(err)
+      this.connect(() => this.get(hash))
     })
-
-    res.on('end', () => {
-      data = Buffer.concat(data)
-      fs.writeFile(file, data, null, (err) => {
-        if (err) {
-          return console.log(err)
-        }
-        add(file, (err) => {
-          if (err)
-            console.log(err)
-        })
-      })
-    })
-  })
+  }
 }

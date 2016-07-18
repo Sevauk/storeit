@@ -15,13 +15,13 @@ wss.on('connection', function connection(ws) {
     ws.send(JSON.stringify({commandUid: 0, message: 'message'}))
   })
 
-  ws.send(JSON.stringify({command: 'FADD', parameters: {files: [
-    {path: '/foo'}, {path: '/bar'}
-  ]}}))
+  // ws.send(JSON.stringify({command: 'FADD', parameters: {files: [
+  //   {path: '/foo'}, {path: '/bar'}
+  // ]}}))
 
-  ws.send(JSON.stringify({command: 'FDEL', parameters: {files: [
-    '/foo', '/bar'
-  ]}}))
+  // ws.send(JSON.stringify({command: 'FDEL', parameters: {files: [
+  //   '/foo', '/bar'
+  // ]}}))
 
   // ws.send(JSON.stringify({command: 'FMOV', parameters: {
   //   src: '/foo',
