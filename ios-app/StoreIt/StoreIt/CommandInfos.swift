@@ -37,8 +37,5 @@ struct CommandInfos {
     let BAD_PARAMETERS = (7, "The request parameters are invalid")
     let UNKNOWN_REQUEST = (8, "The request is unknown")
     let ENOENT = (9, "No such file or directory")
-    
-    // TODO: CLIENT ERRORS
-    
-    let NOT_IMPLEMENTED = (101, "Command is not implemented yet")
+    let NOT_IMPLEMENTED = (10, "Not implemented")
 }
