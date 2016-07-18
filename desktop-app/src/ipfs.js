@@ -47,10 +47,9 @@ export const get = (hash, file, handlerFn) => {
         if (err) {
           return console.log(err)
         }
-        node.add(file, (err) => {
-          if (err) {
+        add(file, (err) => {
+          if (err)
             console.log(err)
-          }
         })
       })
     })
