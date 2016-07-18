@@ -5,13 +5,14 @@ import usrFile from './user-file.js'
 
 export default class IPFSnode {
   constructor() {
-    logger.info('connecting to IPFS...')
+    logger.info('[IPFS] connecting to IPFS...')
     this.connect()
+    logger.info('[IPFS] connected')
   }
 
-  connect(cb) {
+  connect() {
     this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
-    if (cb) cb()
+    return Promise.resolve(true)
   }
 
   add(filePath) {
@@ -28,7 +29,8 @@ export default class IPFSnode {
       }))
       .catch((err) => {
         logger.error(err)
-        this.connect(() => this.get(hash))
+        return this.connect()
+          .then(() => this.get(hash))
       })
   }
 }
