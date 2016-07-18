@@ -59,7 +59,7 @@ export class User {
     if (typeof trees[Symbol.iterator] !== 'function') {
       return api.errWithStack(api.ApiError.BADREQUEST)
     }
-    
+
     for (const treeIncoming of trees) {
       const tri = tree.setTree(this.home, treeIncoming.path, (treeParent, name) =>
         action(treeParent, treeIncoming, name))
@@ -69,6 +69,11 @@ export class User {
 
   addTree(trees) {
     return this.setTrees(trees, (treeParent, treeCurrent, name) => {
+
+      if (!treeParent.files) {
+        treeParent.files = {}
+      }
+
       treeParent.files[name] = treeCurrent
 
       store.keepTreeAlive(treeCurrent)
