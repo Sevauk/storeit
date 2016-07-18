@@ -4,22 +4,29 @@ import * as protoObjs from './common/protocol-objects'
 import * as auth from './auth.js'
 import * as store from './store.js'
 
-const sendWelcome = (socket, usr, commandUid) => {
+const sendWelcome = (socket, usr, commandUid, usrProfile, handlerFn) => {
   socket.sendObj(new protoObjs.Response(0, 'welcome', commandUid, {
-    home: usr.home
+    home: usr.home,
+    usrProfile
   }))
 }
 
 const join = function(command, arg, socket, handlerFn) {
 
   // TODO: error checking on JSON
-  auth.verifyUserToken(arg.authType, arg.accessToken, (err, email) => {
+  auth.verifyUserToken(arg.authType, arg.accessToken, (err, email, profilePic) => {
 
     if (err) {
       return handlerFn(err)
     }
 
     user.connectUser(email, socket, (err, usr) => {
+
+      const unlock = (usr) => {
+        store.processHash(socket, arg)
+        sendWelcome(socket, usr, command.uid, {profilePic}, handlerFn)
+      }
+
       if (err && err.code === 'ENOENT') {
         user.createUser(email, (err) => {
           if (err) {
@@ -29,18 +36,14 @@ const join = function(command, arg, socket, handlerFn) {
             if (err) {
               return handlerFn(protoObjs.ApiError.SERVERERROR)
             }
-            store.processHash(socket, arg)
-            sendWelcome(socket, usrAgain, command.uid, handlerFn)
+            unlock(usrAgain)
           })
         })
       }
       else if (err) {
         return handlerFn(err)
       }
-      else {
-        store.processHash(socket, arg)
-        sendWelcome(socket, usr, command.uid, handlerFn)
-      }
+      else unlock(usr)
     })
   })
 }
@@ -97,7 +100,7 @@ const resp = (command, arg, client) => {
   }
 
   if (client.responseHandlers[command.commandUid]) {
-    client.responseHandlers[command.commandUid](code, text)
+    client.responseHandlers[command.commandUid](command.code, command.text)
     delete client.responseHandlers[command.commandUid]
   }
 }
