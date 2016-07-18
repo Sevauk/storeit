@@ -147,14 +147,23 @@ export default class Client {
     let status = []
     let res
     for (let file of params.files) {
+
+      logger.debug('ignore ' + file.path)
+      userFile.ignore(file.path)
+      logger.debug(userFile.ignoreSet)
+
       if (file.isDir) {
         res = userFile.dirCreate(file.path)
           .then(() => this.recvFADD({files: file.files}, false))
       }
       else {
+        userFile.create(file.path, '') // TODO: show user that we are syncing
         logger.info(`downloading file ${file.path} from ipfs`)
         res = this.ipfs.get(file.IPFSHash)
-          .then((buf) => userFile.create(file.path, buf))
+          .then((buf) => {
+            logger.info(`download of ${file.path} is over`)
+            userFile.create(file.path, buf)
+          })
           .then(() => this.ipfs.add(file.path))
       }
       status.push(res)
@@ -209,7 +218,7 @@ export default class Client {
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {files: [filePath.substr('storeit/'.length)]}) // QUICKFIX, no windows
+    return this.send('FDEL', {files: [filePath.substr('storeit'.length)]}) // QUICKFIX, no windows
     .catch((err) => logger.error('FDEL: ' + err.text))
   }
 

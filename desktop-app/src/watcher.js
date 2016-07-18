@@ -1,5 +1,6 @@
 import chokidar from 'chokidar'
 import {logger} from '../lib/log'
+import userFile from './user-file.js'
 
 const STORE_NAME = '.storeit'
 
@@ -85,7 +86,9 @@ export default class Watcher {
   }
 
   ignoreEvent(ev) {
-    return false
+    const path = ev.path.substr('storeit'.length)
+    return userFile.isIgnored(path) // QUICKFIX FIXME
+      || ev.path.indexOf('.DS_Store') >= 0
   }
 
   setEventHandler(listener) {

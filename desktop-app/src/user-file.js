@@ -31,6 +31,23 @@ let fileMove = (src, dst) => new Promise((resolve, reject) =>
   )
 )
 
+const ignoreSet = new Set()
+
+const ignore = (file) => {
+  ignoreSet.add(file)
+  setTimeout(() => {
+    ignoreSet.delete(file)
+  }, 4000)
+}
+
+const unignore = (file) => {
+  ignoreSet.delete(file)
+}
+
+const isIgnored = (file) => {
+  return ignoreSet.has(file)
+}
+
 export default {
   setStoreDir(dirPath) {
     storeDir = dirPath
@@ -38,6 +55,10 @@ export default {
   getStoreDir() {
     return storeDir
   },
+  ignoreSet,
+  ignore,
+  unignore,
+  isIgnored,
   fullPath: makeFullPath,
   dirCreate,
   create: fileCreate,

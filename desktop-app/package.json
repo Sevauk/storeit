@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
     "postinstall": "shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json",
-    "start": "concurrently -r -k 'ipfs daemon' 'npm run main'",
+    "start": "concurrently -r -k 'npm run main'",
     "main": "npm run build && node build/main.js",
     "test": "npm run build && npm run bdd",
     "dev": "concurrently -r -k  'ipfs daemon' 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
