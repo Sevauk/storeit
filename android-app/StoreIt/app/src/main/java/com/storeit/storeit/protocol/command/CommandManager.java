@@ -14,7 +14,7 @@ public class CommandManager {
             "FDEL",
             "FADD",
             "FUPT",
-            "FMOVE"
+            "FMOV"
     };
 
     public static int getCommandType(String cmd) {

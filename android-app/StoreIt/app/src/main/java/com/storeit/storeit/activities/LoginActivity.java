@@ -205,6 +205,12 @@ public class LoginActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!mBoundService.isConnected())
+                {
+                    Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 pickUserAccount();
             }
         });
@@ -213,12 +219,21 @@ public class LoginActivity extends Activity {
         developerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (!mBoundService.isConnected())
+                {
+                    Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 mBoundService.sendJOIN("gg", "developer");
             }
         });
 
         callbackManager = CallbackManager.Factory.create();
         fbButton = (LoginButton) findViewById(R.id.facebook_login);
+
+        fbButton.setReadPermissions(Arrays.asList(
+                "public_profile", "email"));
 
         fbButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override

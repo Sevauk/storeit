@@ -33,6 +33,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
@@ -91,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBoundService = ((SocketService.LocalBinder) service).getService();
-            mBoundService.setFileCommandandler(mFileCommandHandler);
             mIsBound = true;
         }
 
@@ -234,6 +234,8 @@ public class MainActivity extends AppCompatActivity {
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
+        if (mBoundService != null)
+            mBoundService.setFileCommandandler(mFileCommandHandler);
     }
 
 
@@ -465,7 +467,6 @@ public class MainActivity extends AppCompatActivity {
             Log.v("MainActivity", "tu fois quoi??");
             */
         }
-        Log.v("MainActivity", "Lamentable fail??");
     }
 
     public SocketService getSocketService() {
@@ -477,10 +478,10 @@ public class MainActivity extends AppCompatActivity {
         public void handleFDEL(FileDeleteCommand command) {
             Log.v("MainActivity", "FDEL");
             filesManager.removeFile(command.getFiles());
+            mBoundService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mBoundService.sendRSPONSE();
                     refreshFileExplorer();
                 }
             });
@@ -505,12 +506,13 @@ public class MainActivity extends AppCompatActivity {
             Log.v("MainActivity", "FUPT");
             filesManager.updateFile(command.getFiles());
             mBoundService.sendRSPONSE();
-            runOnUiThread(new Runnable() {
+           /* runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     refreshFileExplorer();
                 }
             });
+            */
         }
 
         @Override

@@ -7,6 +7,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
@@ -65,7 +66,7 @@ public class SocketService extends Service {
                                 int cmdType = CommandManager.getCommandType(message);
                                 switch (cmdType) {
                                     case CommandManager.RESP:
-                                        if (lastCmd.equals("JOIN")){
+                                        if (lastCmd.equals("JOIN")) {
                                             Gson gson = new Gson();
                                             JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
                                             if (mLoginHandler != null) {
@@ -88,14 +89,19 @@ public class SocketService extends Service {
                                         }
                                         break;
                                     case CommandManager.FUPT:
-                                    if (mFileCommandHandler != null) {
-                                        Gson gson = new Gson();
-                                        FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
-                                        mFileCommandHandler.handleFUPT(fileCommand);
+                                        if (mFileCommandHandler != null) {
+                                            Gson gson = new Gson();
+                                            FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
+                                            mFileCommandHandler.handleFUPT(fileCommand);
+                                        }
                                         break;
-                                    }
-                                        case CommandManager.FMOVE:
-                                            break;
+                                    case CommandManager.FMOVE:
+                                        if (mFileCommandHandler != null) {
+                                            Gson gson = new Gson();
+                                            FileMoveCommand fileMoveCommand = gson.fromJson(message, FileMoveCommand.class);
+                                            mFileCommandHandler.handleFMOV(fileMoveCommand);
+                                        }
+                                        break;
                                     default:
                                         Log.v(LOGTAG, "Invalid command received :/");
                                         break;
@@ -186,11 +192,10 @@ public class SocketService extends Service {
         super.onCreate();
 
 
-
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
-//      server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
+      server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
 
-        server = "ws://192.168.1.3:7641";
+      //  server = "ws://192.168.1.3:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();
