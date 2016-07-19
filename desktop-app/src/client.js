@@ -216,19 +216,21 @@ this.checkoutTree(tr[file])
                 userFile.create(file.path, buf)
                 userFile.unignore(file)
               })
-              .then(() => this.ipfs.add(file.path))
+              .then(() => this.ipfs.addRelative(file.path))
+              .catch((err) => logger.error(err))
           }
 
           const exists = !err
 
           if (exists) {
-            this.ipfs.add(file.path)
+            this.ipfs.addRelative(file.path)
               .then((hash) => {
                 if (hash[0].Hash === file.IPFSHash) {
                   return
                 }
                 getFile()
-            })
+              })
+              .catch((err) => logger.error(err))
           }
           else getFile()
         })
