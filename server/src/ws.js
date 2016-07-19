@@ -20,6 +20,7 @@ class Client {
   constructor(ws) {
     this.ws = ws
     this.uid = clientUid++
+    this.responseHandlers = []
 
     ws.on('message', (mess) => {
       proto.parse(mess, this)

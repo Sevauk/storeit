@@ -23,7 +23,7 @@ export const verifyUserToken = (authService, accessToken, handlerFn) => {
       if (response.email === undefined) {
         return handlerFn(protocol.ApiError.BADSCOPE)
       }
-      return handlerFn(null, response.email)
+      return handlerFn(null, response.email, response.picture)
     })
   }
   else if (authService === 'fb') {
@@ -37,7 +37,7 @@ export const verifyUserToken = (authService, accessToken, handlerFn) => {
       if (parsed.email === undefined) {
         return handlerFn(protocol.ApiError.BADSCOPE)
       }
-      handlerFn(null, parsed.email)
+      handlerFn(null, parsed.email, parsed.picture)
     })
   }
   else {

@@ -59,7 +59,7 @@ This is the first request to make whenever a client wants to get online.
 }
 ```
 
-The response will contain a FILE object named "home". Example :
+The response will contain a FILE object named "home" and user profile info. Example :
 
 ```javascript
 {
@@ -68,7 +68,8 @@ The response will contain a FILE object named "home". Example :
 	"commandUid": 42,
 	"command": "RESP",
 	"parameters": {
-		"home": FILEObject
+		"home": FILEObject,
+		"userProfile": {"picture": "pic.jpg"}
 	}
 }
 ```

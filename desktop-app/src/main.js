@@ -14,11 +14,6 @@ commander
   .option('-d, --store <name>', 'set the user synced directory (default is ./storeit')
   .parse(process.argv)
 
-if (commander.store) {
-  userFile.setStoreDir(commander.store)
-}
-else {
-  userFile.setStoreDir('./storeit')
-}
+if (commander.store) userFile.setStoreDir(commander.store)
 
-let client = new Client()
+new Client()

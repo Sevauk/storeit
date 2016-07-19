@@ -1,10 +1,9 @@
-import * as ipfs from './ipfs.js'
 import * as fs from 'fs'
 import * as api from '../lib/protocol-objects.js'
 import userFile from './user-file.js'
 import {logger} from '../lib/log.js'
 
-const createTree = (fullPath) => {
+const createTree = (fullPath, ipfs) => {
 
   return new Promise((resolve, reject) => {
 
@@ -33,12 +32,9 @@ const createTree = (fullPath) => {
         return makeObj(/* null, res */)
       }
 
-      ipfs.add(fullPath, (err, hash) => {
-        if (err)
-          return reject(err)
-        logger.info(hash[0])
-        return makeObj(hash[0].Hash)
-      })
+      ipfs.add(relativePath)
+        .then((hash) => makeObj(hash[0].Hash))
+        .catch((err) => reject(err))
     })
   })
 }
