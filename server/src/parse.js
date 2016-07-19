@@ -124,6 +124,8 @@ export const parse = function(msg, client) {
     return client.answerFailure(command.uid, protoObjs.ApiError.UNKNOWNREQUEST)
   }
 
+  logger.debug(`Command is ${JSON.stringify(command, null, 2)}`)
+  
   // TODO: catch the goddam exception
   const err = hmap[command.command](command, command.parameters, client, (err) => {
     if (err) client.answerFailure(command.uid, err)

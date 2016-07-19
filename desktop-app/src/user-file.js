@@ -6,9 +6,9 @@ let fullPathStoreDir = path.resolve(storeDir)
 
 let makeFullPath = (filePath) => path.join(storeDir, filePath)
 
-let dirCreate = (dirPath) => new Promise((resolve, reject) =>
+let dirCreate = (dirPath) => new Promise((resolve) =>
   fs.mkdir(makeFullPath(dirPath), (err) => !err || err.code === 'EEXIST' ?
-    resolve({path: dirPath, isDir: true}) : reject(err)
+    resolve({path: dirPath, isDir: true}) : resolve(err)
   )
 )
 
@@ -37,11 +37,13 @@ const ignore = (file) => {
   ignoreSet.add(file)
   setTimeout(() => {
     ignoreSet.delete(file)
-  }, 4000)
+  }, 200000)
 }
 
 const unignore = (file) => {
-  ignoreSet.delete(file)
+  setTimeout(() => {
+    ignoreSet.delete(file)
+  }, 500)
 }
 
 const isIgnored = (file) => {
