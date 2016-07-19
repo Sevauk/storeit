@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
+var rimraf = require('rimraf') // SORRY :(
 
 let storeDir = './storeit'
 let fullPathStoreDir = path.resolve(storeDir)
@@ -18,11 +19,11 @@ let fileCreate = (filePath, data) => new Promise((resolve, reject) =>
   )
 )
 
-let fileDelete = (filePath) => new Promise((resolve, reject) =>
-  fs.unlink(makeFullPath(filePath), (err) => !err ?
-    resolve({path: filePath}) : reject(err)
-  )
-)
+let fileDelete = (filePath) => new Promise((resolve, reject) => {
+
+  const fPath = storeDir + filePath
+  rimraf(fPath, (err) => !err ? resolve({path: fPath}) : reject(err))
+})
 
 
 let fileMove = (src, dst) => new Promise((resolve, reject) =>
@@ -40,15 +41,9 @@ const ignore = (file) => {
   }, 20000000)
 }
 
-const unignore = (file) => {
-  setTimeout(() => {
-    ignoreSet.delete(file)
-  }, 500)
-}
-
-const isIgnored = (file) => {
-  return ignoreSet.has(file)
-}
+const unignore = (file) => ignoreSet.delete(file)
+const isIgnored = (file) => ignoreSet.has(file)
+const toStoreitPath = (p) => '/' + path.relative(storeDir, p)
 
 export default {
   setStoreDir(dirPath) {
@@ -57,6 +52,7 @@ export default {
   getStoreDir() {
     return storeDir
   },
+  toStoreitPath,
   ignoreSet,
   ignore,
   unignore,
@@ -68,50 +64,3 @@ export default {
   move: fileMove,
   fullPathStoreDir
 }
-
-// const readmeHash = 'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT'
-// export let storeDir = './storeit'
-// export let home = // TODO: get this from server response to JOIN instead
-//   api.makeFileObj('/', null, {
-//     'readme.txt': api.makeFileObj('/readme.txt', readmeHash)
-//   })
-//
-// let makeInfo = (path, kind) => {
-//   return {
-//     path,
-//     metadata: 'uninplemented for now',
-//     contentHash: 'hache',
-//     kind,
-//     files: []
-//   }
-// }
-//
-// let dirToJson = (filename) => {
-//
-//   let stats = fs.lstatSync(filename)
-//
-//   let info = makeInfo(filename, stats.isDirectory ? 0 : 1)
-//
-//   if (stats.isDirectory()) {
-//     info.files = fs.readdirSync(filename).map((child) => {
-//       return dirToJson(filename + '/' + child)
-//     })
-//   }
-//
-//   return info
-// }
-//
-// let mkdirUser = () => {
-//   fs.mkdir(storeDir, (err) => {
-//     if (err) {
-//       logger.warn('cannot mkdir user dir')
-//     }
-//   })
-// }
-//
-// let makeUserTree = () => {
-//   mkdirUser()
-//   let dir = dirToJson(storeDir)
-//   dir.path = '/'
-//   return dir
-// }

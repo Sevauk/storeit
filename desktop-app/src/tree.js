@@ -3,17 +3,16 @@ import * as api from '../lib/protocol-objects.js'
 import userFile from './user-file.js'
 import {logger} from '../lib/log.js'
 
-const createTree = (fullPath, ipfs) => {
+const createTree = (path, ipfs) => {
 
   return new Promise((resolve, reject) => {
 
-    fs.stat(fullPath, (err, stat) => {
+    fs.stat(path, (err, stat) => {
 
       if (err)
         return reject(err)
 
-      const fullPathStoreDir = userFile.fullPathStoreDir
-      const relativePath = fullPath.substr(fullPathStoreDir.length)
+      const relativePath = userFile.toStoreitPath(path)
 
       const makeObj = (IPFSHash /* , files */) => {
 
@@ -32,9 +31,10 @@ const createTree = (fullPath, ipfs) => {
         return makeObj(/* null, res */)
       }
 
-      ipfs.add(relativePath)
+      ipfs.addRelative(relativePath)
         .then((hash) => makeObj(hash[0].Hash))
         .catch((err) => reject(err))
+
     })
   })
 }

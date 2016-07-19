@@ -14,8 +14,11 @@ export default class IPFSNode {
     return Promise.resolve(true)
   }
 
+  addRelative(filePath) {
+    return this.add(usrFile.fullPathStoreDir + filePath)
+  }
   add(filePath) {
-    return this.node.add(usrFile.fullPath(filePath))
+    return this.node.add(filePath)
   }
 
   get(hash) {

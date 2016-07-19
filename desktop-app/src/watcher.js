@@ -1,6 +1,7 @@
 import chokidar from 'chokidar'
 import {logger} from '../lib/log'
 import userFile from './user-file.js'
+import * as path from 'path'
 
 const STORE_NAME = '.storeit'
 
@@ -86,9 +87,13 @@ export default class Watcher {
   }
 
   ignoreEvent(ev) {
-    const path = ev.path.substr('storeit'.length)
-    return userFile.isIgnored(path) // QUICKFIX FIXME
-      || ev.path.indexOf('.DS_Store') >= 0
+    const fPath = '/' + path.relative(userFile.getStoreDir(), ev.path)
+
+    if (ev.type === 'FDEL')
+      return false
+
+    return userFile.isIgnored(fPath)
+      || ev.path.indexOf('.DS_Store') >= 0 // QUICKFIX FIXME
   }
 
   setEventHandler(listener) {
