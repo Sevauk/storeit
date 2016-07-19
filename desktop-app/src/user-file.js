@@ -37,7 +37,7 @@ const ignore = (file) => {
   ignoreSet.add(file)
   setTimeout(() => {
     ignoreSet.delete(file)
-  }, 200000)
+  }, 20000000)
 }
 
 const unignore = (file) => {
