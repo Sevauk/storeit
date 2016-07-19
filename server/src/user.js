@@ -61,8 +61,13 @@ export class User {
     }
 
     for (const treeIncoming of trees) {
-      const tri = tree.setTree(this.home, treeIncoming.path, (treeParent, name) =>
-        action(treeParent, treeIncoming, name))
+      const tri = tree.setTree(this.home, treeIncoming.path, (treeParent, name) => {
+
+        if (!treeIncoming) {
+          return api.errWithStack(api.ApiError.BADPARAMETERS)
+        }
+        return action(treeParent, treeIncoming, name)
+      })
       if (tri) return tri
     }
   }
