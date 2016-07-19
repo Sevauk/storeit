@@ -214,21 +214,24 @@ this.checkoutTree(tr[file])
               .then((buf) => {
                 logger.info(`download of ${file.path} is over`)
                 userFile.create(file.path, buf)
-                userFile.unignore(file)
+                  .then(() => userFile.unignore(file))
+                  .catch(() => userFile.unignore(file))
               })
-              .then(() => this.ipfs.add(file.path))
+              .then(() => this.ipfs.addRelative(file.path))
+              .catch((err) => logger.error(err))
           }
 
           const exists = !err
 
           if (exists) {
-            this.ipfs.add(file.path)
+            this.ipfs.addRelative(file.path)
               .then((hash) => {
                 if (hash[0].Hash === file.IPFSHash) {
                   return
                 }
                 getFile()
-            })
+              })
+              .catch((err) => logger.error(err))
           }
           else getFile()
         })
@@ -274,7 +277,7 @@ this.checkoutTree(tr[file])
   sendFADD(filePath) {
     return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
       .then((file) => this.send('FADD', {files: [file]}))
-      .catch((err) => logger.error('FADD: ' + err.text))
+      .catch((err) => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {

@@ -37,13 +37,11 @@ const ignore = (file) => {
   ignoreSet.add(file)
   setTimeout(() => {
     ignoreSet.delete(file)
-  }, 200000)
+  }, 20000000)
 }
 
 const unignore = (file) => {
-  setTimeout(() => {
-    ignoreSet.delete(file)
-  }, 500)
+  ignoreSet.delete(file)
 }
 
 const isIgnored = (file) => {
@@ -68,50 +66,3 @@ export default {
   move: fileMove,
   fullPathStoreDir
 }
-
-// const readmeHash = 'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT'
-// export let storeDir = './storeit'
-// export let home = // TODO: get this from server response to JOIN instead
-//   api.makeFileObj('/', null, {
-//     'readme.txt': api.makeFileObj('/readme.txt', readmeHash)
-//   })
-//
-// let makeInfo = (path, kind) => {
-//   return {
-//     path,
-//     metadata: 'uninplemented for now',
-//     contentHash: 'hache',
-//     kind,
-//     files: []
-//   }
-// }
-//
-// let dirToJson = (filename) => {
-//
-//   let stats = fs.lstatSync(filename)
-//
-//   let info = makeInfo(filename, stats.isDirectory ? 0 : 1)
-//
-//   if (stats.isDirectory()) {
-//     info.files = fs.readdirSync(filename).map((child) => {
-//       return dirToJson(filename + '/' + child)
-//     })
-//   }
-//
-//   return info
-// }
-//
-// let mkdirUser = () => {
-//   fs.mkdir(storeDir, (err) => {
-//     if (err) {
-//       logger.warn('cannot mkdir user dir')
-//     }
-//   })
-// }
-//
-// let makeUserTree = () => {
-//   mkdirUser()
-//   let dir = dirToJson(storeDir)
-//   dir.path = '/'
-//   return dir
-// }
