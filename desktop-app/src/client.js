@@ -183,17 +183,16 @@ this.checkoutTree(tr[file])
   recvFADD(params, log=true) {
     if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
 
+    if (!params.files) {
+      return Promise.resolve()
+    }
+
     if (!Array.isArray(params.files)) {
-      logger.debug(params.files)
       params.files = Object.keys(params.files).map((key) => params.files[key])
     }
 
     let status = []
     let res
-
-    if (!params.files) {
-      return Promise.resolve()
-    }
 
     for (let file of params.files) {
 
@@ -215,7 +214,7 @@ this.checkoutTree(tr[file])
             res = this.ipfs.get(file.IPFSHash)
               .then((buf) => {
                 logger.info(`download of ${file.path} is over`)
-                userFile.create(file.path, buf)
+                return userFile.create(file.path, buf)
                   .then(() => userFile.unignore(file))
                   .catch(() => userFile.unignore(file))
               })

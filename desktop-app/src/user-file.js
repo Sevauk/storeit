@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
+var rimraf = require('rimraf') // SORRY :(
 
 let storeDir = './storeit'
 let fullPathStoreDir = path.resolve(storeDir)
@@ -21,12 +22,8 @@ let fileCreate = (filePath, data) => new Promise((resolve, reject) =>
 let fileDelete = (filePath) => new Promise((resolve, reject) => {
 
   const fPath = storeDir + filePath
-  console.log('unlinking ' + fPath)
-  fs.unlink(fPath, (err) => !err ?
-    resolve({path: fPath}) : reject(err)
-  )
-}
-)
+  rimraf(fPath, (err) => !err ? resolve({path: fPath}) : reject(err))
+})
 
 
 let fileMove = (src, dst) => new Promise((resolve, reject) =>
