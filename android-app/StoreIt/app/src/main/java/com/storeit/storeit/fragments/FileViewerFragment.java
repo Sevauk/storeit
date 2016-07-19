@@ -2,9 +2,12 @@ package com.storeit.storeit.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -75,6 +78,8 @@ public class FileViewerFragment extends Fragment {
         }
     }
 
+    CoordinatorLayout coordinatorLayout;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -86,6 +91,18 @@ public class FileViewerFragment extends Fragment {
 
         FilesManager manager = ((MainActivity) getActivity()).getFilesManager();
 
+        coordinatorLayout = (CoordinatorLayout)getActivity().findViewById(R.id.coordinatorLayout);
+/*
+        Snackbar snackbar = Snackbar.make(coordinatorLayout, "Bouge le fichier", Snackbar.LENGTH_INDEFINITE)
+                .setAction("Move", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Toast.makeText(getContext(), "Deplacé!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+        snackbar.setActionTextColor(Color.BLUE);
+        snackbar.show();
+*/
         adapter = new ExplorerAdapter(manager, getContext());
         explorersRecyclerView.setAdapter(adapter);
         explorersRecyclerView.setItemAnimator(new DefaultItemAnimator());
