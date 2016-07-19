@@ -277,7 +277,7 @@ this.checkoutTree(tr[file])
   sendFADD(filePath) {
     return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
       .then((file) => this.send('FADD', {files: [file]}))
-      .catch((err) => logger.error('FADD: ' + err.text))
+      .catch((err) => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {

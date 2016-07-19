@@ -35,6 +35,7 @@ const createTree = (fullPath, ipfs) => {
       ipfs.addRelative(relativePath)
         .then((hash) => makeObj(hash[0].Hash))
         .catch((err) => reject(err))
+
     })
   })
 }
