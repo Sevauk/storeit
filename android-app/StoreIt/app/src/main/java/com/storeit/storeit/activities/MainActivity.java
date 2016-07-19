@@ -87,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean mIsBound = false;
     private SocketService mBoundService = null;
 
+    public FloatingActionButton getFloatingButton() {
+        return fbtn;
+    }
+
     // Should be the same class as LoginActivity ServiceConnection
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override

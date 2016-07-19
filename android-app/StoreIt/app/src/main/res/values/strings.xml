@@ -18,6 +18,7 @@
     <string name="dialog_file_name">Enter file name</string>
     <string name="menu_file_delete_disk">Delete from storage</string>
     <string name="login_connectioni_text">Please login with Facebook or Google</string>
+    <string name="menu_file_move">Move file</string>
 
     <string-array name="file_upload_option">
         <item>Camera</item>

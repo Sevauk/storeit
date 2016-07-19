@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -14,37 +13,30 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
-
+import com.storeit.storeit.R;
 import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.adapters.ExplorerAdapter;
-import com.storeit.storeit.ipfs.UploadAsync;
+import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
-import com.storeit.storeit.R;
-import com.storeit.storeit.protocol.StoreitFile;
 
 import java.io.File;
 
 public class FileViewerFragment extends Fragment {
 
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    private String mParam1;
-    private String mParam2;
     private ExplorerAdapter adapter;
     private OnFragmentInteractionListener mListener;
     private RecyclerView explorersRecyclerView;
+
+    private boolean mMoving = false; // We are moving a file
 
     public ExplorerAdapter getAdapter() {
         return adapter;
@@ -55,27 +47,12 @@ public class FileViewerFragment extends Fragment {
     }
 
     public static FileViewerFragment newInstance(String param1, String param2) {
-        FileViewerFragment fragment = new FileViewerFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+        return new FileViewerFragment();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            /*
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-            */
-
-            mParam1 = "param1";
-            mParam2 = "param2";
-
-        }
     }
 
     CoordinatorLayout coordinatorLayout;
@@ -91,18 +68,8 @@ public class FileViewerFragment extends Fragment {
 
         FilesManager manager = ((MainActivity) getActivity()).getFilesManager();
 
-        coordinatorLayout = (CoordinatorLayout)getActivity().findViewById(R.id.coordinatorLayout);
-/*
-        Snackbar snackbar = Snackbar.make(coordinatorLayout, "Bouge le fichier", Snackbar.LENGTH_INDEFINITE)
-                .setAction("Move", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Toast.makeText(getContext(), "Deplacé!", Toast.LENGTH_SHORT).show();
-                    }
-                });
-        snackbar.setActionTextColor(Color.BLUE);
-        snackbar.show();
-*/
+        coordinatorLayout = (CoordinatorLayout)rootView.findViewById(R.id.coordinatorLayout);
+
         adapter = new ExplorerAdapter(manager, getContext());
         explorersRecyclerView.setAdapter(adapter);
         explorersRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -165,11 +132,14 @@ public class FileViewerFragment extends Fragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        if (mMoving)
+            return super.onContextItemSelected(item);
+
         int position = adapter.getPosition();
 
         MainActivity activity = (MainActivity) getActivity();
-        FilesManager manager = activity.getFilesManager();
-        StoreitFile file = adapter.getFileAt(position);
+        final FilesManager manager = activity.getFilesManager();
+        final StoreitFile file = adapter.getFileAt(position);
         SocketService service = activity.getSocketService();
 
         switch (item.getItemId()) {
@@ -189,11 +159,46 @@ public class FileViewerFragment extends Fragment {
                 break;
             case R.id.action_rename_file:
                 renameFile(manager, file);
-                Log.v("FileVIewerFragment", "Rename");
                 break;
+            case R.id.action_move_file:
+                View focus = getActivity().getCurrentFocus();
+                if (focus == null)
+                    break;
+
+                mMoving = true;
+                ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.GONE); // floating button
+
+                Snackbar snackbar = Snackbar.make(focus, "Bouge le fichier", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("MOVE", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                moveFile(manager, file);
+                                ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.VISIBLE);
+                                mMoving = false;
+                            }
+                        });
+                snackbar.setCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onDismissed(Snackbar snackbar, int event) {
+                        super.onDismissed(snackbar, event);
+                        ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.VISIBLE);
+                        mMoving = false;
+                    }
+                });
+
+                snackbar.setActionTextColor(Color.RED);
+                snackbar.show();
+                break;
+
         }
 
         return super.onContextItemSelected(item);
+    }
+
+    private void moveFile(final FilesManager manager, final StoreitFile file) {
+        //Check
+
+        Toast.makeText(getActivity(), "Move!!", Toast.LENGTH_SHORT).show();
     }
 
     private void renameFile(final FilesManager manager, final StoreitFile file) {

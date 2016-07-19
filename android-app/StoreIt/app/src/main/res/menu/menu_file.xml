@@ -6,4 +6,6 @@
         android:orderInCategory="100"/>
     <item android:id="@+id/action_delete_file_disk" android:title="@string/menu_file_delete_disk"
         android:orderInCategory="100"/>
+    <item android:id="@+id/action_move_file" android:title="@string/menu_file_move"
+        android:orderInCategory="100"/>
 </menu>
