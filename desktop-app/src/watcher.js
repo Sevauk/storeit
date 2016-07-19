@@ -87,6 +87,9 @@ export default class Watcher {
 
   ignoreEvent(ev) {
     const path = ev.path.substr('storeit'.length)
+    if (ev.type === 'unlink' || ev.type === 'unlinkDir')
+      return false
+
     return userFile.isIgnored(path) // QUICKFIX FIXME
       || ev.path.indexOf('.DS_Store') >= 0
   }
