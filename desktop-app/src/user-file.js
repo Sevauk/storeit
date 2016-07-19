@@ -18,10 +18,14 @@ let fileCreate = (filePath, data) => new Promise((resolve, reject) =>
   )
 )
 
-let fileDelete = (filePath) => new Promise((resolve, reject) =>
-  fs.unlink(makeFullPath(filePath), (err) => !err ?
-    resolve({path: filePath}) : reject(err)
+let fileDelete = (filePath) => new Promise((resolve, reject) => {
+
+  const fPath = storeDir + filePath
+  console.log('unlinking ' + fPath)
+  fs.unlink(fPath, (err) => !err ?
+    resolve({path: fPath}) : reject(err)
   )
+}
 )
 
 
@@ -40,13 +44,9 @@ const ignore = (file) => {
   }, 20000000)
 }
 
-const unignore = (file) => {
-  ignoreSet.delete(file)
-}
-
-const isIgnored = (file) => {
-  return ignoreSet.has(file)
-}
+const unignore = (file) => ignoreSet.delete(file)
+const isIgnored = (file) => ignoreSet.has(file)
+const toStoreitPath = (p) => '/' + path.relative(storeDir, p)
 
 export default {
   setStoreDir(dirPath) {
@@ -55,6 +55,7 @@ export default {
   getStoreDir() {
     return storeDir
   },
+  toStoreitPath,
   ignoreSet,
   ignore,
   unignore,

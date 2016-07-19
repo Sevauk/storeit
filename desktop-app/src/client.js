@@ -183,8 +183,10 @@ this.checkoutTree(tr[file])
   recvFADD(params, log=true) {
     if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
 
-    if (!Array.isArray(params.files))
+    if (!Array.isArray(params.files)) {
+      logger.debug(params.files)
       params.files = Object.keys(params.files).map((key) => params.files[key])
+    }
 
     let status = []
     let res
@@ -275,19 +277,19 @@ this.checkoutTree(tr[file])
   }
 
   sendFADD(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
+    return tree.createTree(filePath, this.ipfs)
       .then((file) => this.send('FADD', {files: [file]}))
       .catch((err) => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
+    return tree.createTree(filePath, this.ipfs)
       .then((file) => this.send('FUPT', {files: [file]}))
       .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {files: [filePath.substr('storeit'.length)]}) // QUICKFIX, no windows
+    return this.send('FDEL', {files: [userFile.toStoreitPath(filePath)]})
       .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
