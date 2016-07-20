@@ -237,6 +237,7 @@ this.checkoutTree(tr[file])
             this.ipfs.addRelative(file.path)
               .then((hash) => {
                 if (hash[0].Hash === file.IPFSHash) {
+                  userFile.unignore(file.path)
                   return
                 }
                 getFile()
