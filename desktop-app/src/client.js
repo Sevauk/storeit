@@ -21,7 +21,6 @@ export default class Client {
     this.ipfs = new IPFSnode()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
-    this.connect()
   }
 
   auth(type) {
@@ -58,15 +57,17 @@ export default class Client {
 
   connect() {
     const {SERVER_HOST, SERVER_PORT} = process.env
-    this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
+    return new Promise((resolve) => {
+      this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
-    this.sock.on('open', () => {
-      this.auth('developer')
-      this.recoTime = 1
+      this.sock.on('open', () => {
+        this.recoTime = 1
+        resolve()
+      })
+      this.sock.on('close', () => this.reconnect())
+      this.sock.on('error', () => logger.error('socket error occured'))
+      this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
     })
-    this.sock.on('close', () => this.reconnect())
-    this.sock.on('error', () => logger.error('socket error occured'))
-    this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
   }
 
   reconnect() {
@@ -183,15 +184,16 @@ this.checkoutTree(tr[file])
   recvFADD(params, log=true) {
     if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
 
-    if (!Array.isArray(params.files))
-      params.files = Object.keys(params.files).map((key) => params.files[key])
-
-    let status = []
-    let res
-
     if (!params.files) {
       return Promise.resolve()
     }
+
+    if (!Array.isArray(params.files)) {
+      params.files = Object.keys(params.files).map((key) => params.files[key])
+    }
+
+    let status = []
+    let res
 
     for (let file of params.files) {
 
@@ -213,11 +215,19 @@ this.checkoutTree(tr[file])
             res = this.ipfs.get(file.IPFSHash)
               .then((buf) => {
                 logger.info(`download of ${file.path} is over`)
-                userFile.create(file.path, buf)
-                  .then(() => userFile.unignore(file))
-                  .catch(() => userFile.unignore(file))
+                return userFile.create(file.path, buf)
               })
-              .then(() => this.ipfs.addRelative(file.path))
+              .then(() => {
+		userFile.unignore(file.path)
+		return Promise.resolve()
+		})
+              .catch((err) => {
+		logger.error(err)
+		userFile.unignore(file)
+		})
+              .then(() => {
+		setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
+	      })
               .catch((err) => logger.error(err))
           }
 
@@ -227,6 +237,7 @@ this.checkoutTree(tr[file])
             this.ipfs.addRelative(file.path)
               .then((hash) => {
                 if (hash[0].Hash === file.IPFSHash) {
+                  userFile.unignore(file.path)
                   return
                 }
                 getFile()
@@ -275,19 +286,19 @@ this.checkoutTree(tr[file])
   }
 
   sendFADD(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
+    return tree.createTree(filePath, this.ipfs)
       .then((file) => this.send('FADD', {files: [file]}))
       .catch((err) => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {
-    return tree.createTree(path.resolve('./') + path.sep + filePath, this.ipfs)
+    return tree.createTree(filePath, this.ipfs)
       .then((file) => this.send('FUPT', {files: [file]}))
       .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {files: [filePath.substr('storeit'.length)]}) // QUICKFIX, no windows
+    return this.send('FDEL', {files: [userFile.toStoreitPath(filePath)]})
       .catch((err) => logger.error('FDEL: ' + err.text))
   }
 

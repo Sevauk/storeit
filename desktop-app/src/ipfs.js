@@ -2,29 +2,54 @@ import ipfs from 'ipfs-api'
 import {logger} from '../lib/log'
 import usrFile from './user-file.js'
 
+const MAX_RECO_TIME = 4
+
 export default class IPFSNode {
   constructor() {
-    logger.info('[IPFS] connecting to IPFS...')
+    this.connecting = false
+    this.recoTime = 1
     this.connect()
-    logger.info('[IPFS] connected')
   }
 
   connect() {
     this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
-    return Promise.resolve(true)
+
+    this.ready()
+      .then(() => {
+        logger.info('[IPFS] connected')
+        this.recoTime = 1
+      })
+      .catch(() => this.reconnect())
+  }
+
+  reconnect() {
+    logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
+    setTimeout(() => this.connect(), this.recoTime * 1000)
+
+    if (this.recoTime < MAX_RECO_TIME) {
+      ++this.recoTime
+    }
   }
 
   addRelative(filePath) {
-    return this.add(usrFile.fullPathStoreDir + filePath)
+    return this.ready()
+      .then(() => this.add(usrFile.fullPathStoreDir + filePath))
   }
+
   add(filePath) {
-    return this.node.add(filePath)
+    return this.ready()
+      .then(() => this.node.add(filePath))
+  }
+
+  ready() {
+    return this.node.id()
   }
 
   get(hash) {
     let data = []
 
-    return this.node.cat(hash)
+    return this.ready()
+      .then(() => this.node.cat(hash))
       .then((res) => new Promise((resolve) => {
         res.on('end', () => resolve(Buffer.concat(data)))
         res.on('data', (chunk) => data.push(chunk))
