@@ -21,7 +21,6 @@ export default class Client {
     this.ipfs = new IPFSnode()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
-    this.connect()
   }
 
   auth(type, opener) {
@@ -65,7 +64,6 @@ export default class Client {
 
       this.sock.on('open', () => {
         this.recoTime = 1
-        this.auth('developer')
         resolve()
       })
       this.sock.on('close', () => {
