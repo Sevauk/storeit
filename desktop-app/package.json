@@ -4,10 +4,10 @@
   "main": "main.js",
   "scripts": {
     "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
-    "postinstall": "shx rm -f .env .tokens.json && shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json",
-    "start": "npm run build && node build/main.js",
+    "postinstall": "shx rm -f .env .tokens.json && shx cp -n .env.sample .env && shx cp -n .tokens.json.sample .tokens.json && ipfs init",
+    "start": "npm run build && concurrently -k 'ipfs daemon' 'node build/main.js'",
     "test": "npm run build && npm run bdd",
-    "dev": "concurrently -r -k 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
+    "dev": "concurrently -r -k 'ipfs daemon' 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
     "build:lib": "babel ../lib/js/src -s -d ./lib",
     "build": "npm run build:lib && babel src -s -d build",
     "nodemon": "npm run build:lib && nodemon src/main.js --debug --watch src --watch ../lib/js/src --exec babel-node",

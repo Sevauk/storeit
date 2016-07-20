@@ -12,9 +12,10 @@ export default class IPFSNode {
   }
 
   connect() {
+
     this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
 
-    this.ready()
+    return this.ready()
       .then(() => {
         logger.info('[IPFS] connected')
         this.recoTime = 1
@@ -23,12 +24,18 @@ export default class IPFSNode {
   }
 
   reconnect() {
-    logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
-    setTimeout(() => this.connect(), this.recoTime * 1000)
 
-    if (this.recoTime < MAX_RECO_TIME) {
-      ++this.recoTime
-    }
+    return new Promise((resolve) => {
+      logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
+      setTimeout(() => {
+        this.connect()
+        .then(() => resolve())
+      }, this.recoTime * 1000)
+
+      if (this.recoTime < MAX_RECO_TIME) {
+        ++this.recoTime
+      }
+    })
   }
 
   addRelative(filePath) {
@@ -39,6 +46,10 @@ export default class IPFSNode {
   add(filePath) {
     return this.ready()
       .then(() => this.node.add(filePath))
+      .catch(() => this.reconnect().then(() => {
+        logger.debug('adding again ' + filePath)
+        this.add(filePath)
+      }))
   }
 
   ready() {
@@ -50,14 +61,16 @@ export default class IPFSNode {
 
     return this.ready()
       .then(() => this.node.cat(hash))
-      .then((res) => new Promise((resolve) => {
+      .then((res) => new Promise((resolve, reject) => {
         res.on('end', () => resolve(Buffer.concat(data)))
         res.on('data', (chunk) => data.push(chunk))
+        res.on('close', () => reject())
+        res.on('error', () => reject())
       }))
-      .catch((err) => {
-        logger.error(err)
+      .catch(() => {
         return this.connect()
           .then(() => this.get(hash))
+          .catch((err) => logger.debug('HASH RETRY: ' + err))
       })
   }
 }

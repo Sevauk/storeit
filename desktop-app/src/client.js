@@ -5,7 +5,7 @@ import userFile from './user-file.js'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../lib/protocol-objects'
-import * as store from './store.js'
+import store from './store.js'
 import tree from './tree.js'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -21,6 +21,7 @@ export default class Client {
     this.ipfs = new IPFSnode()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
+    this.connect()
   }
 
   auth(type, opener) {
@@ -60,11 +61,17 @@ export default class Client {
     return new Promise((resolve) => {
       this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
+      logger.debug('attempting connection')
+
       this.sock.on('open', () => {
         this.recoTime = 1
+        this.auth('developer')
         resolve()
       })
-      this.sock.on('close', () => this.reconnect())
+      this.sock.on('close', () => {
+        this.reconnect()
+      })
+
       this.sock.on('error', () => logger.error('socket error occured'))
       this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
     })
@@ -173,7 +180,8 @@ this.checkoutTree(tr[file])
   }
 
   join(authType, accessToken) {
-    return this.send('JOIN', {authType, accessToken})
+    return store.getHostedChunks()
+      .then((hashes) => this.send('JOIN', {authType, accessToken, hosting: hashes}))
       .then((params) => {
         return this.recvFADD({files: [params.home]})
       })
@@ -217,17 +225,11 @@ this.checkoutTree(tr[file])
                 logger.info(`download of ${file.path} is over`)
                 return userFile.create(file.path, buf)
               })
+              .then(() => userFile.unignore(file.path))
+              .catch((err) => userFile.unignore(file.path))
               .then(() => {
-		userFile.unignore(file.path)
-		return Promise.resolve()
-		})
-              .catch((err) => {
-		logger.error(err)
-		userFile.unignore(file)
-		})
-              .then(() => {
-		setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
-	      })
+                setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
+              })
               .catch((err) => logger.error(err))
           }
 
@@ -237,6 +239,7 @@ this.checkoutTree(tr[file])
             this.ipfs.addRelative(file.path)
               .then((hash) => {
                 if (hash[0].Hash === file.IPFSHash) {
+                  userFile.unignore(file.path)
                   return
                 }
                 getFile()
@@ -278,8 +281,8 @@ this.checkoutTree(tr[file])
   }
 
   recvFSTR(params) {
-    logger.info(`received FMOV => ${JSON.stringify(params)}`)
-    return store.FSTR(params.hash, params.keep)
+    logger.info(`received FSTR => ${JSON.stringify(params)}`)
+    return store.FSTR(this.ipfs, params.hash, params.keep)
       .then(() => this.answerSuccess())
       .catch((err) => logger.error('FSTR: ' + err))
   }

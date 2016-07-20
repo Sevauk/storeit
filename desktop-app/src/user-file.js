@@ -11,13 +11,15 @@ let makeFullPath = (filePath) => path.join(storeDir, filePath)
 const makeSubDirs = (p) => new Promise((resolve) => {
 
   const eachDir = p.split(path.sep)
-  let currentPath = ''
-  for (const dir of eachDir) {
-    currentPath += dir + path.sep
+  let currentPath = storeDir
+  for (let i = 0; i < eachDir.length - 1; i++) {
+
+    currentPath += eachDir[i] + path.sep
     try {
       fs.mkdirSync(currentPath)
     }
-    catch (e) {}
+    catch (e) {
+    }
   }
   resolve()
 })
@@ -37,10 +39,11 @@ let fileCreate = (filePath, data) => new Promise((resolve, reject) => {
 
   const fsPath = makeFullPath(filePath)
   return makeSubDirs(filePath)
-    .then(() =>
-      fs.writeFile(fsPath, data, (err) => !err ?
+    .then(() => {
+      return fs.writeFile(fsPath, data, (err) => !err ?
         resolve({path: filePath, data}) : reject(err)
       )
+    }
     )
 })
 
