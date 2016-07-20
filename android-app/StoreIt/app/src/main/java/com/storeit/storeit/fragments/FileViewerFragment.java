@@ -1,5 +1,6 @@
 package com.storeit.storeit.fragments;
 
+import android.accessibilityservice.GestureDescription;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
@@ -140,7 +141,7 @@ public class FileViewerFragment extends Fragment {
         MainActivity activity = (MainActivity) getActivity();
         final FilesManager manager = activity.getFilesManager();
         final StoreitFile file = adapter.getFileAt(position);
-        SocketService service = activity.getSocketService();
+        final SocketService service = activity.getSocketService();
 
         switch (item.getItemId()) {
             case R.id.action_delete_file:
@@ -168,13 +169,24 @@ public class FileViewerFragment extends Fragment {
                 mMoving = true;
                 ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.GONE); // floating button
 
-                Snackbar snackbar = Snackbar.make(focus, "Bouge le fichier", Snackbar.LENGTH_INDEFINITE)
+                Snackbar snackbar = Snackbar.make(focus, "Move file", Snackbar.LENGTH_INDEFINITE)
                         .setAction("MOVE", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                moveFile(manager, file);
                                 ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.VISIBLE);
                                 mMoving = false;
+
+                                String oldPath = file.getPath();
+                                String movedPath = getCurrentFile().getPath() +File.separator + file.getFileName();
+                                movedPath = movedPath.replace("//", "/");
+
+                                manager.removeFile(file.getPath());
+
+                                file.setPath(movedPath);
+
+                                manager.addFile(file, getCurrentFile());
+                                adapter.reloadFiles();
+                                service.sendFMOV(oldPath, movedPath);
                             }
                         });
                 snackbar.setCallback(new Snackbar.Callback() {
@@ -193,12 +205,6 @@ public class FileViewerFragment extends Fragment {
         }
 
         return super.onContextItemSelected(item);
-    }
-
-    private void moveFile(final FilesManager manager, final StoreitFile file) {
-        //Check
-
-        Toast.makeText(getActivity(), "Move!!", Toast.LENGTH_SHORT).show();
     }
 
     private void renameFile(final FilesManager manager, final StoreitFile file) {

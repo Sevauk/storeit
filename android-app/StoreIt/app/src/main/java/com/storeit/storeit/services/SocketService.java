@@ -119,39 +119,62 @@ public class SocketService extends Service {
         }
     }
 
-    public void sendJOIN(String authType, String token) {
+    public boolean sendJOIN(String authType, String token) {
+        if (!mConnected)
+            return false;
+
         Gson gson = new Gson();
         JoinCommand cmd = new JoinCommand(uid, authType, token);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
         lastCmd = "JOIN";
+
+        return true;
     }
 
-    public void sendFADD(StoreitFile newFile) {
+    public boolean sendFADD(StoreitFile newFile) {
+        if (!mConnected)
+            return false;
+
         Gson gson = new Gson();
         FileCommand cmd = new FileCommand(uid, "FADD", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
         lastCmd = "FADD";
+
+        return true;
     }
 
-    public void sendFDEL(StoreitFile newFile) {
+    public boolean sendFDEL(StoreitFile newFile) {
+        if (!mConnected)
+            return false;
+
         Gson gson = new Gson();
         FileDeleteCommand cmd = new FileDeleteCommand(uid, "FDEL", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
         lastCmd = "FDEL";
+
+        return true;
     }
 
-    public void sendFUPT(StoreitFile newFile) {
+    public boolean sendFUPT(StoreitFile newFile) {
+        if (!mConnected)
+            return false;
+
         Gson gson = new Gson();
         FileCommand cmd = new FileCommand(uid, "FUPT", newFile);
         webSocket.sendText(gson.toJson(cmd));
         uid++;
         lastCmd = "FUPT";
+
+        return true;
     }
 
-    public void sendFMOV(String src, String dst) {
+    public boolean sendFMOV(String src, String dst) {
+        if (!mConnected)
+            return false;
+
         Gson gson = new Gson();
         FileMoveCommand cmd = new FileMoveCommand(uid, "FMOV", src, dst);
         webSocket.sendText(gson.toJson(cmd));
@@ -160,11 +183,18 @@ public class SocketService extends Service {
 
         uid++;
         lastCmd = "FMOV";
+
+        return true;
     }
 
-    public void sendRSPONSE() {
+    public boolean sendRSPONSE() {
+        if (!mConnected)
+            return false;
+
         Gson gson = new Gson();
         Response response = new Response(0, "OK", uid, "RESP");
+
+        return true;
     }
 
     public void setmLoginHandler(LoginHandler handler) {
@@ -193,9 +223,9 @@ public class SocketService extends Service {
 
 
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
-      server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
+        server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
 
-      //  server = "ws://192.168.1.3:7641";
+        server = "ws://158.69.196.83:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();

@@ -135,7 +135,7 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
             File file = new File(storeitPath + File.separator + mFiles[position].getPath()); // To get the file type
             File phyiscalFile = new File(storeitPath + File.separator + mFiles[position].getIPFSHash()); // the location of the real file
 
-            String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
+            String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString().toLowerCase());
             String mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
             intent.setDataAndType(Uri.fromFile(phyiscalFile), mimetype);
 
@@ -149,9 +149,12 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
 
         historyStack.push(mFiles[position]);
 
-        for (Map.Entry<String, StoreitFile> entry : mFiles[position].getFiles().entrySet()) { // list all files from current folder
-            files.add(entry.getValue());
+        if (mFiles[position].getFiles() != null) {
+            for (Map.Entry<String, StoreitFile> entry : mFiles[position].getFiles().entrySet()) { // list all files from current folder
+                files.add(entry.getValue());
+            }
         }
+
         mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
 
         notifyDataSetChanged();

@@ -37,6 +37,8 @@ public class FilesManager {
         mDataDir = new File(storageLocation);
 
 
+
+/*
         File jsonFile = new File(storageLocation + "/storeit.json");
         if (!jsonFile.exists()) {
             Log.d(LOGTAG, "Creating root json file");
@@ -77,7 +79,7 @@ public class FilesManager {
                 e.printStackTrace();
             }
         }
-
+*/
         mRootFile = rootFile;
     }
 
@@ -103,7 +105,7 @@ public class FilesManager {
     public void recursiveCmp(StoreitFile existingFile, StoreitFile newRoot) {
 
         if (!existingFile.getPath().equals("/")) { // Don't delete root
-            StoreitFile f = getFileByHash(existingFile.getIPFSHash(), newRoot); // Look for the actual file
+            StoreitFile f = getFileByName(existingFile.getPath(), newRoot); // Look for the actual file
             if (f == null) { // If the file doesn't exist anymore
                 File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + existingFile.getIPFSHash());
                 if (fileToDelete.exists()) {
@@ -298,7 +300,9 @@ public class FilesManager {
 
             if (srcParent.getParent() != null && dstParent.getParent() != null // Rename file
                     && srcParent.getParent().equals(dstParent.getParent())) {
+                removeFile(storeitFile.getPath());
                 storeitFile.setPath(dst);
+                addFile(storeitFile);
             } else { // Move File
                 StoreitFile newFile = new StoreitFile(dst, storeitFile.getIPFSHash(), // copy
                         storeitFile.isDirectory());

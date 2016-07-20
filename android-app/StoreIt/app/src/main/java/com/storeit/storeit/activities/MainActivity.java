@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBoundService = ((SocketService.LocalBinder) service).getService();
+            mBoundService.setFileCommandandler(mFileCommandHandler);
             mIsBound = true;
         }
 
@@ -226,8 +227,7 @@ public class MainActivity extends AppCompatActivity {
 
         openFragment(new HomeFragment());
         ActionBar bar = getSupportActionBar();
-        if (bar != null)
-        {
+        if (bar != null) {
             bar.setTitle("Home");
         }
 
@@ -238,8 +238,7 @@ public class MainActivity extends AppCompatActivity {
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
-        if (mBoundService != null)
-            mBoundService.setFileCommandandler(mFileCommandHandler);
+
     }
 
 
@@ -263,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container); // Get the current fragment
                 if (currentFragment instanceof FileViewerFragment) {
-                    FileViewerFragment fragment = (FileViewerFragment)currentFragment;
+                    FileViewerFragment fragment = (FileViewerFragment) currentFragment;
 
                     // Create new folder
                     StoreitFile folder;
@@ -311,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
             startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
         }
-
 
 
     }
@@ -370,8 +368,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        switch (id)
-        {
+        switch (id) {
             case R.id.action_settings:
                 break;
             case android.R.id.home:
@@ -428,8 +425,8 @@ public class MainActivity extends AppCompatActivity {
     public String getRealPathFromURI(Uri contentUri) {
         Cursor cursor = null;
         try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = getContentResolver().query(contentUri,  proj, null, null, null);
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = getContentResolver().query(contentUri, proj, null, null, null);
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
             return cursor.getString(column_index);
@@ -460,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container); // Get the current fragment
         if (currentFragment instanceof FileViewerFragment) {
 
-            FileViewerFragment f = (FileViewerFragment)currentFragment;
+            FileViewerFragment f = (FileViewerFragment) currentFragment;
             f.getAdapter().reloadFiles();
 
             /*
