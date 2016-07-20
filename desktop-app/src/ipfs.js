@@ -14,7 +14,7 @@ export default class IPFSNode {
   connect() {
     this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
 
-    this.ready()
+    return this.ready()
       .then(() => {
         logger.info('[IPFS] connected')
         this.recoTime = 1

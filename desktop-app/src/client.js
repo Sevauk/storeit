@@ -217,17 +217,11 @@ this.checkoutTree(tr[file])
                 logger.info(`download of ${file.path} is over`)
                 return userFile.create(file.path, buf)
               })
+              .then(() => userFile.unignore(file.path))
+              .catch((err) => userFile.unignore(file.path))
               .then(() => {
-		userFile.unignore(file.path)
-		return Promise.resolve()
-		})
-              .catch((err) => {
-		logger.error(err)
-		userFile.unignore(file)
-		})
-              .then(() => {
-		setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
-	      })
+                setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
+              })
               .catch((err) => logger.error(err))
           }
 
