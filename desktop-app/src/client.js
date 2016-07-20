@@ -280,8 +280,8 @@ this.checkoutTree(tr[file])
   }
 
   recvFSTR(params) {
-    logger.info(`received FMOV => ${JSON.stringify(params)}`)
-    return store.FSTR(params.hash, params.keep)
+    logger.info(`received FSTR => ${JSON.stringify(params)}`)
+    return store.FSTR(this.ipfs, params.hash, params.keep)
       .then(() => this.answerSuccess())
       .catch((err) => logger.error('FSTR: ' + err))
   }

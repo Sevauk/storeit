@@ -1,7 +1,6 @@
 // code for hosting other people files via ipfs
 
 import * as fs from 'fs'
-import * as ipfs from './ipfs.js'
 
 // TODO: make this windows compatible
 export const ipfsStore = '~/.storeit'
@@ -12,7 +11,7 @@ try {
 catch (e) {
 }
 
-const FSTR = (hash, keep) => {
+const FSTR = (ipfs, hash, keep) => {
 
   return new Promise((resolve, reject) => {
 
