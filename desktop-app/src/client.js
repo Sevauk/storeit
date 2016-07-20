@@ -21,6 +21,7 @@ export default class Client {
     this.ipfs = new IPFSnode()
     this.fsWatcher = new Watcher(userFile.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
+    this.connect()
   }
 
   auth(type) {
@@ -60,11 +61,16 @@ export default class Client {
     return new Promise((resolve) => {
       this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
+
       this.sock.on('open', () => {
         this.recoTime = 1
+        this.auth('developer')
         resolve()
       })
-      this.sock.on('close', () => this.reconnect())
+      this.sock.on('close', () => {
+        this.reconnect()
+      })
+
       this.sock.on('error', () => logger.error('socket error occured'))
       this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
     })
