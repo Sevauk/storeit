@@ -18,4 +18,4 @@ if (commander.store) userFile.setStoreDir(commander.store)
 
 let client = new Client()
 client.connect()
-  .then(() => this.auth('developer'))
+  .then(() => client.auth('developer'))
