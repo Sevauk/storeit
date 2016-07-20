@@ -46,7 +46,10 @@ export default class IPFSNode {
   add(filePath) {
     return this.ready()
       .then(() => this.node.add(filePath))
-      .catch(() => this.reconnect().then(() => this.add(filePath)))
+      .catch(() => this.reconnect().then(() => {
+        logger.debug('adding again ' + filePath)
+        this.add(filePath)
+      }))
   }
 
   ready() {

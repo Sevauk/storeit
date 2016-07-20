@@ -20,12 +20,15 @@ const FSTR = (ipfs, hash, keep) => {
       return resolve()
     }
 
+    if (hash.substr(2) !== 'Qm')
+      return reject('bad IPFS Hash ' + hash)
+
     ipfs.get(hash, '~/.storeit/' + hash, (err) => {
       if (err) {
-        return reject(err)
+        reject(err)
       }
 
-      return resolve()
+      resolve()
     })
   })
 }
