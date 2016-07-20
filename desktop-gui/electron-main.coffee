@@ -11,10 +11,12 @@ StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
 
 global.daemon = new StoreItClient
 win = null
+tray = null
 
 init = -> daemon.connect()
 
 load = ->
+  tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
   win = new electron.BrowserWindow {width: 800, height: 600}
 
   init()

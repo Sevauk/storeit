@@ -1,4 +1,7 @@
 $ = require 'bootstrap'
 
 module.exports =
-  template: (template) -> ($ template.html).appendTo($ '#container')
+  template: (template) ->
+    container = $ '#container'
+    container.empty()
+    ($ template.html).appendTo(container)
