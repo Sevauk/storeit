@@ -9,7 +9,7 @@ StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
 
 {app} = electron
 
-daemon = new StoreItClient
+global.daemon = new StoreItClient
 win = null
 
 init = -> daemon.connect()
