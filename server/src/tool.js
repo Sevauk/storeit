@@ -18,6 +18,8 @@ map2:
   }
 */
 
+import {logger} from './common/log.js'
+
 export class TwoHashMap {
 
   constructor() {
@@ -86,8 +88,9 @@ export class TwoHashMap {
   selectA(dontHave, howMany) {
 
     const selected = new Set()
+
     for (const item of Object.keys(this.map1)) {
-      if (this.map2[dontHave].has(item))
+      if (this.map2[dontHave] && this.map2[dontHave].has(item))
         continue
       selected.add(item)
       if (--howMany <= 0)

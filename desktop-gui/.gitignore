@@ -1,0 +1,6 @@
+build
+lib
+storeit/
+npm-debug.log
+node_modules/
+jspm_packages/

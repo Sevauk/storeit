@@ -8,6 +8,7 @@ import {logger} from './common/log.js'
 export const storeTable = new tool.TwoHashMap()
 
 export const registerHashesForUser = (socket, hashes) => {
+  storeTable.add(socket.uid, '')
   if (hashes !== undefined) {
     for (const hash of hashes) {
       storeTable.add(socket.uid, hash)
@@ -22,23 +23,28 @@ export const processHash = (socket, arg) => {
 const targetCount = 5
 
 export const keepChunkAlive = (hash) => {
-  let instances = store.storeTable.count(hash)
+  let instances = storeTable.count(hash)
 
   if (instances >= targetCount)
     return
 
   const amountNeeded = targetCount - instances
-  const users = store.storeTable.selectA(hash, amountNeeded)
+  const users = storeTable.selectA(hash, amountNeeded)
+
+  logger.debug('--->' + JSON.stringify(storeTable.map1))
 
   if (users.size < amountNeeded)
     logger.warn('insufficient amount of users needed to have good redundancy')
 
   for (const usr of users) {
+    storeTable.add(usr, hash)
+    logger.debug('ADD' + JSON.stringify(storeTable.map1))
     user.getSocketFromUid(usr).sendObj(new api.Command('FSTR', {hash, 'keep': true}), (err) => {
       if (err) {
         return logger.debug('user did not FSTR as asked (TODO: punish him and try with someone else)')
       }
-      logger.debug('user did download the chunk')
+      storeTable.add(usr, hash) // TODO: why is it not running this line ?
+      logger.debug('user did download the chunk') 
     })
   }
 }

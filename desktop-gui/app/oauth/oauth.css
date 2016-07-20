@@ -1,0 +1,16 @@
+#login .login-buttons button {
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 10px;
+  width: 225px;
+}
+
+#login #facebook {
+  color: #fff;
+  background-color: #3B5998;
+}
+
+#login #google {
+  color: #fff;
+  background-color: #D94A38;
+}

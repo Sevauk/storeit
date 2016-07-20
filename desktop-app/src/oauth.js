@@ -8,7 +8,7 @@ import fbgraph from 'fbgraph'
 import {logger} from '../lib/log'
 
 const REDIRECT_URI = 'http://localhost:7777/'
-const TOKENS_FILE = './.tokens.json'
+const TOKENS_FILE = `${(global.STOREIT_RELATIVE_PATH || '.')}/.tokens.json`
 const HTTP_PORT = 7777
 
 class OAuthProvider {
@@ -128,7 +128,7 @@ export class FacebookService extends OAuthProvider {
     })
   }
 
-  oauth() {
+  oauth(opener=open) {
     const ENDPOINT = 'auth/fb'
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
@@ -140,7 +140,7 @@ export class FacebookService extends OAuthProvider {
     })
     let tokenPromise = this.waitAuthorized()
       .then((code) => this.getToken(code))
-    open(`http://localhost:${HTTP_PORT}/${ENDPOINT}`)
+    opener(`http://localhost:${HTTP_PORT}/${ENDPOINT}`)
     return tokenPromise
   }
 
