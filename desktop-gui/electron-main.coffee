@@ -12,22 +12,36 @@ StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
 ipc = electron.ipcMain
 
 global.daemon = new StoreItClient
-win = null
+mainWin = null
 tray = null
 
 load = ->
   tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
-  win = new electron.BrowserWindow {width: 800, height: 600}
+  mainWin = new electron.BrowserWindow {width: 800, height: 600}
+  mainWin.openDevTools()
 
   daemon.connect().then ->
-    ipc.on 'auth', (ev, authType) ->
-      daemon.auth authType
-    win.loadURL "file://#{__dirname}/../index.html"
+    mainWin.loadURL "file://#{__dirname}/../index.html"
 
-  win.on 'closed', -> win = null
+  mainWin.on 'closed', -> mainWin = null
 
 app.on 'ready', -> load()
 
 app.on 'window-all-closed', -> app.quit() if process.platform isnt 'darwin'
 
-app.on 'activate', -> load() unless win?
+app.on 'activate', -> load() unless mainWin?
+
+oauthWin = null
+ipc.on 'auth', (ev, authType) ->
+  oauthWin = new electron.BrowserWindow
+    parent: mainWin
+    modal: true
+    webPreferences:
+      nodeIntegration: false
+  daemon.auth(authType, oauthWin.loadURL.bind(oauthWin))
+    .then ->
+      oauthWin.close()
+      ev.sender.send 'auth', 'done'
+    .catch (e) ->
+      oauthWin.close()
+      ev.sender.send 'auth', 'done' # FIXME: workaround

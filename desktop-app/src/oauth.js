@@ -128,9 +128,8 @@ export class FacebookService extends OAuthProvider {
     })
   }
 
-  oauth() {
+  oauth(opener=open) {
     const ENDPOINT = 'auth/fb'
-    logger.info('tokens loaded', this.tokens)
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
         if (!req.query.error)
@@ -141,7 +140,7 @@ export class FacebookService extends OAuthProvider {
     })
     let tokenPromise = this.waitAuthorized()
       .then((code) => this.getToken(code))
-    open(`http://localhost:${HTTP_PORT}/${ENDPOINT}`)
+    opener(`http://localhost:${HTTP_PORT}/${ENDPOINT}`)
     return tokenPromise
   }
 

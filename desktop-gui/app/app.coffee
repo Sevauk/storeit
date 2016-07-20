@@ -8,4 +8,4 @@ oauth = require 'app/oauth/oauth.coffee!'
 
 $ ->
   ($ template.html).appendTo($ document.body)
-  oauth.run()
+  oauth.spawn()

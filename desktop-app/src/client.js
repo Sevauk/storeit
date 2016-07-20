@@ -23,7 +23,7 @@ export default class Client {
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
-  auth(type) {
+  auth(type, opener) {
     let service
     switch (type) {
      case 'facebook':
@@ -40,12 +40,12 @@ export default class Client {
       return this.login() // TODO
     }
 
-    return service.oauth()
+    return service.oauth(opener)
       .then((tokens) => this.join(type, tokens.access_token))
       .then((cmd) =>
         this.addResponseHandler(cmd.uid, (data) => this.getRemoteTree(data))
-  )
-}
+    )
+  }
 
   developer() {
     return this.join('gg', 'developer')
