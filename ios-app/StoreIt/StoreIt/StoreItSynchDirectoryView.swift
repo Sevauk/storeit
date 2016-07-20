@@ -9,6 +9,7 @@
 import UIKit
 import Photos
 import ObjectMapper
+import QuickLook
 
 // TODO: maybe import interface texts from a file for different languages ?
 
@@ -101,16 +102,12 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             }
             else if (segue.identifier == "showFileSegue") {
                 let fileView = segue.destinationViewController as! FileView
-                
-                fileView.file = target
-                fileView.networkManager = self.networkManager
-                fileView.actionSheetsManager = self.actionSheetsManager
-                
                 fileView.navigationItem.title = self.navigationManager?.getTargetName(target)
                 
-                self.ipfsManager?.get(target.IPFSHash) { data in
+                self.ipfsManager?.get(target.IPFSHash) { bytes in
                     //print("[IPFS.GET] received data: \(data)")
-                    fileView.data = data
+                    fileView.bytes = bytes
+                    fileView.presentQlPreviewController()
                 }
             }
         }
@@ -130,7 +127,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let selectedFile: File = (navigationManager?.getSelectedFileAtRow(indexPath))!
         let isDir: Bool = (self.navigationManager?.isSelectedFileAtRowADir(indexPath))!
-        print(self.navigationManager?.getSortedItems())
+
         if (isDir) {
             self.performSegueWithIdentifier("nextDirSegue", sender: selectedFile)
         } else {

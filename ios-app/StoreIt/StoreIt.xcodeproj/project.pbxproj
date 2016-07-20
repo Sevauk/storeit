@@ -20,6 +20,7 @@
 		8500F7111C972B0400C69875 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8500F7101C972B0400C69875 /* NetworkManager.swift */; };
 		850831521CE7332200C11EB5 /* DirectoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850831511CE7332200C11EB5 /* DirectoryCell.swift */; };
 		850831541CE7358C00C11EB5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850831531CE7358C00C11EB5 /* FileCell.swift */; };
+		85145A731D3EC41900520B1E /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85145A721D3EC41900520B1E /* FileView.swift */; };
 		8531C2921CE670F50009B26A /* StoreItSynchDirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8531C2911CE670F50009B26A /* StoreItSynchDirectoryView.swift */; };
 		853B29011CD8B33000742F8D /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B29001CD8B33000742F8D /* WebSocketManager.swift */; };
 		854E27E91CF5C795007DA015 /* StoreitActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854E27E81CF5C795007DA015 /* StoreitActionSheet.swift */; };
@@ -35,7 +36,6 @@
 		857D8ED01D1A90D100166738 /* ConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857D8ECF1D1A90D100166738 /* ConnectionType.swift */; };
 		858B096E1D23D9D400CB1190 /* IpfsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 858B096D1D23D9D400CB1190 /* IpfsResponse.swift */; };
 		8596DF0C1CDBDC03008501BD /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8596DF0B1CDBDC03008501BD /* ConnectionManager.swift */; };
-		85B0F7391D24696A00314421 /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B0F7381D24696A00314421 /* FileView.swift */; };
 		85B154121D140D18003B62FE /* PListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B154111D140D18003B62FE /* PListManager.swift */; };
 		85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B5A8F21D2C09AE00529533 /* UidFactory.swift */; };
 		85BA025B1CEDBD7200A8FC6F /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */; };
@@ -98,6 +98,7 @@
 		8500F7101C972B0400C69875 /* NetworkManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		850831511CE7332200C11EB5 /* DirectoryCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectoryCell.swift; sourceTree = "<group>"; };
 		850831531CE7358C00C11EB5 /* FileCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
+		85145A721D3EC41900520B1E /* FileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileView.swift; sourceTree = "<group>"; };
 		85220E6F1D12B1A000069573 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		8531C2911CE670F50009B26A /* StoreItSynchDirectoryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreItSynchDirectoryView.swift; sourceTree = "<group>"; };
 		853B29001CD8B33000742F8D /* WebSocketManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
@@ -114,7 +115,6 @@
 		857D8ECF1D1A90D100166738 /* ConnectionType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConnectionType.swift; sourceTree = "<group>"; };
 		858B096D1D23D9D400CB1190 /* IpfsResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IpfsResponse.swift; sourceTree = "<group>"; };
 		8596DF0B1CDBDC03008501BD /* ConnectionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
-		85B0F7381D24696A00314421 /* FileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileView.swift; sourceTree = "<group>"; };
 		85B154111D140D18003B62FE /* PListManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PListManager.swift; sourceTree = "<group>"; };
 		85B5A8F21D2C09AE00529533 /* UidFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UidFactory.swift; sourceTree = "<group>"; };
 		85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
@@ -264,8 +264,8 @@
 				854E27E81CF5C795007DA015 /* StoreitActionSheet.swift */,
 				85708E811D130ED5001B7415 /* ParametersView.swift */,
 				85708E851D131D21001B7415 /* ProfileView.swift */,
-				85B0F7381D24696A00314421 /* FileView.swift */,
 				85FF45DC1D3A757500A89436 /* ActionSheetsManager.swift */,
+				85145A721D3EC41900520B1E /* FileView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -543,7 +543,6 @@
 				853B29011CD8B33000742F8D /* WebSocketManager.swift in Sources */,
 				85D0E6101D1D985E00C564C3 /* IpfsManager.swift in Sources */,
 				857987321CDCBE4D0062B8F8 /* OAuth2Google.swift in Sources */,
-				85B0F7391D24696A00314421 /* FileView.swift in Sources */,
 				850831521CE7332200C11EB5 /* DirectoryCell.swift in Sources */,
 				855AFB311D15D081009B81D9 /* Response.swift in Sources */,
 				857987301CDCBE300062B8F8 /* OAuth2.swift in Sources */,
@@ -564,6 +563,7 @@
 				8500F7111C972B0400C69875 /* NetworkManager.swift in Sources */,
 				85708E821D130ED5001B7415 /* ParametersView.swift in Sources */,
 				855AFB2F1D15CCC6009B81D9 /* CommandInfos.swift in Sources */,
+				85145A731D3EC41900520B1E /* FileView.swift in Sources */,
 				85FF45E11D3CD50D00A89436 /* SuccessResponse.swift in Sources */,
 				85708E861D131D21001B7415 /* ProfileView.swift in Sources */,
 				858B096E1D23D9D400CB1190 /* IpfsResponse.swift in Sources */,

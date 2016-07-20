@@ -21,7 +21,9 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     var plistManager: PListManager? = nil
 
     let port: Int = 7641//8001
-    let host: String = "158.69.196.83"
+    //let host: String = "158.69.196.83"
+    let host: String = "localhost"
+
     
     @IBOutlet weak var FBLoginButton: FBSDKLoginButton!
     

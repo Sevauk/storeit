@@ -155,31 +155,22 @@
             <point key="canvasLocation" x="-552" y="-1370"/>
         </scene>
         <!--File View-->
-        <scene sceneID="pHm-sz-Zt4">
+        <scene sceneID="p9Q-C1-PEg">
             <objects>
-                <viewController id="Zeh-eu-bbm" customClass="FileView" customModule="StoreIt" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="W57-VD-ZO7" customClass="FileView" customModule="StoreIt" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="N1y-iK-Qx2"/>
-                        <viewControllerLayoutGuide type="bottom" id="t8p-Es-4iN"/>
+                        <viewControllerLayoutGuide type="top" id="kXG-Mu-YMN"/>
+                        <viewControllerLayoutGuide type="bottom" id="aGf-Zk-scl"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="cws-ie-6YA">
+                    <view key="view" contentMode="scaleToFill" id="kBN-CO-AHg">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Ri-aj-3e7">
-                                <rect key="frame" x="0.0" y="64" width="600" height="492"/>
-                            </imageView>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <toolbarItems/>
-                    <connections>
-                        <outlet property="imageView" destination="4Ri-aj-3e7" id="2oe-BH-Dfz"/>
-                    </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="LbT-YO-25I" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="VeM-9v-XOG" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="796" y="-428"/>
+            <point key="canvasLocation" x="261" y="342"/>
         </scene>
         <!--Dossier StoreIt-->
         <scene sceneID="1Xa-cG-M6I">
@@ -299,7 +290,6 @@
                                         <connections>
                                             <outlet property="contextualMenu" destination="E3b-TD-tbm" id="NUS-g1-3fc"/>
                                             <outlet property="itemName" destination="QxY-hc-CM0" id="FNK-Tt-tTD"/>
-                                            <segue destination="Zeh-eu-bbm" kind="show" identifier="showFileSegue" animates="NO" id="BwH-I2-qrw"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -342,6 +332,7 @@
                         <outlet property="list" destination="2DC-Ug-Ua6" id="lqj-Ff-fXJ"/>
                         <outlet property="moveToolBar" destination="lSG-A4-8Rg" id="g5o-l0-dmG"/>
                         <outlet property="tabBarItem" destination="LZY-Ty-zno" id="kVQ-J3-WoE"/>
+                        <segue destination="W57-VD-ZO7" kind="show" identifier="showFileSegue" id="qI2-21-Y2L"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="J0l-OA-TyR" userLabel="First Responder" sceneMemberID="firstResponder"/>
