@@ -61,6 +61,7 @@ export default class Client {
     return new Promise((resolve) => {
       this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
 
+      logger.debug('attempting connection')
 
       this.sock.on('open', () => {
         this.recoTime = 1

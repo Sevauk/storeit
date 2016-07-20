@@ -12,6 +12,7 @@ export default class IPFSNode {
   }
 
   connect() {
+
     this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
 
     return this.ready()
@@ -23,12 +24,18 @@ export default class IPFSNode {
   }
 
   reconnect() {
-    logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
-    setTimeout(() => this.connect(), this.recoTime * 1000)
 
-    if (this.recoTime < MAX_RECO_TIME) {
-      ++this.recoTime
-    }
+    return new Promise((resolve) => {
+      logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
+      setTimeout(() => {
+        this.connect()
+        .then(() => resolve())
+      }, this.recoTime * 1000)
+
+      if (this.recoTime < MAX_RECO_TIME) {
+        ++this.recoTime
+      }
+    })
   }
 
   addRelative(filePath) {
@@ -57,7 +64,10 @@ export default class IPFSNode {
       .catch((err) => {
         logger.error(err)
         return this.connect()
-          .then(() => this.get(hash))
+          .then(() => {
+            logger.debug('GETTING ' + hash + ' again')
+            this.get(hash)
+          })
       })
   }
 }
