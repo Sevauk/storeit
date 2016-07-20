@@ -1,22 +1,25 @@
+DAEMON_PATH = '../desktop-app'
+(require 'dotenv').config path: "#{DAEMON_PATH}/.env"
+
 electron = require 'electron'
 
-shell = require 'shelljs'
 logger = (require '../lib/log').logger
 
+StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
+
 {app} = electron
+
+daemon = new StoreItClient
 win = null
 
-init = ->
-  # if shell.exec('npm --prefix ../desktop-app start').code isnt 0
-  #   logger.error 'Error: could not start daemon'
-  # else
-  #   logger.info 'StoreIt daemon started'
+init = -> daemon.connect()
 
 load = ->
   win = new electron.BrowserWindow {width: 800, height: 600}
 
   init()
-  win.loadURL "file://#{__dirname}/../index.html"
+    .then -> win.loadURL "file://#{__dirname}/../index.html"
+
   win.on 'closed', -> win = null
 
 app.on 'ready', -> load()

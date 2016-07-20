@@ -1,3 +1,7 @@
-$ = require 'jquery'
+$ = require 'bootstrap'
+require 'bootstrap/css/bootstrap.css!'
 
-console.log 'foobar !!!'
+template = require 'app/oauth.jade!'
+
+$ ->
+  ($ template.html).appendTo($ document.body)
