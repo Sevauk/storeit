@@ -180,7 +180,8 @@ this.checkoutTree(tr[file])
   }
 
   join(authType, accessToken) {
-    return this.send('JOIN', {authType, accessToken})
+    return store.getHostedChunks()
+      .then((hashes) => this.send('JOIN', {authType, accessToken, hosting: hashes}))
       .then((params) => {
         return this.recvFADD({files: [params.home]})
       })
