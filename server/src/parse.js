@@ -24,7 +24,7 @@ const join = function(command, arg, socket, handlerFn) {
 
       const unlock = (usr) => {
         store.processHash(socket, arg)
-        sendWelcome(socket, usr, command.uid, {profilePic}, handlerFn)
+        sendWelcome(socket, usr, command.uid, {email, profilePic}, handlerFn)
       }
 
       if (err && err.code === 'ENOENT') {
@@ -128,7 +128,7 @@ export const parse = function(msg, client) {
   }
 
   logger.debug(`Command is ${JSON.stringify(command, null, 2)}`)
-  
+
   // TODO: catch the goddam exception
   const err = hmap[command.command](command, command.parameters, client, (err) => {
     if (err) client.answerFailure(command.uid, err)
