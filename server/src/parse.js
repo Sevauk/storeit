@@ -120,6 +120,9 @@ export const parse = function(msg, client) {
     'RESP': resp,
   }
 
+  if (command.command !== 'JOIN' && !client.getUser())
+    return client.answerFailure(command.uid, protoObjs.ApiError.BADREQUEST)
+
   if (!(command.command in hmap)) {
     return client.answerFailure(command.uid, protoObjs.ApiError.UNKNOWNREQUEST)
   }
