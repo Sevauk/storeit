@@ -46,6 +46,7 @@ export default class IPFSNode {
   add(filePath) {
     return this.ready()
       .then(() => this.node.add(filePath))
+      .catch(() => this.reconnect().then(() => this.add(filePath)))
   }
 
   ready() {
@@ -57,17 +58,16 @@ export default class IPFSNode {
 
     return this.ready()
       .then(() => this.node.cat(hash))
-      .then((res) => new Promise((resolve) => {
+      .then((res) => new Promise((resolve, reject) => {
         res.on('end', () => resolve(Buffer.concat(data)))
         res.on('data', (chunk) => data.push(chunk))
+        res.on('close', () => reject())
+        res.on('error', () => reject())
       }))
-      .catch((err) => {
-        logger.error(err)
+      .catch(() => {
         return this.connect()
-          .then(() => {
-            logger.debug('GETTING ' + hash + ' again')
-            this.get(hash)
-          })
+          .then(() => this.get(hash))
+          .catch((err) => logger.debug('HASH RETRY: ' + err))
       })
   }
 }
