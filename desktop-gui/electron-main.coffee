@@ -16,7 +16,7 @@ load = ->
   win = new electron.BrowserWindow {width: 800, height: 600}
 
   init()
-  win.loadURL "file://#{__dirname}/build/app/index.html"
+  win.loadURL "file://#{__dirname}/../index.html"
   win.on 'closed', -> win = null
 
 app.on 'ready', -> load()
