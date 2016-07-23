@@ -1,13 +1,15 @@
 Prérequis du logiciel StoreIt pour ordinateur de bureau
-====================================================
+=======================================================
 
-#### Systèmes d’exploitation supportés:
+Systèmes d’exploitation supportés:
+----------------------------------
 
 - Linux
 - MacOS
 - Windows
 
-#### Configuration minimale conseillée
+Configuration minimale conseillée:
+----------------------------------
 
 Mémoire vive: 2Go
 CPU: 2x 2Ghz architecture Intel
@@ -17,30 +19,67 @@ Vitesse de la connexion internet: 4Mbps
 Prérequis pour le serveur StoreIt
 =================================
 
-#### Systèmes d’exploitation supportés:
+Systèmes d’exploitation supportés:
+----------------------------------
 
 - Linux
 - MacOS
 
-#### Configuration minimale conseillée
+Configuration minimale conseillée
+---------------------------------
 
 Mémoire vive: 2Go (pour une petite quantité d’utilisateurs)
 CPU: 2x 2Ghz architecture Intel
 Disque dur 1Go (pour une petite quantité d’utilisateurs)
 
 
-Appli iOS
-=========
+Prérequis pour l'application iOS
+================================
 
-L'utilisateur a besoin d'un iPhone possèdant la versio d'iOS 8 au minimum ainsi que d'un accès à internet. En revanche, l'application a besoin d'être publiée sur l'AppStore pour que le téléchargement soit possible.
+Système d'exploitation:
+-----------------------
 
-## Documentation d'installation
+iOS >= 8
 
-### Installation de l'environnement
+Devices:
+--------
 
-* Posséder un Mac afin d’installer la dernière version Xcode
-* Installer Cocoapods [Tutoriel sur le Site de Cocoapods ici](https://cocoapods.org)
-* Cloner le dépôt git
-* Depuis le dépôt, installer les dépendances `pod install`
-* Ouvrir le projet dans Xcode `open StoreIt.xcworkspace`
-* Compilier le projet avant de lancer l'émulateur !
+- iPhone
+- iPad
+
+Prérequis pour l'application Android
+====================================
+
+Système d'exploitation:
+-----------------------
+
+Android >= 4.3
+
+Devices:
+--------
+
+- Mobiles Android
+- Tablettes Android
+
+Prérequis de l'application Web StoreIt
+======================================
+
+Système d'exploitation:
+-----------------------
+
+Multi-OS
+
+Navigateurs supportés:
+----------------------
+
+- Google Chrome
+- Mozilla Firefox
+- Microsoft Edge
+- Safari
+
+Le support d'Internet Explorer a été abandonné en même temps que la fin de sa prise en charge par Microsoft au 12/01/2016.
+
+Serveur Web:
+-------------
+
+NGINX
