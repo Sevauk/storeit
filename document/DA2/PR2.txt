@@ -1,0 +1,46 @@
+Prérequis du logiciel StoreIt pour ordinateur de bureau
+====================================================
+
+#### Systèmes d’exploitation supportés:
+
+- Linux
+- MacOS
+- Windows
+
+#### Configuration minimale conseillée
+
+Mémoire vive: 2Go
+CPU: 2x 2Ghz architecture Intel
+Disque dur: 5Go
+Vitesse de la connexion internet: 4Mbps
+
+Prérequis pour le serveur StoreIt
+=================================
+
+#### Systèmes d’exploitation supportés:
+
+- Linux
+- MacOS
+
+#### Configuration minimale conseillée
+
+Mémoire vive: 2Go (pour une petite quantité d’utilisateurs)
+CPU: 2x 2Ghz architecture Intel
+Disque dur 1Go (pour une petite quantité d’utilisateurs)
+
+
+Appli iOS
+=========
+
+L'utilisateur a besoin d'un iPhone possèdant la versio d'iOS 8 au minimum ainsi que d'un accès à internet. En revanche, l'application a besoin d'être publiée sur l'AppStore pour que le téléchargement soit possible.
+
+## Documentation d'installation
+
+### Installation de l'environnement
+
+* Posséder un Mac afin d’installer la dernière version Xcode
+* Installer Cocoapods [Tutoriel sur le Site de Cocoapods ici](https://cocoapods.org)
+* Cloner le dépôt git
+* Depuis le dépôt, installer les dépendances `pod install`
+* Ouvrir le projet dans Xcode `open StoreIt.xcworkspace`
+* Compilier le projet avant de lancer l'émulateur !
