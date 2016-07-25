@@ -97,7 +97,7 @@ class WebSocketManager {
     private func addFiles(files: [File]) {
         for file in files {
             let updateElement = UpdateElement(file: file)
-            
+
             let index = self.navigationManager.updateTree(updateElement)
             
             if (index != -1) {

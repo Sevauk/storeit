@@ -21,6 +21,8 @@
 		850831521CE7332200C11EB5 /* DirectoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850831511CE7332200C11EB5 /* DirectoryCell.swift */; };
 		850831541CE7358C00C11EB5 /* FileCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 850831531CE7358C00C11EB5 /* FileCell.swift */; };
 		85145A731D3EC41900520B1E /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85145A721D3EC41900520B1E /* FileView.swift */; };
+		85145A771D3F802E00520B1E /* btn_google+_signin_dark_normal_ios.png in Resources */ = {isa = PBXBuildFile; fileRef = 85145A761D3F802E00520B1E /* btn_google+_signin_dark_normal_ios.png */; };
+		85145A791D3F806100520B1E /* btn_google+_dark_normal_ios.png in Resources */ = {isa = PBXBuildFile; fileRef = 85145A781D3F806100520B1E /* btn_google+_dark_normal_ios.png */; };
 		8531C2921CE670F50009B26A /* StoreItSynchDirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8531C2911CE670F50009B26A /* StoreItSynchDirectoryView.swift */; };
 		853B29011CD8B33000742F8D /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B29001CD8B33000742F8D /* WebSocketManager.swift */; };
 		854E27E91CF5C795007DA015 /* StoreitActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854E27E81CF5C795007DA015 /* StoreitActionSheet.swift */; };
@@ -99,6 +101,8 @@
 		850831511CE7332200C11EB5 /* DirectoryCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectoryCell.swift; sourceTree = "<group>"; };
 		850831531CE7358C00C11EB5 /* FileCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileCell.swift; sourceTree = "<group>"; };
 		85145A721D3EC41900520B1E /* FileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileView.swift; sourceTree = "<group>"; };
+		85145A761D3F802E00520B1E /* btn_google+_signin_dark_normal_ios.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "btn_google+_signin_dark_normal_ios.png"; path = "../../../Downloads/google+_signin_buttons/ios/1x/btn_google+_signin_dark_normal_ios.png"; sourceTree = "<group>"; };
+		85145A781D3F806100520B1E /* btn_google+_dark_normal_ios.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "btn_google+_dark_normal_ios.png"; path = "../../../Downloads/google+_signin_buttons/ios/1x/btn_google+_dark_normal_ios.png"; sourceTree = "<group>"; };
 		85220E6F1D12B1A000069573 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		8531C2911CE670F50009B26A /* StoreItSynchDirectoryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreItSynchDirectoryView.swift; sourceTree = "<group>"; };
 		853B29001CD8B33000742F8D /* WebSocketManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
@@ -315,6 +319,8 @@
 		857439571D252A70005A591B /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				85145A761D3F802E00520B1E /* btn_google+_signin_dark_normal_ios.png */,
+				85145A781D3F806100520B1E /* btn_google+_dark_normal_ios.png */,
 				85FF45DE1D3A9E2400A89436 /* ic_settings_white.imageset */,
 				85FF45D81D390F2900A89436 /* ic_folder_open.imageset */,
 				85FF45D61D390EEB00A89436 /* ic_settings.imageset */,
@@ -438,9 +444,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				85FF45DF1D3A9E2400A89436 /* ic_settings_white.imageset in Resources */,
+				85145A791D3F806100520B1E /* btn_google+_dark_normal_ios.png in Resources */,
 				85FF45CF1D39067000A89436 /* ic_more_vert.imageset in Resources */,
 				85FF45D51D390EDB00A89436 /* ic_person.imageset in Resources */,
 				85FF45D71D390EEB00A89436 /* ic_settings.imageset in Resources */,
+				85145A771D3F802E00520B1E /* btn_google+_signin_dark_normal_ios.png in Resources */,
 				85FF45D11D390A7A00A89436 /* ic_folder.imageset in Resources */,
 				85FF45D91D390F2900A89436 /* ic_folder_open.imageset in Resources */,
 				8500F6E81C970F1C00C69875 /* LaunchScreen.storyboard in Resources */,

@@ -38,7 +38,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         self.list.delegate = self
         self.list.dataSource = self
 
@@ -59,12 +59,15 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         }
     }
     
+    
+    
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
     	self.moveToolBar.hidden = !(self.navigationManager?.movingOptions.isMoving)!
         
         self.navigationManager?.list = self.list
         self.navigationManager?.moveToolBar = self.moveToolBar
+
         self.list.reloadData()
     }
     
@@ -104,7 +107,9 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
                 let fileView = segue.destinationViewController as! FileView
                 fileView.navigationItem.title = self.navigationManager?.getTargetName(target)
                 
+                print("Processing IPFS GET....")
                 self.ipfsManager?.get(target.IPFSHash) { bytes in
+                    print("Settings bytes in FileView...")
                     //print("[IPFS.GET] received data: \(data)")
                     fileView.bytes = bytes
                     fileView.presentQlPreviewController()
@@ -239,6 +244,9 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         if let index = self.lastSelectedActionSheetForFile {
         	if let selectedFile = self.navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
                 self.moveToolBar.hidden = false
+                
+                self.list!.contentInset = UIEdgeInsetsMake(0, 0, self.moveToolBar.frame.size.height, 0)
+                
                 self.navigationManager?.movingOptions.isMoving = true
                 self.navigationManager?.movingOptions.src = selectedFile.path
                 self.navigationManager?.movingOptions.file = self.navigationManager?.getFileObjInCurrentDir(selectedFile.path)
@@ -366,6 +374,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     
     @IBAction func cancelMove(sender: AnyObject) {
         self.moveToolBar.hidden = true
+        self.list!.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
         self.navigationManager?.movingOptions = MovingOptions()
     }
 }

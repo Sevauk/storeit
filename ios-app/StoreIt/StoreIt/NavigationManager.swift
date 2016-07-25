@@ -104,9 +104,11 @@ class NavigationManager {
         if (indexes == self.indexes) {
             switch updateElement.updateType {
                 case .ADD:
-                    self.items.append(fileName)
-                    self.currentDirectory[fileName] = updateElement.fileToAdd!
-                	index = self.items.count - 1
+                    if (!self.items.contains(fileName)) {
+                        self.items.append(fileName)
+                        self.currentDirectory[fileName] = updateElement.fileToAdd!
+                        index = self.items.count - 1
+                	}
                 case .DELETE:
                     let orderedItems = self.getSortedItems()
                     let orderedIndex = orderedItems.indexOf(fileName)
@@ -214,6 +216,20 @@ class NavigationManager {
         return newTree
     }
     
+    private func updateFilePathsAfterRename(inout storeit: [String:File], newPath: String) {
+		let keys: [String] = Array(storeit.keys)
+        
+        for key in keys {
+            if let fileName = storeit[key]?.path.componentsSeparatedByString("/").last {
+                storeit[key]!.path = "\(newPath)/\(fileName)"
+                
+                if (storeit[key]!.isDir) {
+                    self.updateFilePathsAfterRename(&storeit[key]!.files, newPath: "\(newPath)/\(fileName)")
+                }
+            }
+        }
+    }
+    
     private func insertUpdateInTree(inout storeit: [String:File], updateElement: UpdateElement, path: [String]) {
         let keys: [String] = Array(storeit.keys)
         
@@ -239,7 +255,12 @@ class NavigationManager {
                     if let newPath = updateElement.pathToRenameWith?.1 {
                         if let newName = newPath.componentsSeparatedByString("/").last {
                             storeit[newName] = file
-                            storeit[newName]?.path = newPath
+                            storeit[newName]!.path = newPath
+                            
+                            // We need to change the path of the subdir
+                            if (storeit[newName]!.isDir) {
+                                self.updateFilePathsAfterRename(&storeit[newName]!.files, newPath: newPath)
+                            }
                         }
                     }
             	case .UPDATE:
@@ -304,7 +325,7 @@ class NavigationManager {
         self.indexes.append(targetName)
         self.currentDirectory = self.getFileObjectsAtIndex()
         self.items = Array(target.files.keys)
-
+        
         return targetName
     }
     
