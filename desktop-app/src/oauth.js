@@ -65,7 +65,7 @@ export class GoogleService extends OAuthProvider {
     }
   }
 
-  oauth() {
+  oauth(opener=open) {
     if (this.hasRefreshToken())
       return this.getToken()
 
@@ -76,7 +76,7 @@ export class GoogleService extends OAuthProvider {
     let tokenPromise = this.waitAuthorized()
       .then((code) => this.getToken(code))
 
-    open(url)
+    opener(url)
     return tokenPromise
   }
 

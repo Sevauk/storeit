@@ -18,7 +18,7 @@ tray = null
 load = ->
   tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
   mainWin = new electron.BrowserWindow {width: 800, height: 600}
-  mainWin.openDevTools()
+  # mainWin.openDevTools()
 
   daemon.connect().then ->
     mainWin.loadURL "file://#{__dirname}/../index.html"

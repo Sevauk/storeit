@@ -4,6 +4,8 @@
   "description": "GUI for StoreIt Desktop App",
   "main": "./build/electron-main.js",
   "dependencies": {
+    "concurrently": "^2.2.0",
+    "dotenv": "^2.0.0",
     "electron-prebuilt": "^1.2.7",
     "jspm": "^0.16.39",
     "winston": "^2.2.0"
@@ -14,7 +16,7 @@
     "karma": "^1.1.1"
   },
   "scripts": {
-    "start": "npm run build && npm run gui",
+    "start": "npm run build && concurrently -k 'ipfs daemon' 'npm run gui'",
     "test": "karma start karma.config.js",
     "preinstall": "npm prune",
     "postinstall": "jspm install",
