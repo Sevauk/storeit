@@ -166,7 +166,7 @@ public class FilesManager {
             if (entry.getValue().getPath().equals(name))
                 return entry.getValue();
             else if (entry.getValue().isDirectory())
-                return recursiveSearchName(name, entry.getValue());
+                recursiveSearchName(name, entry.getValue());
         }
         return null;
     }

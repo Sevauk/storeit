@@ -44,6 +44,9 @@ public class StoreitFile {
 
     public void addFile(StoreitFile file) {
         Uri uri = Uri.parse(file.getPath());
+        if (this.files == null) {
+            this.files = new HashMap<>();
+        }
         this.files.put(uri.getLastPathSegment(), file);
     }
 
