@@ -47,7 +47,7 @@ public class IPFS {
         String boundary;
         URL url;
 
-        m_nodeUrl = "http://192.168.0.102";
+        m_nodeUrl = "http://192.168.1.3";
 
         try {
             url = new URL(m_nodeUrl + ":5001/api/v0/add?stream-cannels=true");

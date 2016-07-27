@@ -16,6 +16,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.CallbackManager;
@@ -266,6 +267,15 @@ public class LoginActivity extends Activity {
                 );
             }
         }
+
+        ImageButton settingsBtn = (ImageButton)findViewById(R.id.app_settings_btn);
+        settingsBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(LoginActivity.this, StoreItPreferences.class);
+                startActivity(i);
+            }
+        });
 
         copyIpfs();
 

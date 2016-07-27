@@ -9,8 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
@@ -24,7 +22,6 @@ import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.utils.FilesManager;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -215,7 +212,7 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
 
     public void reloadFiles() {
         StoreitFile currentFile = getCurrentFile();
-        StoreitFile newFile = manager.getFileByName(currentFile.getPath(), manager.getRoot());
+        StoreitFile newFile = manager.getFileByPath(currentFile.getPath(), manager.getRoot());
 
         ArrayList<StoreitFile> files = new ArrayList<>();
 

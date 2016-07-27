@@ -223,9 +223,9 @@ public class SocketService extends Service {
 
 
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
-        server = SP.getString("pref_key_server_url", "ws://192.168.0.102:7641");
+        server = SP.getString("pref_key_server_url", "ws://192.168.1.3:7641");
 
-        server = "ws://158.69.196.83:7641";
+        server = "ws://121.181.166.188:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();

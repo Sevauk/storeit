@@ -44,8 +44,16 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Developer login"
+        android:text="@string/developer_login_text"
         android:id="@+id/developer_login"
         android:layout_gravity="center_horizontal" />
+
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/app_settings_btn"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/ic_settings_applications_black_24dp"
+        android:layout_marginTop="20dp" />
 
 </LinearLayout>

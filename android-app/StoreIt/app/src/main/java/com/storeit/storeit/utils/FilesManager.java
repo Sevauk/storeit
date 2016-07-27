@@ -8,9 +8,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.storeit.storeit.protocol.StoreitFile;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
@@ -105,7 +103,7 @@ public class FilesManager {
     public void recursiveCmp(StoreitFile existingFile, StoreitFile newRoot) {
 
         if (!existingFile.getPath().equals("/")) { // Don't delete root
-            StoreitFile f = getFileByName(existingFile.getPath(), newRoot); // Look for the actual file
+            StoreitFile f = getFileByPath(existingFile.getPath(), newRoot); // Look for the actual file
             if (f == null) { // If the file doesn't exist anymore
                 File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + existingFile.getIPFSHash());
                 if (fileToDelete.exists()) {
@@ -145,38 +143,21 @@ public class FilesManager {
         return mDataDir.getPath();
     }
 
-    private StoreitFile recursiveSearch(String hash, StoreitFile root) {
-        if (root.getIPFSHash() != null && root.getIPFSHash().equals(hash))
+    public StoreitFile getFileByPath(String path, StoreitFile root) {
+        if (root.getPath().equals(path)) {
             return root;
+        }
 
         for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            if (entry.getValue().getIPFSHash() != null && entry.getValue().getIPFSHash().equals(hash))
+            if (entry.getValue().getPath().equals(path)) {
                 return entry.getValue();
-            else if (entry.getValue().isDirectory())
-                return recursiveSearch(hash, entry.getValue());
+            }
+            if (entry.getValue().isDirectory()) {
+                getFileByPath(path, entry.getValue());
+            }
         }
+
         return null;
-    }
-
-    private StoreitFile recursiveSearchName(String name, StoreitFile root) {
-        if (root.getPath().equals(name))
-            return root;
-
-        for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            if (entry.getValue().getPath().equals(name))
-                return entry.getValue();
-            else if (entry.getValue().isDirectory())
-                recursiveSearchName(name, entry.getValue());
-        }
-        return null;
-    }
-
-    public StoreitFile getFileByHash(String hash, StoreitFile file) {
-        return recursiveSearch(hash, file);
-    }
-
-    public StoreitFile getFileByName(String name, StoreitFile file) {
-        return recursiveSearchName(name, file);
     }
 
     private StoreitFile getParentFile(StoreitFile root, String parentPath) {
@@ -212,32 +193,12 @@ public class FilesManager {
         }
     }
 
-    /*
-    public void removeFile(StoreitFile file) {
-        File parentFile = new File(file.getPath());
-        String parentPath = parentFile.getParentFile().getAbsolutePath();
-
-        StoreitFile parent = getParentFile(mRootFile, parentPath);
-        if (parent != null) {
-            parent.getFiles().remove(file.getFileName());
-
-            File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + file.getIPFSHash());
-            if (fileToDelete.exists()) {
-                if (!fileToDelete.delete()) {
-                    Log.e(LOGTAG, "Error while deleting " + fileToDelete);
-                }
-            }
-            saveJson();
-        }
-    }
-*/
-
     public void removeFile(String path) {
         File parentFile = new File(path);
         String parentPath = parentFile.getParentFile().getAbsolutePath();
         StoreitFile parent = getParentFile(mRootFile, parentPath);
 
-        StoreitFile stFileToDelete = getFileByName(path, mRootFile); // get storeitfile for hash
+        StoreitFile stFileToDelete = getFileByPath(path, mRootFile); // get storeitfile for hash
         if (stFileToDelete != null && !stFileToDelete.isDirectory() && stFileToDelete.getIPFSHash() != null) {
             File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + stFileToDelete.getIPFSHash());
             if (fileToDelete.exists()) {
@@ -256,7 +217,7 @@ public class FilesManager {
     }
 
     public void addFile(StoreitFile file, StoreitFile parent) {
-        StoreitFile p = getFileByName(parent.getPath(), mRootFile);
+        StoreitFile p = getFileByPath(parent.getPath(), mRootFile);
         if (p != null) {
             p.addFile(file);
             saveJson();
@@ -274,14 +235,14 @@ public class FilesManager {
         }
 
         StoreitFile parent = getParentFile(mRootFile, parentPath);
-          if (parent != null) {
+        if (parent != null) {
             parent.addFile(file);
             saveJson();
         }
     }
 
     public void updateFile(StoreitFile file) {
-        StoreitFile toUpdate = getFileByName(file.getPath(), mRootFile);
+        StoreitFile toUpdate = getFileByPath(file.getPath(), mRootFile);
 
         if (toUpdate != null) {
             toUpdate.setIPFSHash(file.getIPFSHash());
@@ -292,7 +253,7 @@ public class FilesManager {
     }
 
     public void moveFile(String src, String dst) {
-        StoreitFile storeitFile = getFileByName(src, mRootFile);
+        StoreitFile storeitFile = getFileByPath(src, mRootFile);
 
         if (storeitFile != null) {
             File srcParent = new File(src);
