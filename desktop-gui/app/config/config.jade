@@ -1,0 +1,15 @@
+#config
+  h1 Configuration Panel
+  hr
+  
+  form(role="form")
+    .form-group
+      label(for="storeit-dir") Synced Directory Path
+      input#storeit-dir.form-control(type="text")
+    .form-group
+      label(for="storeit-host-addr") Host address
+      input#storeit-host-addr.form-control(type="text")
+    .form-group
+      label(for="storeit-host-port") Host port
+      input#storeit-host-port.form-control(type="number")
+    button.btn.btn-primary(type="submit") Save

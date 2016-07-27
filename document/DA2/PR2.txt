@@ -1,0 +1,85 @@
+Prérequis du logiciel StoreIt pour ordinateur de bureau
+=======================================================
+
+Systèmes d’exploitation supportés:
+----------------------------------
+
+- Linux
+- MacOS
+- Windows
+
+Configuration minimale conseillée:
+----------------------------------
+
+Mémoire vive: 2Go
+CPU: 2x 2Ghz architecture Intel
+Disque dur: 5Go
+Vitesse de la connexion internet: 4Mbps
+
+Prérequis pour le serveur StoreIt
+=================================
+
+Systèmes d’exploitation supportés:
+----------------------------------
+
+- Linux
+- MacOS
+
+Configuration minimale conseillée
+---------------------------------
+
+Mémoire vive: 2Go (pour une petite quantité d’utilisateurs)
+CPU: 2x 2Ghz architecture Intel
+Disque dur 1Go (pour une petite quantité d’utilisateurs)
+
+
+Prérequis pour l'application iOS
+================================
+
+Système d'exploitation:
+-----------------------
+
+iOS >= 8
+
+Devices:
+--------
+
+- iPhone
+- iPad
+
+Prérequis pour l'application Android
+====================================
+
+Système d'exploitation:
+-----------------------
+
+Android >= 4.3
+
+Devices:
+--------
+
+- Mobiles Android
+- Tablettes Android
+
+Prérequis de l'application Web StoreIt
+======================================
+
+Système d'exploitation:
+-----------------------
+
+Multi-OS
+
+Navigateurs supportés:
+----------------------
+
+- Google Chrome
+- Mozilla Firefox
+- Microsoft Edge
+- Safari
+
+Le support d'Internet Explorer a été abandonné en même temps que la fin de sa prise en charge par Microsoft au 12/01/2016.
+
+Serveur Web:
+-------------
+
+NGINX

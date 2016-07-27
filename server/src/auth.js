@@ -11,7 +11,7 @@ export const verifyUserToken = (authService, accessToken, handlerFn) => {
     let idx = parseInt(accessToken.substr(devlpr.length))
     if (isNaN(idx))
       idx = ''
-    return handlerFn(null, 'adrien.morel' + idx + '@me.com')
+    return handlerFn(null, 'adrien.morel' + idx + '@me.com', 'http://i1-news.softpedia-static.com/images/news2/Keep-Your-Programming-Code-Safe-Obfuscate-It-480832-2.jpg')
   }
 
   if (authService === 'gg') {
