@@ -105,12 +105,11 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             }
             else if (segue.identifier == "showFileSegue") {
                 let fileView = segue.destinationViewController as! FileView
-                fileView.navigationItem.title = self.navigationManager?.getTargetName(target)
                 
-                print("Processing IPFS GET....")
+                fileView.navigationItem.title = self.navigationManager?.getTargetName(target)
+                fileView.showActivityIndicatory()
+                
                 self.ipfsManager?.get(target.IPFSHash) { bytes in
-                    print("Settings bytes in FileView...")
-                    //print("[IPFS.GET] received data: \(data)")
                     fileView.bytes = bytes
                     fileView.presentQlPreviewController()
                 }

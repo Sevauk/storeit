@@ -10,7 +10,7 @@ import UIKit
 import QuickLook
 
 class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
-    
+
     var bytes: [UInt8]? = nil
     
     let fileManager = NSFileManager.defaultManager()
@@ -39,6 +39,19 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
         QL.delegate = self
         
         self.navigationController?.presentViewController(QL, animated: false, completion: nil)
+    }
+    
+    func showActivityIndicatory() {
+        let actInd: UIActivityIndicatorView = UIActivityIndicatorView()
+        
+        actInd.frame = CGRectMake(0.0, 0.0, 40.0, 40.0)
+        actInd.center = self.view.center
+        actInd.hidesWhenStopped = true
+        actInd.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.Gray
+
+        self.view.addSubview(actInd)
+        
+        actInd.startAnimating()
     }
     
     // TODO: Try / Catch

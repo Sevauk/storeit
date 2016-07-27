@@ -41,6 +41,7 @@ class WebSocketManager {
         if let list = self.navigationManager.list {
             let indexPath = NSIndexPath(forRow: index, inSection: 0)
             list.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+			list.reloadData()
         }
     }
     
@@ -59,7 +60,7 @@ class WebSocketManager {
     private func isRenaming(src: String, dest: String) -> Bool {
         // Drop file name to compare path (if the path is the same, it's only a rename)
         let srcComponents = src.componentsSeparatedByString("/").dropLast()
-        let destComponents = src.componentsSeparatedByString("/").dropLast()
+        let destComponents = dest.componentsSeparatedByString("/").dropLast()
 
         if (srcComponents == destComponents) {
             return true
@@ -209,13 +210,14 @@ class WebSocketManager {
                     // FMOV
                     else if (command.command == cmdInfos.FMOV) {
                         let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(request)
-                        
+
                         if let cmd = fmovCmd {
                             if let parameters = cmd.parameters {
                                 if (self.isRenaming(parameters.src, dest: parameters.dest)) {
                                     self.renameFile(parameters.src, dest: parameters.dest)
                                 } else {
                                     if let file = self.navigationManager.getFileObjByPath(parameters.src) {
+                                        file.path = parameters.dest
                                         self.moveFile(parameters.src, file: file)
                                     }
                                 }

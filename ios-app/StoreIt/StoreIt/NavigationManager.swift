@@ -100,7 +100,6 @@ class NavigationManager {
     private func updateCurrentItems(fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
         var index: Int = -1
 
-        // TODO: find better way for index !!!
         if (indexes == self.indexes) {
             switch updateElement.updateType {
                 case .ADD:
@@ -109,6 +108,7 @@ class NavigationManager {
                         self.currentDirectory[fileName] = updateElement.fileToAdd!
                         index = self.items.count - 1
                 	}
+                
                 case .DELETE:
                     let orderedItems = self.getSortedItems()
                     let orderedIndex = orderedItems.indexOf(fileName)
@@ -141,7 +141,8 @@ class NavigationManager {
                             self.currentDirectory[newFileName]?.path = (updateElement.pathToRenameWith?.1)!
                         }
                 }
-            case .UPDATE: break // TODO
+                
+            	case .UPDATE: break // TODO
             }
         }
         return index
