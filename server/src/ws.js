@@ -1,8 +1,8 @@
 import * as ws from 'ws'
-import {logger} from './common/log.js'
+import {logger} from './lib/log.js'
 import * as proto from './parse.js'
 import * as user from './user.js'
-import * as protoObjs from './common/protocol-objects.js'
+import * as protoObjs from './lib/protocol-objects.js'
 
 const PORT = 7641
 

@@ -1,11 +1,11 @@
-import {logger} from './common/log.js'
+import {logger} from './lib/log.js'
 
 logger.transports.console.level = 'error'
 
 import {expect} from 'chai'
 import WebSocket from 'ws'
 import * as fs from 'fs'
-import * as api from './common/protocol-objects.js'
+import * as api from './lib/protocol-objects.js'
 import * as user from './user.js'
 import * as tool from './tool.js'
 import * as store from './store.js'

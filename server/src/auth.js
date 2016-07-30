@@ -1,6 +1,6 @@
 import {oauth2} from 'googleapis'
 import request from 'request'
-import * as protocol from './common/protocol-objects.js'
+import * as protocol from './lib/protocol-objects.js'
 
 const oauth = oauth2('v2')
 

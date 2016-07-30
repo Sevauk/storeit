@@ -1,6 +1,6 @@
-import {logger} from './common/log.js'
+import {logger} from './lib/log.js'
 import * as user from './user.js'
-import * as protoObjs from './common/protocol-objects'
+import * as protoObjs from './lib/protocol-objects'
 import * as auth from './auth.js'
 import * as store from './store.js'
 

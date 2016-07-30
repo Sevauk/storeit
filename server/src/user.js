@@ -1,9 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import * as api from './common/protocol-objects.js'
-import * as tree from './common/tree.js'
+import * as api from './lib/protocol-objects.js'
+import * as tree from './lib/tree.js'
 import * as store from './store.js'
-import {logger} from './common/log.js'
+import {logger} from './lib/log.js'
 
 let usersDir = null
 

@@ -1,9 +1,9 @@
 import * as tool from './tool.js'
 import * as store from './store.js'
 import * as user from './user.js'
-import * as api from './common/protocol-objects.js'
-import * as tree from './common/tree.js'
-import {logger} from './common/log.js'
+import * as api from './lib/protocol-objects.js'
+import * as tree from './lib/tree.js'
+import {logger} from './lib/log.js'
 
 export const storeTable = new tool.TwoHashMap()
 
@@ -44,7 +44,7 @@ export const keepChunkAlive = (hash) => {
         return logger.debug('user did not FSTR as asked (TODO: punish him and try with someone else)')
       }
       storeTable.add(usr, hash) // TODO: why is it not running this line ?
-      logger.debug('user did download the chunk') 
+      logger.debug('user did download the chunk')
     })
   }
 }
