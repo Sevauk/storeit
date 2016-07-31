@@ -4,20 +4,7 @@ import * as api from './lib/protocol-objects.js'
 import * as tree from './lib/tree.js'
 import * as store from './store.js'
 import {logger} from './lib/log.js'
-
-let usersDir = null
-
-export const setUsersDir = (name) => {
-  usersDir = name
-  try {
-    fs.mkdirSync(name)
-  }
-  catch(e) {
-    logger.debug('userdir already there')
-  }
-}
-
-setUsersDir('storeit-users' + path.sep)
+import cmd from './main.js'
 
 export const makeBasicHome = () => {
 
@@ -29,7 +16,7 @@ export const makeBasicHome = () => {
 
 export const createUser = (email, handlerFn) => {
 
-  const userHomePath = `${usersDir}${path.sep}${email}`
+  const userHomePath = `${cmd.usrdir}${email}`
 
   const basicHome = makeBasicHome()
 
@@ -37,7 +24,7 @@ export const createUser = (email, handlerFn) => {
 }
 
 const readHome = (email, handlerFn) => {
-  fs.readFile(usersDir + email, 'utf8', (err, data) => {
+  fs.readFile(cmd.usrdir + email, 'utf8', (err, data) => {
     if (err) {
       return handlerFn(err)
     }
@@ -173,7 +160,7 @@ export class User {
   }
 
   flushHome() {
-    fs.writeFile(usersDir + this.email, JSON.stringify(this.home, null, 2))
+    fs.writeFile(cmd.usrdir + this.email, JSON.stringify(this.home, null, 2))
   }
 }
 

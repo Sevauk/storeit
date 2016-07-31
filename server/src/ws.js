@@ -1,12 +1,9 @@
 import * as ws from 'ws'
+import cmd from './main.js'
 import {logger} from './lib/log.js'
 import * as proto from './parse.js'
 import * as user from './user.js'
 import * as protoObjs from './lib/protocol-objects.js'
-
-const PORT = 7641
-
-const wss = ws.Server({port: PORT})
 
 const ClientStatus = {
   LOGGED: 1,
@@ -59,9 +56,12 @@ class Client {
   }
 }
 
-wss.on('connection', (ws) => {
-  logger.debug('client connects')
-  new Client(ws)
-})
+export const listen = () => {
+  const wss = ws.Server({port: cmd.port, host: cmd.addr})
+  logger.info(`listening on ${cmd.port}`)
 
-logger.info(`listening on ${PORT}`)
+  wss.on('connection', (ws) => {
+    logger.debug('client connects')
+    new Client(ws)
+  })
+}
