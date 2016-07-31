@@ -16,6 +16,10 @@ commander
 
 if (commander.store) userFile.setStoreDir(commander.store)
 
+const cmd = commander
+export default cmd
+
 let client = new Client()
+
 client.connect()
   .then(() => client.auth('developer'))

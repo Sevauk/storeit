@@ -2,6 +2,7 @@ import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
+import cmd from './main.js'
 import {logger} from '../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../lib/protocol-objects'
@@ -19,7 +20,7 @@ export default class Client {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
     this.ipfs = new IPFSnode()
-    this.fsWatcher = new Watcher(userFile.getStoreDir())
+    this.fsWatcher = new Watcher(cmd.store)
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
@@ -205,7 +206,7 @@ this.checkoutTree(tr[file])
 
       userFile.ignore(file.path)
 
-      const realPath = userFile.fullPath(file.path)
+      const realPath = userFile.storeitPathToFSPath(file.path)
 
       if (file.isDir) {
         res = userFile.dirCreate(file.path)
