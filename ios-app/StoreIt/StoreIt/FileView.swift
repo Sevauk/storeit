@@ -2,55 +2,92 @@
 //  FileView.swift
 //  StoreIt
 //
-//  Created by Romain Gjura on 29/06/2016.
+//  Created by Romain Gjura on 19/07/2016.
 //  Copyright © 2016 Romain Gjura. All rights reserved.
 //
 
 import UIKit
-import Photos
+import QuickLook
 
-class FileView: UIViewController {
+class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+
+    var bytes: [UInt8]? = nil
     
-    @IBOutlet weak var imageView: UIImageView!
+    let fileManager = NSFileManager.defaultManager()
+    var tmpDirUrl: NSURL
     
-    var fileActionSheet: FileActionSheet?
-    var data: [UInt8]?
+    required init?(coder aDecoder: NSCoder) {
+        // Creation of tmp dir
+        let identifier = NSProcessInfo.processInfo().globallyUniqueString
+        self.tmpDirUrl = NSURL(fileURLWithPath: NSTemporaryDirectory()).URLByAppendingPathComponent(identifier, isDirectory: true)
+        
+        super.init(coder: aDecoder)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+    
+    func previewControllerWillDismiss(controller: QLPreviewController) {
+        self.clearTmpDir()
+        self.navigationController?.popViewControllerAnimated(false)
+    }
+    
+    func presentQlPreviewController() {
+        let QL = QLPreviewController()
+        QL.dataSource = self
+        QL.delegate = self
         
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: #selector(fileOptions))
-        self.fileActionSheet = FileActionSheet(title: "Options du fichier", message: nil)
-        self.addActionsToFileSheet()
+        self.navigationController?.presentViewController(QL, animated: false, completion: nil)
     }
     
-    func addActionsToFileSheet() {
-        self.fileActionSheet!.addActionToFileActionSheet("Annuler", style: .Cancel, handler: nil)
-        self.fileActionSheet!.addActionToFileActionSheet("Enregistrer dans la pellicule", style: .Default, handler: download) // only if photo
-        self.fileActionSheet!.addActionToFileActionSheet("Supprimer", style: .Default, handler: deleteFile)
+    func showActivityIndicatory() {
+        let actInd: UIActivityIndicatorView = UIActivityIndicatorView()
+        
+        actInd.frame = CGRectMake(0.0, 0.0, 40.0, 40.0)
+        actInd.center = self.view.center
+        actInd.hidesWhenStopped = true
+        actInd.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.Gray
+
+        self.view.addSubview(actInd)
+        
+        actInd.startAnimating()
     }
     
-    func fileDidDownload(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo:UnsafePointer<Void>) {
-        if error == nil {
-            let alert = UIAlertController(title: "Terminé", message: "Le fichier a été telechargé dans la pellicule", preferredStyle: .Alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
-            presentViewController(alert, animated: true, completion: nil)
-        } else {
-            let alert = UIAlertController(title: "Erreur", message: error?.localizedDescription, preferredStyle: .Alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
-            presentViewController(alert, animated: true, completion: nil)
+    // TODO: Try / Catch
+    func clearTmpDir() {
+        try! fileManager.removeItemAtURL(self.tmpDirUrl)
+    }
+    
+    // TODO: Try / Catch
+    func createTmpFile() -> NSURL? {
+        if let unwrapBytes = self.bytes {
+            
+            // Creation of tmp file
+            let fileName = self.navigationItem.title!
+            try! self.fileManager.createDirectoryAtURL(self.tmpDirUrl, withIntermediateDirectories: true, attributes: nil)
+            
+            let fileURL = self.tmpDirUrl.URLByAppendingPathComponent(fileName)
+            let data = NSData(bytes: unwrapBytes)
+            
+            // Write data to file
+            try! data.writeToURL(fileURL, options: .AtomicWrite)
+            
+            return fileURL
         }
+        return nil
     }
     
-    func download(action: UIAlertAction) -> Void  {
-        UIImageWriteToSavedPhotosAlbum(UIImage(data: NSData(bytes: data!))!, self, #selector(fileDidDownload), nil)
+    func numberOfPreviewItemsInPreviewController(controller: QLPreviewController)  -> Int{
+        return 1
     }
     
-    func deleteFile(action: UIAlertAction) -> Void  {
-        
+    func previewController(controller: QLPreviewController,
+                             previewItemAtIndex index: Int) -> QLPreviewItem {
+        if let doc = self.createTmpFile() {
+            return doc
+        }
+    	return NSURL()
     }
     
-    func fileOptions() {
-        self.presentViewController(self.fileActionSheet!.fileActionSheet, animated: true, completion: nil)
-    }
 }
