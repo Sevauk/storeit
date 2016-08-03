@@ -2,6 +2,7 @@ import chokidar from 'chokidar'
 import {logger} from '../lib/log'
 import userFile from './user-file.js'
 import * as path from 'path'
+import cmd from './main.js'
 
 const STORE_NAME = '.storeit'
 
@@ -87,7 +88,7 @@ export default class Watcher {
   }
 
   ignoreEvent(ev) {
-    const fPath = '/' + path.relative(userFile.getStoreDir(), ev.path)
+    const fPath = '/' + path.relative(cmd.store, ev.path)
 
     if (ev.type === 'FDEL')
       return false

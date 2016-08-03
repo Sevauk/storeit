@@ -8,11 +8,11 @@
     "start": "npm run build && concurrently -k 'ipfs daemon' 'node build/main.js'",
     "test": "npm run build && npm run bdd",
     "dev": "concurrently -r -k 'ipfs daemon' 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
-    "build:lib": "babel ../lib/js/src -s -d ./lib",
-    "build": "npm run build:lib && babel src -s -d build",
+    "build:lib": "babel ../lib/js/src -d ./lib",
+    "build": "npm run build:lib && babel src -d build --source-maps inline",
     "nodemon": "npm run build:lib && nodemon src/main.js --debug --watch src --watch ../lib/js/src --exec babel-node",
     "mock-server": "nodemon test/mock/server.js --watch test/mock --exec babel-node",
-    "bdd": "mocha --compilers coffee:coffee-script/register --require source-map-support/register"
+    "bdd": "mocha --compilers js:babel-core/register --require source-map-support/register src/test.js"
   },
   "dependencies": {
     "babel-cli": "^6.7.7",
