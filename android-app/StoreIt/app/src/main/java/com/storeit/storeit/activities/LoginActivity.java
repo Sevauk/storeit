@@ -36,18 +36,10 @@ import com.storeit.storeit.R;
 import com.storeit.storeit.oauth.GetUsernameTask;
 import com.storeit.storeit.protocol.LoginHandler;
 import com.storeit.storeit.protocol.command.JoinResponse;
+import com.storeit.storeit.services.IpfsService;
 import com.storeit.storeit.services.SocketService;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /*
 * Login Activity
@@ -58,9 +50,14 @@ public class LoginActivity extends Activity {
     static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
     static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 1001;
 
-    private boolean mIsBound = false;
-    private boolean destroyService = true;
-    private SocketService mBoundService = null;
+    private boolean mSocketServiceBound = false;
+    private boolean mIpfsServiceBound = false;
+
+    private boolean destroySocketService = true;
+    private boolean destroyIpfsService = true;
+    
+    private SocketService mSocketService = null;
+    private IpfsService mIpfsService = null;
     private String mEmail;
     String SCOPE = "oauth2:https://www.googleapis.com/auth/userinfo.email";
 
@@ -74,7 +71,7 @@ public class LoginActivity extends Activity {
                     if (joinResponse.getCode() == 0) {
 
                         // The service will be handled by MainActivity;
-                        destroyService = false;
+                        destroySocketService = false;
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 
@@ -115,7 +112,7 @@ public class LoginActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mBoundService.sendJOIN("gg", token);
+                mSocketService.sendJOIN("gg", token);
             }
         });
     }
@@ -141,18 +138,32 @@ public class LoginActivity extends Activity {
         });
     }
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private ServiceConnection mSocketServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mBoundService = ((SocketService.LocalBinder) service).getService();
-            mBoundService.setmLoginHandler(mLoginHandler);
-            mIsBound = true;
+            mSocketService = ((SocketService.LocalBinder) service).getService();
+            mSocketService.setmLoginHandler(mLoginHandler);
+            mSocketServiceBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mBoundService = null;
-            mIsBound = false;
+            mSocketService = null;
+            mSocketServiceBound = false;
+        }
+    };
+
+    private ServiceConnection mIpfsServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            mIpfsService = ((IpfsService.LocalBinder)service).getService();
+            mIpfsServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mIpfsService = null;
+            mIpfsServiceBound = false;
         }
     };
 
@@ -178,16 +189,24 @@ public class LoginActivity extends Activity {
         super.onStart();
 
         Intent socketService = new Intent(this, SocketService.class);
-        bindService(socketService, mConnection, Context.BIND_AUTO_CREATE);
+        bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
+
+        Intent ipfsService = new Intent(this, IpfsService.class);
+        bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        if (mIsBound && destroyService) {
-            unbindService(mConnection);
-            mIsBound = false;
+        if (mSocketServiceBound && destroySocketService) {
+            unbindService(mSocketServiceConnection);
+            mSocketServiceBound = false;
+        }
+
+        if (mIpfsServiceBound && destroyIpfsService) {
+            unbindService(mIpfsServiceConnection);
+            mIpfsServiceBound = false;
         }
     }
 
@@ -206,7 +225,7 @@ public class LoginActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mBoundService.isConnected())
+                if (!mSocketService.isConnected())
                 {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
@@ -220,13 +239,13 @@ public class LoginActivity extends Activity {
         developerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!mBoundService.isConnected())
+                if (!mSocketService.isConnected())
                 {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                mBoundService.sendJOIN("gg", "developer");
+                mSocketService.sendJOIN("gg", "developer");
             }
         });
 
@@ -240,7 +259,7 @@ public class LoginActivity extends Activity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 Log.d("LoginActivity", loginResult.getAccessToken().getToken());
-                mBoundService.sendJOIN("fb", loginResult.getAccessToken().getToken());
+                mSocketService.sendJOIN("fb", loginResult.getAccessToken().getToken());
             }
 
             @Override
@@ -276,16 +295,6 @@ public class LoginActivity extends Activity {
                 startActivity(i);
             }
         });
-
-        copyIpfs();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "daemon"));
-            }
-        }).start();
-
     }
 
     @Override
@@ -301,54 +310,4 @@ public class LoginActivity extends Activity {
         }
     }
 
-    void copyIpfs() {
-        File file = new File("/data/data/com.storeit.storeit/ipfs"); // Check if ipfs is already copied
-        if (file.exists()) {
-            return;
-        }
-
-        try {
-            InputStream is = getAssets().open("ipfs"); // Copy file
-            OutputStream os = new FileOutputStream(file);
-
-            int len = 0;
-            byte[] buffer = new byte[1024];
-            while ((len = is.read(buffer)) > 0) {
-                os.write(buffer, 0, len);
-            }
-            os.close();
-
-            launchCommand(Arrays.asList("/system/bin/chmod",
-                    "751",
-                    "/data/data/com.storeit.storeit/ipfs"));
-            launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "init"));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    void launchCommand(List<String> args) {
-        ProcessBuilder pb = new ProcessBuilder(args);
-        Map<String, String> env = pb.environment();
-        env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
-
-        try {
-            Process process = pb.start();
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
-            int read;
-            char[] buffer = new char[4096];
-//            StringBuffer output = new StringBuffer();
-            while ((read = reader.read(buffer)) > 0) {
-//                output.append(buffer, 0, read);
-                Log.v("BINARY", String.valueOf(buffer, 0, read));
-            }
-            reader.close();
-            process.waitFor();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 }

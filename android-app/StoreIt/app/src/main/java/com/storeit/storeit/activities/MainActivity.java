@@ -47,6 +47,7 @@ import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
+import com.storeit.storeit.protocol.command.FileStoreCommand;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -381,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
             Uri uri = data.getData();
-            Log.v("MainActivity", "icici " + uri.toString());
             fbtn.setVisibility(View.VISIBLE);
             new UploadAsync(this, mBoundService).execute(uri.getPath());
         } else if (requestCode == PICK_IMAGE_GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) { // Gallery
@@ -527,6 +527,19 @@ public class MainActivity extends AppCompatActivity {
                     refreshFileExplorer();
                 }
             });
+        }
+
+        @Override
+        public void handleFSTR(FileStoreCommand command) {
+            boolean shouldKeep = command.shouldKeep();
+            String hash = command.getHash();
+
+            if (!shouldKeep) {
+
+                // Delete hash (send command to gateway
+                return;
+            }
+            // Download the file (ipfs get)
         }
     };
 }

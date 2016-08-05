@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.storeit.storeit.protocol.StoreitFile;
+import com.storeit.storeit.protocol.command.FileStoreCommand;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -21,6 +21,7 @@ import com.storeit.storeit.protocol.command.CommandManager;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
+import com.storeit.storeit.protocol.command.FileStoreCommand;
 import com.storeit.storeit.protocol.command.JoinCommand;
 import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.protocol.command.Response;
@@ -102,6 +103,12 @@ public class SocketService extends Service {
                                             mFileCommandHandler.handleFMOV(fileMoveCommand);
                                         }
                                         break;
+                                    case CommandManager.FSTR:
+                                        if (mFileCommandHandler != null) {
+                                            Gson gson = new Gson();
+                                            FileStoreCommand fileStoreCommand = gson.fromJson(message, FileStoreCommand.class);
+                                            mFileCommandHandler.handleFSTR(fileStoreCommand);
+                                        }
                                     default:
                                         Log.v(LOGTAG, "Invalid command received :/");
                                         break;
@@ -225,7 +232,7 @@ public class SocketService extends Service {
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
         server = SP.getString("pref_key_server_url", "ws://192.168.1.3:7641");
 
-        server = "ws://121.181.166.188:7641";
+        //  server = "ws://121.181.166.188:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();

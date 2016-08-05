@@ -118,7 +118,6 @@ public class IPFS {
         }
         return "";
     }
-
     public boolean downloadFile(FileOutputStream downloadFile, String hash){
 
         HttpURLConnection connection;

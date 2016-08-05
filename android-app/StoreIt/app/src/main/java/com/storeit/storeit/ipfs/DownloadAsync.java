@@ -31,8 +31,7 @@ public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
                 .setContentTitle("StoreIt")
                 .setContentText("Download in progress")
                 .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
-        mBuilder.setProgress(0, 0, true);
-
+        mBuilder.setProgress(100, 0, false);
         mNotifyManager.notify(id, mBuilder.build());
     }
 
