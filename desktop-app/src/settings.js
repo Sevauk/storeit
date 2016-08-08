@@ -41,7 +41,9 @@ const save = () => {
 }
 
 const reset = () => {
+  const auth = settings.auth
   settings = defaults
+  settings.auth = auth
 }
 
 const getAuthType = () => settings.auth.type
