@@ -23,6 +23,8 @@ import java.util.Map;
 public class IpfsService extends Service {
 
     static final String LOGTAG = "IpfsService";
+    static final String IPFS_BINARY = "/data/data/com.storeit.storeit/ipfs";
+
 
     private final IBinder myBinder = new LocalBinder();
 
@@ -43,7 +45,7 @@ public class IpfsService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "daemon"));
+                launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
             }
         }).start();
     }
@@ -69,7 +71,7 @@ public class IpfsService extends Service {
     }
 
     void copyIpfs() {
-        File file = new File("/data/data/com.storeit.storeit/ipfs"); // Check if ipfs is already copied
+        File file = new File(IPFS_BINARY); // Check if ipfs is already copied
         if (file.exists()) {
             return;
         }
@@ -87,8 +89,8 @@ public class IpfsService extends Service {
 
             launchCommand(Arrays.asList("/system/bin/chmod",
                     "751",
-                    "/data/data/com.storeit.storeit/ipfs"));
-            launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "init"));
+                    IPFS_BINARY));
+            launchCommand(Arrays.asList(IPFS_BINARY, "init"));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -119,11 +121,22 @@ public class IpfsService extends Service {
         }
     }
 
-    public void downloadFile(String hash) {
-        launchCommand(Arrays.asList("/data/data/com.storeit.storeit/ipfs", "get", hash));
+    public void addFile(final String hash) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                launchCommand(Arrays.asList(IPFS_BINARY, "get", hash));
+            }
+        }).run();
+
     }
 
-    public void deleteHash(String hash) {
-        
+    public void removeFile(final String hash) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                launchCommand(Arrays.asList(IPFS_BINARY, "pin", "rm", hash));
+            }
+        }).run();
     }
 }

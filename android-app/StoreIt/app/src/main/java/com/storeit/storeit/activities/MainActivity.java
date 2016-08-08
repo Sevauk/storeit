@@ -1,7 +1,6 @@
 package com.storeit.storeit.activities;
 
 import android.app.Activity;
-import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,7 +14,6 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -31,10 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.Toast;
-
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
@@ -48,6 +43,7 @@ import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
 import com.storeit.storeit.protocol.command.FileStoreCommand;
+import com.storeit.storeit.services.IpfsService;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -81,39 +77,60 @@ public class MainActivity extends AppCompatActivity {
     ActionBar mActionBar;
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
-
-    private FilesManager filesManager;
-
-    // Socket service is already existing
-    private boolean mIsBound = false;
-    private SocketService mBoundService = null;
-
+    
     public FloatingActionButton getFloatingButton() {
         return fbtn;
     }
 
+    private FilesManager filesManager;
+
+    // Socket and ipfs service are already existing
+    private boolean mSocketServiceBound = false;
+    private boolean mIpfsServiceBound = false;
+
+    private SocketService mSocketService = null;
+    private IpfsService mIpfsService = null;
+
     // Should be the same class as LoginActivity ServiceConnection
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private ServiceConnection mSocketServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mBoundService = ((SocketService.LocalBinder) service).getService();
-            mBoundService.setFileCommandandler(mFileCommandHandler);
-            mIsBound = true;
+            mSocketService = ((SocketService.LocalBinder) service).getService();
+            mSocketService.setFileCommandandler(mFileCommandHandler);
+            mSocketServiceBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mBoundService = null;
-            mIsBound = false;
+            mSocketService = null;
+            mSocketServiceBound = false;
         }
     };
+
+    private ServiceConnection mIpfsServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mIpfsService = ((IpfsService.LocalBinder) service).getService();
+            mIpfsServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mIpfsService = null;
+            mIpfsServiceBound = false;
+        }
+    };
+
 
     @Override
     protected void onStart() {
         super.onStart();
 
         Intent socketService = new Intent(this, SocketService.class);
-        bindService(socketService, mConnection, Context.BIND_AUTO_CREATE);
+        bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
+
+        Intent ipfsService = new Intent(this, IpfsService.class);
+        bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -275,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     filesManager.addFile(folder, fragment.getCurrentFile());
                     refreshFileExplorer();
-                    mBoundService.sendFADD(folder);
+                    mSocketService.sendFADD(folder);
                 }
 
             }
@@ -319,11 +336,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        if (mIsBound) {
-            unbindService(mConnection);
-            mIsBound = false;
+        if (mSocketServiceBound) {
+            unbindService(mSocketServiceConnection);
+            mSocketServiceBound = false;
         }
 
+        if (mIpfsServiceBound) {
+            unbindService(mIpfsServiceConnection);
+            mIpfsServiceBound = false;
+        }
     }
 
     public void onTouchDrawer(final int position) {
@@ -383,12 +404,12 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
             Uri uri = data.getData();
             fbtn.setVisibility(View.VISIBLE);
-            new UploadAsync(this, mBoundService).execute(uri.getPath());
+            new UploadAsync(this, mSocketService).execute(uri.getPath());
         } else if (requestCode == PICK_IMAGE_GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) { // Gallery
             fbtn.setVisibility(View.VISIBLE);
 
             Uri uri = data.getData();
-            new UploadAsync(this, mBoundService).execute(getRealPathFromURI(uri));
+            new UploadAsync(this, mSocketService).execute(getRealPathFromURI(uri));
         } else if (requestCode == CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             LayoutInflater inflater = getLayoutInflater();
@@ -410,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("RENAME", "result : " + file.renameTo(fileRenamed));
 
                     fbtn.setVisibility(View.VISIBLE);
-                    new UploadAsync(MainActivity.this, mBoundService).execute(fileRenamed.getAbsolutePath());
+                    new UploadAsync(MainActivity.this, mSocketService).execute(fileRenamed.getAbsolutePath());
 
                 }
             }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -471,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public SocketService getSocketService() {
-        return mBoundService;
+        return mSocketService;
     }
 
     private FileCommandHandler mFileCommandHandler = new FileCommandHandler() {
@@ -479,7 +500,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFDEL(FileDeleteCommand command) {
             Log.v("MainActivity", "FDEL");
             filesManager.removeFile(command.getFiles());
-            mBoundService.sendRSPONSE();
+            mSocketService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -493,7 +514,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFADD(FileCommand command) {
             Log.v("MainActivity", "FADD");
             filesManager.addFile(command.getFiles());
-            mBoundService.sendRSPONSE();
+            mSocketService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -506,7 +527,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFUPT(FileCommand command) {
             Log.v("MainActivity", "FUPT");
             filesManager.updateFile(command.getFiles());
-            mBoundService.sendRSPONSE();
+            mSocketService.sendRSPONSE();
            /* runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -520,7 +541,7 @@ public class MainActivity extends AppCompatActivity {
         public void handleFMOV(FileMoveCommand command) {
             Log.v("MainActivity", "FMOV");
             filesManager.moveFile(command.getSrc(), command.getDst());
-            mBoundService.sendRSPONSE();
+            mSocketService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -530,16 +551,28 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void handleFSTR(FileStoreCommand command) {
+        public void handleFSTR(final FileStoreCommand command) {
             boolean shouldKeep = command.shouldKeep();
             String hash = command.getHash();
 
             if (!shouldKeep) {
-
-                // Delete hash (send command to gateway
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mIpfsService.removeFile(command.getHash());
+                        mSocketService.sendRSPONSE();
+                    }
+                });
                 return;
             }
-            // Download the file (ipfs get)
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mIpfsService.addFile(command.getHash());
+                    mSocketService.sendRSPONSE();
+                }
+            });
+
         }
     };
 }
