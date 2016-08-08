@@ -7,9 +7,14 @@
       label(for="storeit-dir") Synced Directory Path
       input#storeit-dir.form-control(type="text")
     .form-group
-      label(for="storeit-host-addr") Host address
-      input#storeit-host-addr.form-control(type="text")
+      label(for="storeit-space") Allocated space
+      .input-group
+        input#storeit-space.form-control(type="number")
+        .input-group-addon MB
     .form-group
-      label(for="storeit-host-port") Host port
-      input#storeit-host-port.form-control(type="number")
-    button.btn.btn-primary(type="submit") Save
+      label(for="storeit-bandwidth") Bandwidth restriction (0 for unlimited)
+      .input-group
+        input#storeit-bandwidth.form-control(type="number")
+        .input-group-addon kB/s
+    button#storeit-validate.btn.btn-primary(type="submit") Save
+    button#storeit-reset.btn.btn-primary Restore defaults

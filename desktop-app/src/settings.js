@@ -23,7 +23,13 @@ const defaults = {
   bandwidth: 0
 }
 
-let settings = storage.getItemSync(storeItData) || defaults
+const load = () => storage.getItemSync(storeItData)
+
+let settings = load() || defaults
+
+const reload = () => {
+  settings = load()
+}
 
 logger.info('[Settings]: status ', settings)
 
@@ -89,5 +95,6 @@ export default {
   getBandwidth,
   setBandwidth,
   save,
-  reset
+  reset,
+  reload
 }

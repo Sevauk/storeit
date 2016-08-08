@@ -7,13 +7,12 @@ electron = require 'electron'
 logger = (require '../lib/log').logger
 
 StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
-settings = (require "../#{DAEMON_PATH}/build/settings").default
+global.settings = (require "../#{DAEMON_PATH}/build/settings").default
 
 {app} = electron
 ipc = electron.ipcMain
 
 global.daemon = new StoreItClient
-global.settings = settings
 
 mainWin = null
 tray = null
@@ -52,3 +51,6 @@ ipc.on 'auth', (ev, authType) ->
   oauth(authType)
     .then -> ev.sender.send 'auth', 'done'
     .catch -> ev.sender.send 'auth', 'done'
+
+ipc.on 'reload', (ev) ->
+  daemon.reloadSettings()

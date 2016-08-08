@@ -1,14 +1,11 @@
 $ = require 'bootstrap'
-
-ipc = (System._nodeRequire 'electron').ipcRenderer
-
-settings = (require 'app/remote.coffee!') 'settings'
-
-render = require 'app/render.coffee!'
-
 template = require 'app/oauth/oauth.jade!'
 require 'app/oauth/oauth.css!'
 
+ipc = (System._nodeRequire 'electron').ipcRenderer
+settings = (require 'app/remote.coffee!') 'settings'
+
+render = require 'app/render.coffee!'
 config = require 'app/config/config.coffee!'
 
 auth = (type) -> ipc.send 'auth', type

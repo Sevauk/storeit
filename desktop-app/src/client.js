@@ -1,3 +1,5 @@
+import * as fs from 'fs'
+
 import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
@@ -7,9 +9,8 @@ import Watcher from './watcher'
 import {Command, Response} from '../lib/protocol-objects'
 import store from './store.js'
 import tree from './tree.js'
-import * as path from 'path'
-import * as fs from 'fs'
 import IPFSnode from './ipfs'
+import settings from './settings'
 
 const MAX_RECO_TIME = 4
 
@@ -319,5 +320,11 @@ this.checkoutTree(tr[file])
 
   getRemoteTree(files) {
     return files
+  }
+
+
+  reloadSettings() {
+    // TODO
+    settings.reload()
   }
 }
