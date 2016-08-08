@@ -63,6 +63,7 @@ export default class Client {
       logger.debug('attempting connection')
 
       this.sock.on('open', () => {
+        logger.debug('sock opened')
         this.recoTime = 1
         resolve()
       })
