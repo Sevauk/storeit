@@ -44,6 +44,7 @@ const reset = () => {
   settings = defaults
 }
 
+const getAuthType = () => settings.auth.type
 
 const getTokens = (type) =>
   type === settings.auth.type ? settings.auth.tokens : null
@@ -75,6 +76,7 @@ const setBandwidth = (max) => {
 
 export default {
   get,
+  getAuthType,
   setTokens,
   getTokens,
   resetTokens,

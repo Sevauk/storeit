@@ -25,8 +25,8 @@
     "build:app": "coffee -o ./build -c ./electron-main.coffee",
     "build:daemon": "npm --prefix ../desktop-app run build",
     "build:lib": "babel ../lib/js/src -s -d lib",
-    "dev": "npm run build:dev && npm run gui",
-    "build:dev": "coffee -w -c electron-main.coffee -o ./build"
+    "dev": "npm run build && concurrently -r -k 'npm run build:dev' 'npm run gui'",
+    "build:dev": "coffee -o ./build -w -c electron-main.coffee"
   },
   "repository": {
     "type": "git",

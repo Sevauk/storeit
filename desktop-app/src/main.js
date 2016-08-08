@@ -19,6 +19,6 @@ if (commander.store) userFile.setStoreDir(commander.store)
 let client = new Client()
 client.connect()
   .then(() => {
-    client.auth('facebook')
+    client.auth('fb')
   })
   .catch(() => logger.error('something happened'))

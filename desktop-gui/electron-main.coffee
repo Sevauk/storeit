@@ -7,11 +7,14 @@ electron = require 'electron'
 logger = (require '../lib/log').logger
 
 StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
+settings = (require "../#{DAEMON_PATH}/build/settings").default
 
 {app} = electron
 ipc = electron.ipcMain
 
 global.daemon = new StoreItClient
+global.settings = settings
+
 mainWin = null
 tray = null
 
@@ -32,7 +35,7 @@ app.on 'window-all-closed', -> app.quit() if process.platform isnt 'darwin'
 app.on 'activate', -> load() unless mainWin?
 
 oauthWin = null
-ipc.on 'auth', (ev, authType) ->
+oauth = (authType) ->
   oauthWin = new electron.BrowserWindow
     parent: mainWin
     modal: true
@@ -41,7 +44,11 @@ ipc.on 'auth', (ev, authType) ->
   daemon.auth(authType, oauthWin.loadURL.bind(oauthWin))
     .then ->
       oauthWin.close()
-      ev.sender.send 'auth', 'done'
     .catch (e) ->
       oauthWin.close()
-      ev.sender.send 'auth', 'done' # FIXME: workaround
+
+
+ipc.on 'auth', (ev, authType) ->
+  oauth(authType)
+    .then -> ev.sender.send 'auth', 'done'
+    .catch -> ev.sender.send 'auth', 'done'

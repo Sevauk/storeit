@@ -26,13 +26,11 @@ export default class Client {
   auth(type, opener) {
     let service
     switch (type) {
-     case 'facebook':
+     case 'fb':
       service = new FacebookService()
-      type = 'fb'
       break
-     case 'google':
+     case 'gg':
       service = new GoogleService()
-      type = 'gg'
       break
      case 'developer':
       return this.developer()
