@@ -24,7 +24,7 @@ export default class Client {
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
-  auth(type, opener) {
+  auth(type, devId, opener) {
     let service
     switch (type) {
      case 'facebook':
@@ -36,7 +36,7 @@ export default class Client {
       type = 'gg'
       break
      case 'developer':
-      return this.developer()
+      return this.developer(devId)
       default:
       return this.login() // TODO
     }
@@ -48,8 +48,8 @@ export default class Client {
     )
   }
 
-  developer() {
-    return this.join('gg', 'developer')
+  developer(devId) {
+    return this.join('gg', `developer${devId}`)
   }
 
   login() {

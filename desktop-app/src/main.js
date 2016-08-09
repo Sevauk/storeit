@@ -35,6 +35,6 @@ let client = new Client()
 
 if (!commander.developer)
   commander.developer = ''
-  
+
 client.connect()
-  .then(() => client.auth(`developer${commander.developer}`))
+  .then(() => client.auth('developer', commander.developer))
