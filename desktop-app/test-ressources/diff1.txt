@@ -1,0 +1,19 @@
+/tmp/storeit-test
+├── client0
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client0.log
+├── client1
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client1.log
+├── diff.txt
+├── server.log
+└── userdata
+    └── adrien.morel1@me.com
+
+8 directories, 8 files
