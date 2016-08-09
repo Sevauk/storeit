@@ -40,7 +40,7 @@ export default class IPFSNode {
 
   addRelative(filePath) {
     return this.ready()
-      .then(() => this.add(usrFile.fullPathStoreDir + filePath))
+      .then(() => this.add(usrFile.storeitPathToFSPath(filePath)))
   }
 
   add(filePath) {
