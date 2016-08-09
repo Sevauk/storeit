@@ -1,10 +1,13 @@
 #! /bin/bash
 
+# RANDOM=0 TODO: tests shouldn't be random but for now we lack tests
 SERVER_ADDR=localhost
 PORT=7641
 MAIN='build/main.js'
 TESTDIR='/tmp/storeit-test'
 SERVER="../server/build/main.js -u $TESTDIR/userdata"
+CLIENT_COUNT=0
+SRC='test-ressources/'
 
 function clean {
   echo "cleaning first..."
@@ -12,7 +15,7 @@ function clean {
 }
 
 function init {
-  trap "killall background" EXIT
+  trap 'kill $(jobs -p)' EXIT
   clean
   mkdir -p $TESTDIR
   npm run build
@@ -27,15 +30,72 @@ function test {
 }
 
 function runcli {
-  echo "running client #$1"
-  node $MAIN --server $SERVER_ADDR:$PORT --developer $1 -d $TESTDIR/client$1 > $TESTDIR/client$1.log
+  echo "running client #$CLIENT_COUNT with account developer$1"
+  node $MAIN --server $SERVER_ADDR:$PORT --developer $1 -d $TESTDIR/client$CLIENT_COUNT 2> $TESTDIR/client$CLIENT_COUNT.log&
+  return $((CLIENT_COUNT++))
+}
+
+function select_client {
+  echo $(($RANDOM % $1))
+}
+
+function ssleep {
+  echo -n "."
+  sleep $1
+}
+
+function someone {
+  echo $TESTDIR/client$(select_client $1)
+}
+
+function playWithFS {
+  MAX=$1
+  cp $SRC/hello.txt $(someone $MAX)/hi.txt
+  ssleep 0.5
+  mkdir $(someone $MAX)/pic
+  ssleep 0.5
+  cp $SRC/logo.png $(someone $MAX)/pic
+  ssleep 0.5
+  cli=$(someone $MAX)
+  mv $cli/pic/logo.png $cli/pic/renamed.png
+  ssleep 0.5
+  mv $cli/pic/renamed.png $cli/renamed.png
 }
 
 function t1 {
   runcli 1
   sleep 1
-  echo "hello world" > $TESTDIR/client1/hello.txt
+  runcli 1
+  sleep 1
+
+  playWithFS 2
+  sleep 1
+  tree $TESTDIR > $TESTDIR/diff.txt
+  diff $TESTDIR/diff.txt $SRC/diff1.txt
+}
+
+function t2 {
+  runcli 0
+  runcli 0
+  runcli 0
+  runcli 0
+  runcli 1
+  runcli 1
+  runcli 1
+  runcli 1
+  runcli 2
+  runcli 2
+  runcli 3
+  runcli 4
+  sleep 1
+
+  playWithFS 4
+  echo "waiting 3sec..."
+  sleep 3
+  tree $TESTDIR > $TESTDIR/diff.txt
 }
 
 init
-test t1
+test t1 &&
+test t2 &&
+echo "test passed successfully"
