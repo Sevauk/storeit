@@ -16,22 +16,18 @@ global.daemon = new StoreItClient
 
 mainWin = null
 tray = null
-
 load = ->
   tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
-  mainWin = new electron.BrowserWindow {width: 800, height: 600}
-  # mainWin.openDevTools()
+  display = electron.screen.getPrimaryDisplay()
+  mainWin = new electron.BrowserWindow
+    width: display.size.width
+    height: display.size.height
+  mainWin.openDevTools()
 
   daemon.connect().then ->
     mainWin.loadURL "file://#{__dirname}/../index.html"
 
   mainWin.on 'closed', -> mainWin = null
-
-app.on 'ready', -> load()
-
-app.on 'window-all-closed', -> app.quit() if process.platform isnt 'darwin'
-
-app.on 'activate', -> load() unless mainWin?
 
 oauthWin = null
 oauth = (authType) ->
@@ -53,4 +49,8 @@ ipc.on 'auth', (ev, authType) ->
     .catch -> ev.sender.send 'auth', 'done'
 
 ipc.on 'reload', (ev) ->
-  daemon.reloadSettings()
+  # daemon.reloadSettings()
+
+app.on 'ready', -> load()
+app.on 'activate', -> load() unless mainWin?
+app.on 'window-all-closed', -> app.quit() if process.platform isnt 'darwin'
