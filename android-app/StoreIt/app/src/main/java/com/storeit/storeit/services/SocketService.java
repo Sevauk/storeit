@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
@@ -14,6 +16,7 @@ import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketExtension;
 import com.neovisionaries.ws.client.WebSocketFactory;
+import com.neovisionaries.ws.client.WebSocketFrame;
 import com.storeit.storeit.protocol.FileCommandHandler;
 import com.storeit.storeit.protocol.LoginHandler;
 import com.storeit.storeit.protocol.StoreitFile;
@@ -56,72 +59,86 @@ public class SocketService extends Service {
             // Loop on connection
             mConnected = false;
 
-            try {
-                webSocket = new WebSocketFactory()
-                        .setConnectionTimeout(TIMEOUT)
-                        .createSocket(server)
-                        .addListener(new WebSocketAdapter() {
+            while (!mConnected) {
+                try {
+                    webSocket = new WebSocketFactory()
+                            .setConnectionTimeout(TIMEOUT)
+                            .createSocket(server)
+                            .addListener(new WebSocketAdapter() {
 
-                            public void onTextMessage(WebSocket websocket, String message) {
-                                Log.v(LOGTAG, "received : " + message);
-                                int cmdType = CommandManager.getCommandType(message);
-                                switch (cmdType) {
-                                    case CommandManager.RESP:
-                                        if (lastCmd.equals("JOIN")) {
-                                            Gson gson = new Gson();
-                                            JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
-                                            if (mLoginHandler != null) {
-                                                mLoginHandler.handleJoin(joinResponse);
-                                            }
-                                        }
-                                        break;
-                                    case CommandManager.FDEL:
-                                        if (mFileCommandHandler != null) {
-                                            Gson gson = new Gson();
-                                            FileDeleteCommand fileCommand = gson.fromJson(message, FileDeleteCommand.class);
-                                            mFileCommandHandler.handleFDEL(fileCommand);
-                                        }
-                                        break;
-                                    case CommandManager.FADD:
-                                        if (mFileCommandHandler != null) {
-                                            Gson gson = new Gson();
-                                            FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
-                                            mFileCommandHandler.handleFADD(fileCommand);
-                                        }
-                                        break;
-                                    case CommandManager.FUPT:
-                                        if (mFileCommandHandler != null) {
-                                            Gson gson = new Gson();
-                                            FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
-                                            mFileCommandHandler.handleFUPT(fileCommand);
-                                        }
-                                        break;
-                                    case CommandManager.FMOVE:
-                                        if (mFileCommandHandler != null) {
-                                            Gson gson = new Gson();
-                                            FileMoveCommand fileMoveCommand = gson.fromJson(message, FileMoveCommand.class);
-                                            mFileCommandHandler.handleFMOV(fileMoveCommand);
-                                        }
-                                        break;
-                                    case CommandManager.FSTR:
-                                        if (mFileCommandHandler != null) {
-                                            Gson gson = new Gson();
-                                            FileStoreCommand fileStoreCommand = gson.fromJson(message, FileStoreCommand.class);
-                                            mFileCommandHandler.handleFSTR(fileStoreCommand);
-                                        }
-                                    default:
-                                        Log.v(LOGTAG, "Invalid command received :/");
-                                        break;
+                                public void onDisconnected(WebSocket websocket,
+                                                           WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame,
+                                                           boolean closedByServer) throws IOException, WebSocketException {
+                                    mConnected = false;
+                                    if (mLoginHandler != null){
+                                        //mLoginHandler.handleDisconnection();
+                                    }
+                                    webSocket = websocket.recreate().connect();
                                 }
 
-                            }
-                        })
-                        .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
-                        .connect();
-                mConnected = true;
-            } catch (WebSocketException | IOException e) {
-                e.printStackTrace();
-                mConnected = false;
+                                public void onTextMessage(WebSocket websocket, String message) {
+                                    Log.v(LOGTAG, "received : " + message);
+                                    int cmdType = CommandManager.getCommandType(message);
+                                    switch (cmdType) {
+                                        case CommandManager.RESP:
+                                            if (lastCmd.equals("JOIN")) {
+                                                Gson gson = new Gson();
+                                                JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
+                                                if (mLoginHandler != null) {
+                                                    mLoginHandler.handleJoin(joinResponse);
+                                                }
+                                            }
+                                            break;
+                                        case CommandManager.FDEL:
+                                            if (mFileCommandHandler != null) {
+                                                Gson gson = new Gson();
+                                                FileDeleteCommand fileCommand = gson.fromJson(message, FileDeleteCommand.class);
+                                                mFileCommandHandler.handleFDEL(fileCommand);
+                                            }
+                                            break;
+                                        case CommandManager.FADD:
+                                            if (mFileCommandHandler != null) {
+                                                Gson gson = new Gson();
+                                                FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
+                                                mFileCommandHandler.handleFADD(fileCommand);
+                                            }
+                                            break;
+                                        case CommandManager.FUPT:
+                                            if (mFileCommandHandler != null) {
+                                                Gson gson = new Gson();
+                                                FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
+                                                mFileCommandHandler.handleFUPT(fileCommand);
+                                            }
+                                            break;
+                                        case CommandManager.FMOVE:
+                                            if (mFileCommandHandler != null) {
+                                                Gson gson = new Gson();
+                                                FileMoveCommand fileMoveCommand = gson.fromJson(message, FileMoveCommand.class);
+                                                mFileCommandHandler.handleFMOV(fileMoveCommand);
+                                            }
+                                            break;
+                                        case CommandManager.FSTR:
+                                            if (mFileCommandHandler != null) {
+                                                Gson gson = new Gson();
+                                                FileStoreCommand fileStoreCommand = gson.fromJson(message, FileStoreCommand.class);
+                                                mFileCommandHandler.handleFSTR(fileStoreCommand);
+                                            }
+                                        default:
+                                            Log.v(LOGTAG, "Invalid command received :/");
+                                            break;
+                                    }
+
+                                }
+                            })
+                            .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
+                            .connect();
+                    mConnected = true;
+                } catch (WebSocketException | IOException e) {
+                    e.printStackTrace();
+                    mConnected = false;
+                    Log.e(LOGTAG, "Cannot connect to server... Retrying in 5 seconds");
+                    SystemClock.sleep(5000);
+                }
             }
         }
     }

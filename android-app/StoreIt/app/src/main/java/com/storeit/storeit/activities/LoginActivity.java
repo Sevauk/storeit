@@ -90,6 +90,18 @@ public class LoginActivity extends Activity {
                 }
             });
         }
+
+        @Override
+        public void handleDisconnection() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(LoginActivity.this, "Connection lost...", Toast.LENGTH_LONG).show();
+                    stopService(new Intent(LoginActivity.this, SocketService.class));
+                    startService(new Intent(LoginActivity.this, SocketService.class));
+                }
+            });
+        }
     };
 
     private void pickUserAccount() {
