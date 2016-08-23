@@ -3,54 +3,63 @@ global.STOREIT_RELATIVE_PATH = DAEMON_PATH
 (require 'dotenv').config path: "#{DAEMON_PATH}/.env"
 
 electron = require 'electron'
-
-logger = (require '../lib/log').logger
-
-StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
-global.settings = (require "../#{DAEMON_PATH}/build/settings").default
-
 {app} = electron
 ipc = electron.ipcMain
 
+logger = (require '../lib/log').logger
+StoreItClient = (require "../#{DAEMON_PATH}/build/client").default
+global.settings = (require "../#{DAEMON_PATH}/build/settings").default
+
 global.daemon = new StoreItClient
 
+display = null
 mainWin = null
-tray = null
-load = ->
-  tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
-  display = electron.screen.getPrimaryDisplay()
-  mainWin = new electron.BrowserWindow
-    width: display.size.width
-    height: display.size.height
+loadPage = (page) ->
+  unless mainWin?
+    mainWin = new electron.BrowserWindow
+      width: display.size.width
+      height: display.size.height
+    mainWin.on 'closed', -> mainWin = null
+  mainWin.loadURL "file://#{__dirname}/../index.html?p=#{page or ''}"
   mainWin.openDevTools()
 
-  daemon.connect().then ->
-    mainWin.loadURL "file://#{__dirname}/../index.html"
-
-  mainWin.on 'closed', -> mainWin = null
-
-oauthWin = null
-oauth = (authType) ->
-  oauthWin = new electron.BrowserWindow
+authWin = null
+auth = (authType) ->
+  authWin = new electron.BrowserWindow
     parent: mainWin
     modal: true
+    show: settings.getAuthType() == null
     webPreferences:
       nodeIntegration: false
-  daemon.auth(authType, oauthWin.loadURL.bind(oauthWin))
+  authWin.on 'closed', -> authWin = null
+  daemon.auth(authType, authWin.loadURL.bind(authWin))
     .then ->
-      oauthWin.close()
+      authWin.close()
     .catch (e) ->
-      oauthWin.close()
+      authWin.close()
 
+tray = null
+init = ->
+  display = electron.screen.getPrimaryDisplay()
+  tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
+  tray.setToolTip 'StoreIt'
+
+  tray.setContextMenu electron.Menu.buildFromTemplate [
+    {label: 'Settings', click: -> loadPage 'settings'}
+    {label: 'Statistics', click: -> loadPage 'stats'} #TODO
+    {label: 'Logout', click: -> daemon.logout()} #TODO
+    {type: 'separator'}
+    {label: 'Restart', click: -> daemon.restart()} #TODO
+    {label: 'Quit', click: -> app.quit() }
+  ]
+  daemon.connect().then -> loadPage()
 
 ipc.on 'auth', (ev, authType) ->
-  oauth(authType)
+  auth(authType)
     .then -> ev.sender.send 'auth', 'done'
     .catch -> ev.sender.send 'auth', 'done'
 
-ipc.on 'reload', (ev) ->
-  # daemon.reloadSettings()
+ipc.on 'reload', (ev) -> # daemon.restart() #TODO
 
-app.on 'ready', -> load()
-app.on 'activate', -> load() unless mainWin?
-app.on 'window-all-closed', -> app.quit() if process.platform isnt 'darwin'
+app.on 'ready', -> init()
+app.on 'activate', -> init() unless mainWin?

@@ -29,6 +29,7 @@ System.config({
     "jade": "github:johnsoftek/plugin-jade@1.1.2",
     "jquery": "npm:jquery@2.2.4",
     "node-dir": "npm:node-dir@0.1.8",
+    "query-string": "npm:query-string@4.2.3",
     "react": "npm:react@0.13.3",
     "github:johnsoftek/plugin-jade@1.1.2": {
       "jade-compiler": "npm:jade@1.11.0"
@@ -348,6 +349,10 @@ System.config({
     },
     "npm:punycode@1.3.2": {
       "process": "github:jspm/nodelibs-process@0.1.2"
+    },
+    "npm:query-string@4.2.3": {
+      "object-assign": "npm:object-assign@4.1.0",
+      "strict-uri-encode": "npm:strict-uri-encode@1.1.0"
     },
     "npm:react@0.13.3": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",

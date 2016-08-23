@@ -19,7 +19,6 @@ reset = ->
   ipc.send 'reload'
 
 init = ->
-  console.log userSettings.get()
   $('#storeit-dir').val userSettings.getFolderPath()
   $('#storeit-space').val userSettings.getAllocated()
   $('#storeit-bandwidth').val userSettings.getBandwidth()
