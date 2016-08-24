@@ -6,12 +6,15 @@
     "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
     "postinstall": "shx rm -f .env && shx cp -n .env.sample .env && ipfs init || true",
     "start": "npm run build && concurrently -k 'ipfs daemon' 'node -r dotenv/config build/main.js'",
-    "test": "npm run build && npm run bdd",
-    "dev": "concurrently -r -k 'ipfs daemon' 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
-    "build:lib": "babel ../lib/js/src -s -d ./lib",
+
     "build": "npm run build:lib && babel src -s -d build",
+    "build:lib": "babel ../lib/js/src -s -d ./lib",
+
+    "dev": "concurrently -r -k 'ipfs daemon' 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
     "nodemon": "npm run build:lib && nodemon src/main.js --debug --watch src --watch ../lib/js/src --exec 'node -r dotenv/config -r babel-register'",
     "mock-server": "nodemon test/mock/server.js --watch test/mock --exec 'node -r dotenv/config -r babel-register'",
+
+    "test": "npm run build && npm run bdd",
     "bdd": "mocha --compilers coffee:coffee-script/register --require source-map-support/register --require dotenv/config"
   },
   "dependencies": {
