@@ -1,6 +1,3 @@
-import Promise from 'bluebird'
-global.Promise = Promise
-
 import commander from 'commander'
 import dotenv from 'dotenv'
 dotenv.config()

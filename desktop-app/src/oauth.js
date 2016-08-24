@@ -52,14 +52,7 @@ export class GoogleService extends OAuthProvider {
     this.client = new gapi.auth.OAuth2(GAPI_CLIENT_ID,
       GAPI_CLIENT_SECRET, REDIRECT_URI)
     if (this.hasRefreshToken()) {
-      /* eslint-disable camelcase */
-      let {access_token, refresh_token} = settings.getTokens('gg')
-
-      this.client.setCredentials({
-        access_token,
-        refresh_token
-      })
-      /* eslint-enable camelcase */
+      this.client.setCredentials(settings.getTokens('gg'))
     }
   }
 
