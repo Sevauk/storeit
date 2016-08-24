@@ -1,6 +1,4 @@
 import commander from 'commander'
-import dotenv from 'dotenv'
-dotenv.config()
 
 import Client from './client'
 import userFile from './user-file'
