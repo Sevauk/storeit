@@ -23,7 +23,7 @@
     "postinstall": "jspm install",
     "gui": "electron .",
     "build": "npm run build:lib && npm run build:daemon && npm run build:app",
-    "build:app": "coffee -o ./build -c ./electron-main.coffee",
+    "build:app": "coffee -o ./build -c ./electron-main.coffee && jspm bundle 'app/app.coffee!' build/app/app.js",
     "build:daemon": "npm --prefix ../desktop-app run build",
     "build:lib": "babel ../lib/js/src -s -d lib",
     "dev": "npm run build && concurrently -r -k 'npm run build:dev' 'npm run gui'",
