@@ -5,17 +5,29 @@
   "scripts": {
     "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
     "postinstall": "shx rm -f .env && shx cp -n .env.sample .env && ipfs init || true",
-    "start": "npm run build && concurrently -k 'ipfs daemon' 'node -r dotenv/config build/main.js'",
+    "start": "npm run build && concurrently -k 'ipfs daemon' 'npm run daemon'",
 
-    "build": "npm run build:lib && babel src -s -d build",
+    "daemon": "node -r dotenv/config bootstrap.js'",
+    "gui": "electron -r dotenv/config bootstrap.js --gui'",
+
+    "build": "npm run build:lib && npm run build:daemon && npm run build:gui",
     "build:lib": "babel ../lib/js/src -s -d ./lib",
+    "build:daemon": "babel ./src -s -d ./build",
+    "build:gui": "coffee -o ./build -c ./src",
+    "clean": "shx rm -rf ./lib ./build && shx mkdir ./lib ./build",
+    "rebuild": "npm run clean && npm run build",
 
-    "dev": "concurrently -r -k 'ipfs daemon' 'gulp' 'node-inspector --web-port 8081' 'npm run nodemon'",
-    "nodemon": "npm run build:lib && nodemon src/main.js --debug --watch src --watch ../lib/js/src --exec 'node -r dotenv/config -r babel-register'",
+    "dev": "concurrently -r -k 'ipfs daemon' 'npm run watch:lib' 'npm run watch:daemon' 'gulp watch:lint' 'npm run debug'",
+    "debug": "node-inspector --web-port 8081",
+    "watch:lib": "babel ../lib/js/src -s -d ./lib -w",
+    "watch:daemon": "nodemon bootstrap.js --debug --watch ./src --watch ../lib/js/src --exec 'node -r dotenv/config'",
+
     "mock-server": "nodemon test/mock/server.js --watch test/mock --exec 'node -r dotenv/config -r babel-register'",
 
+    "lint": "eslint ./src ./bootstrap.js || true",
     "test": "npm run build && npm run bdd",
     "bdd": "mocha --compilers coffee:coffee-script/register --require source-map-support/register --require dotenv/config"
+
   },
   "dependencies": {
     "babel-cli": "^6.7.7",

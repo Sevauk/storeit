@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import * as api from '../lib/protocol-objects.js'
+import * as api from '../../lib/protocol-objects.js'
 import userFile from './user-file.js'
-import {logger} from '../lib/log.js'
+import {logger} from '../../lib/log.js'
 
 const createTree = (path, ipfs) => {
 

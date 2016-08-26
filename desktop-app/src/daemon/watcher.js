@@ -1,5 +1,5 @@
 import chokidar from 'chokidar'
-import {logger} from '../lib/log'
+import {logger} from '../../lib/log'
 import userFile from './user-file.js'
 import * as path from 'path'
 
