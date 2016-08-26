@@ -27,16 +27,16 @@ export default class Client {
   auth(type, opener) {
     let service
     switch (type) {
-     case 'fb':
-      service = new FacebookService()
-      break
-     case 'gg':
-      service = new GoogleService()
-      break
-     case 'developer':
-      return this.developer()
+      case 'fb':
+        service = new FacebookService()
+        break
+      case 'gg':
+        service = new GoogleService()
+        break
+      case 'developer':
+        return this.developer()
       default:
-      return this.login() // TODO
+        return this.login() // TODO
     }
 
     return service.oauth(opener)
