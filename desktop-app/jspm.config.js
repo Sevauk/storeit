@@ -18,7 +18,7 @@ System.config({
     "babel": "npm:babel-core@5.8.38",
     "babel-runtime": "npm:babel-runtime@5.8.38",
     "bootstrap": "github:twbs/bootstrap@3.3.7",
-    "coffee": "github:forresto/system-coffee@master",
+    "coffee": "github:forresto/system-coffee@0.1.2",
     "core-js": "npm:core-js@1.2.7",
     "css": "github:systemjs/plugin-css@0.1.27",
     "events": "github:jspm/nodelibs-events@0.1.1",

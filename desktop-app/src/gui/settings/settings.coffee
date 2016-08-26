@@ -1,11 +1,11 @@
 $ = require 'bootstrap'
-template = require 'app/settings/settings.jade!'
-require 'app/settings/settings.css!'
+template = require './settings.jade!'
+require './settings.css!'
 
 ipc = (System._nodeRequire 'electron').ipcRenderer
-userSettings = (require 'app/remote.coffee!') 'settings'
+userSettings = (require '../remote.coffee!') 'settings'
 
-render = require 'app/render.coffee!'
+render = require '../render.coffee!'
 
 save = ->
   userSettings.setFolderPath $('#storeit-dir').val()
