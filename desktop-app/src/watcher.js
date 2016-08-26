@@ -10,39 +10,39 @@ export class EventType {
     this.path = path
     this.meta = stats
     switch (type) {
-    case 'add':
-      Object.assign(this, {
-        isDir: false,
-        type: 'FADD'
-      })
-      break
-    case 'addDir':
-      Object.assign(this, {
-        isDir: true,
-        type: 'FADD'
-      })
-      break
-    case 'unlink':
-      Object.assign(this, {
-        isDir: false,
-        type: 'FDEL'
-      })
-      break
-    case 'unlinkDir':
-      Object.assign(this, {
-        isDir: true,
-        type: 'FDEL'
-      })
-      break
-    case 'change':
-      Object.assign(this, {
-        isDir: false,
-        type: 'FUPT'
-      })
-      break
-    default:
-      logger.error('error here')
-      throw {msg: 'Unexpected error occured'}
+      case 'add':
+        Object.assign(this, {
+          isDir: false,
+          type: 'FADD'
+        })
+        break
+      case 'addDir':
+        Object.assign(this, {
+          isDir: true,
+          type: 'FADD'
+        })
+        break
+      case 'unlink':
+        Object.assign(this, {
+          isDir: false,
+          type: 'FDEL'
+        })
+        break
+      case 'unlinkDir':
+        Object.assign(this, {
+          isDir: true,
+          type: 'FDEL'
+        })
+        break
+      case 'change':
+        Object.assign(this, {
+          isDir: false,
+          type: 'FUPT'
+        })
+        break
+      default:
+        logger.error('error here')
+        throw {msg: 'Unexpected error occured'}
     }
   }
 }
