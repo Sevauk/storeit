@@ -1,8 +1,8 @@
-electron = null
-app = null
-ipc = null
-logger = (require '../lib/log').logger
+electron = require 'electron'
+{app} = electron
+ipc = electron.ipcMain
 
+logger = (require '../lib/log').logger
 StoreItClient = (require "../build/daemon/client.js").default
 global.settings = (require "../build/daemon/settings").default
 
@@ -46,20 +46,17 @@ init = ->
     {label: 'Restart', click: -> daemon.restart()} #TODO
     {label: 'Quit', click: -> app.quit() }
   ]
-  loadPage()
-  # daemon.connect().then -> loadPage()
+  daemon.connect().then -> loadPage()
+
+ipc.on 'auth', (ev, authType) ->
+  auth(authType)
+    .then -> ev.sender.send 'auth', 'done'
+    .catch -> ev.sender.send 'auth', 'done'
+ipc.on 'reload', (ev) -> # daemon.restart() #TODO
 
 module.exports = run: (program) ->
-  electron = require 'electron'
 
   global.OPTIONS = program
-  # global.daemon = new StoreItClient
-  {app} = electron
-  ipc = electron.ipcMain
+  global.daemon = new StoreItClient
   app.on 'ready', -> init()
   app.on 'activate', -> init() unless mainWin?
-  ipc.on 'auth', (ev, authType) ->
-    auth(authType)
-      .then -> ev.sender.send 'auth', 'done'
-      .catch -> ev.sender.send 'auth', 'done'
-  ipc.on 'reload', (ev) -> # daemon.restart() #TODO
