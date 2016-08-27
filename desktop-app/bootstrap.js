@@ -14,7 +14,7 @@ let mainPath = program.debug ? './src' : './build'
 
 if (program.gui) {
   if (program.debug) require('coffee-script/register')
-  mainPath += '/gui'
+  mainPath += '/electron'
 }
 else {
   if (program.debug) require('babel-register')
