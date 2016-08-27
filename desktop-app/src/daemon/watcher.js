@@ -1,7 +1,10 @@
-import chokidar from 'chokidar'
-import {logger} from '../../lib/log'
-import userFile from './user-file.js'
 import * as path from 'path'
+
+import chokidar from 'chokidar'
+
+import {logger} from '../../lib/log'
+import settings from './settings'
+import userFile from './user-file'
 
 const STORE_NAME = '.storeit'
 
@@ -87,7 +90,7 @@ export default class Watcher {
   }
 
   ignoreEvent(ev) {
-    const fPath = '/' + path.relative(userFile.getStoreDir(), ev.path)
+    const fPath = '/' + path.relative(settings.getStoreDir(), ev.path)
 
     if (ev.type === 'FDEL')
       return false

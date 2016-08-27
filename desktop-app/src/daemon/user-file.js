@@ -1,64 +1,53 @@
 import * as fs from 'fs'
 import * as path from 'path'
+
+import del from 'del'
+
 import {logger} from '../../lib/log.js'
-var rimraf = require('rimraf') // SORRY :(
+import settings from './settings'
 
-let storeDir = './storeit'
-let fullPathStoreDir = path.resolve(storeDir)
+fs = Promise.promisifyAll(fs)
 
-let makeFullPath = (filePath) => path.join(storeDir, filePath)
+let fullPathStoreDir = () => path.resolve(settings.getStoreDir())
 
-const makeSubDirs = (p) => new Promise((resolve) => {
+let makeFullPath = (filePath) => path.join(settings.getStoreDir(), filePath)
 
+const makeSubDirs = (p) => {
   const eachDir = p.split(path.sep)
-  let currentPath = storeDir
-  for (let i = 0; i < eachDir.length - 1; i++) {
+  let currentPath = settings.getStoreDir()
+  let promises = []
 
-    currentPath += eachDir[i] + path.sep
-    try {
-      fs.mkdirSync(currentPath)
-    }
-    catch (e) {
-    }
+  for (let dir of eachDir) {
+    currentPath = path.join(currentPath, dir)
+    promises.push(fs.mkdirAsync(currentPath))
   }
-  resolve()
-})
+  return Promise.all(promises)
+}
 
-let dirCreate = (dirPath) => new Promise((resolve) => {
-
-  const fsPath = makeFullPath(dirPath)
+let dirCreate = (dirPath) => {
+  const dir = {path: dirPath, isDir: true}
   return makeSubDirs(dirPath)
-    .then(() =>
-      fs.mkdir(fsPath, (err) => !err || err.code === 'EEXIST' ?
-        resolve({path: dirPath, isDir: true}) : resolve(err)
-    ))
+    .then(() => fs.mkdirAsync(makeFullPath(dirPath)))
+    .then(() => dir)
+    .catch((err) => {
+      if (err.code === 'EEXIST') return dir
+      else throw err
+    })
     .catch((err) => logger.error(err))
-})
+}
 
-let fileCreate = (filePath, data) => new Promise((resolve, reject) => {
-
+let fileCreate = (filePath, data) => {
   const fsPath = makeFullPath(filePath)
-  return makeSubDirs(filePath)
-    .then(() => {
-      return fs.writeFile(fsPath, data, (err) => !err ?
-        resolve({path: filePath, data}) : reject(err)
-      )
-    }
-    )
-})
+  return makeSubDirs(makeFullPath(filePath))
+    .then(() => fs.writeFileAsync(fsPath, data))
+    .then(() => ({path: filePath, data}))
+}
 
-let fileDelete = (filePath) => new Promise((resolve, reject) => {
+let fileDelete = (filePath) => del(makeFullPath(filePath))
 
-  const fPath = storeDir + filePath
-  rimraf(fPath, (err) => !err ? resolve({path: fPath}) : reject(err))
-})
-
-
-let fileMove = (src, dst) => new Promise((resolve, reject) =>
-  fs.rename(makeFullPath(src), makeFullPath(dst), (err) => !err ?
-    resolve({src, dst}) : reject(err)
-  )
-)
+let fileMove = (src, dst) =>
+  fs.renameAsync(makeFullPath(src), makeFullPath(dst))
+    .then(() => ({src, dst}))
 
 const ignoreSet = new Set()
 
@@ -69,15 +58,9 @@ const ignore = (file) => {
 
 const unignore = (file) => ignoreSet.delete(file)
 const isIgnored = (file) => ignoreSet.has(file)
-const toStoreitPath = (p) => '/' + path.relative(storeDir, p)
+const toStoreitPath = (p) => '/' + path.relative(settings.getFolderPath(), p)
 
 export default {
-  setStoreDir(dirPath) {
-    storeDir = dirPath
-  },
-  getStoreDir() {
-    return storeDir
-  },
   toStoreitPath,
   ignoreSet,
   ignore,

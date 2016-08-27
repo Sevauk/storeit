@@ -20,7 +20,7 @@ export default class Client {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
     this.ipfs = new IPFSnode()
-    this.fsWatcher = new Watcher(userFile.getStoreDir())
+    this.fsWatcher = new Watcher(settings.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 

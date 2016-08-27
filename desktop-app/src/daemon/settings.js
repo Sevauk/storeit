@@ -64,9 +64,9 @@ const setTokens = (type, tokens) => {
 
 const resetTokens = () => setTokens(null, null)
 
-const getFolderPath = () => settings.folderPath
+const getStoreDir = () => settings.folderPath
 
-const setFolderPath = (folderPath) => {
+const setStoreDir = (folderPath) => {
   settings.folderPath = folderPath
 }
 
@@ -88,8 +88,8 @@ export default {
   setTokens,
   getTokens,
   resetTokens,
-  setFolderPath,
-  getFolderPath,
+  setStoreDir,
+  getStoreDir,
   getAllocated,
   setAllocated,
   getBandwidth,
