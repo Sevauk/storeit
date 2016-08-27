@@ -8,7 +8,7 @@ program
   .version('0.0.1')
   .option('-s, --store <name>', 'set the user synced directory (default is ~/storeit')
   .option('-g, --gui', 'display gui')
-  .option('-d, --debug', 'use for debug environment')
+  .option('-d, --dev', 'run in development mode')
   .parse(process.argv)
 
 let mainPath = program.debug ? './src' : './build'
