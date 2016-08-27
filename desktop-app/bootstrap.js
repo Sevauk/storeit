@@ -2,6 +2,7 @@
  eslint-disable import/no-commonjs
 */
 const program = require('commander')
+global.Promise = require('bluebird')
 
 program
   .version('0.0.1')

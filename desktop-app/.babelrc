@@ -1,7 +1,6 @@
 {
   "presets": ["es2015-node6"],
   "plugins": [
-    "transform-promise-to-bluebird",
     "syntax-async-functions",
     ["transform-async-to-module-method", {
        "module": "bluebird",
