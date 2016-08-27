@@ -11,14 +11,14 @@ program
   .option('-d, --dev', 'run in development mode')
   .parse(process.argv)
 
-let mainPath = program.debug ? './src' : './build'
+let mainPath = program.dev ? './src' : './build'
 
 if (program.gui) {
-  if (program.debug) require('coffee-script/register')
+  if (program.dev) require('coffee-script/register')
   mainPath += '/electron'
 }
 else {
-  if (program.debug) require('babel-register')
+  if (program.dev) require('babel-register')
   mainPath += '/cli'
 }
 

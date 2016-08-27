@@ -15,7 +15,7 @@ loadPage = (page) ->
       height: display.size.height
     mainWin.on 'closed', -> mainWin = null
   mainWin.loadURL "file://#{__dirname}/../index.html?p=#{page or ''}"
-  mainWin.openDevTools()
+  mainWin.openDevTools() if OPTIONS.dev
 
 authWin = null
 auth = (authType) ->
