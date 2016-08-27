@@ -19,7 +19,11 @@ Dev
 ---
 
 ```
-npm run dev
+npm run dev:daemon
+```
+
+```
+npm run dev:gui
 ```
 
 Test
