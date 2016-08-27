@@ -27,6 +27,7 @@ module.exports = {
     'no-redeclare': ['error'],
     'no-this-before-super': ['error'],
     'no-undef': ['error'],
+    'no-unreachable': ['error'],
     'no-use-before-define': ['error', { 'functions': true, 'classes': true }],
     'no-var': ['error'],
     'no-with': ['error'],
