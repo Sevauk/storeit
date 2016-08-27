@@ -58,26 +58,20 @@ export default class Client {
     const {SERVER_HOST, SERVER_PORT} = process.env
     return new Promise((resolve) => {
       this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
-
       logger.debug('attempting connection')
 
-      this.sock.on('open', () => {
-        logger.debug('sock opened')
-        this.recoTime = 1
-        resolve()
-      })
-      this.sock.on('close', () => {
-        this.reconnect()
-      })
-
+      this.sock.on('open', resolve)
+      this.sock.on('close', () => this.reconnect())
       this.sock.on('error', () => logger.error('socket error occured'))
       this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
     })
+      .then(() => this.recoTime = 1)
+      .then(() => logger.debug('sock opened'))
   }
 
   reconnect() {
     logger.error(`attempting to reconnect in ${this.recoTime} seconds`)
-    setTimeout(() => this.connect(), this.recoTime * 1000)
+    Promise.delay(this.recoTime * 1000).then(() => this.connect())
 
     if (this.recoTime < MAX_RECO_TIME) {
       ++this.recoTime
@@ -225,9 +219,8 @@ this.checkoutTree(tr[file])
               })
               .then(() => userFile.unignore(file.path))
               .catch((err) => userFile.unignore(file.path))
-              .then(() => {
-                setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
-              })
+              .delay(500)  // QUCIK FIX, FIMXE
+              .then(() => this.ipfs.addRelative(file.path), 500))
               .catch((err) => logger.error(err))
           }
 
@@ -263,14 +256,9 @@ this.checkoutTree(tr[file])
 
   recvFDEL(params) {
     logger.info(`received FDEL => ${JSON.stringify(params)}`)
-    let status = []
-    for (let file of params.files) {
-      status.push(userFile.del(file))
-    }
-    return Promise.all(status)
-      .then((files) =>
-    files.forEach((file) => logger.info(`removed file ${file.path}`))
-  )}
+    return Promise.map(params.files, (file) => userFile.del(file))
+      .each((file) => logger.info(`removed file ${file.path}`))
+  }
 
   recvFMOV(params) {
     logger.info(`received FMOV => ${JSON.stringify(params)}`)

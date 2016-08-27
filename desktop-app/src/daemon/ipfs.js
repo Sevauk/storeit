@@ -7,7 +7,7 @@ const MAX_RECO_TIME = 4
 export default class IPFSNode {
   constructor() {
     this.connecting = false
-    this.recoTime = 1
+    this.recoTime = 0
     this.connect()
   }
 
@@ -24,18 +24,12 @@ export default class IPFSNode {
   }
 
   reconnect() {
-
-    return new Promise((resolve) => {
-      logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
-      setTimeout(() => {
-        this.connect()
-        .then(() => resolve())
-      }, this.recoTime * 1000)
-
-      if (this.recoTime < MAX_RECO_TIME) {
-        ++this.recoTime
-      }
-    })
+    logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
+    if (this.recoTime < MAX_RECO_TIME) {
+      ++this.recoTime
+    }
+    return Promise.delay(this.recoTime * 1000)
+      .then(() => this.connect())
   }
 
   addRelative(filePath) {

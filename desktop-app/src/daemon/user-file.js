@@ -15,13 +15,11 @@ let makeFullPath = (filePath) => path.join(settings.getStoreDir(), filePath)
 const makeSubDirs = (p) => {
   const eachDir = p.split(path.sep)
   let currentPath = settings.getStoreDir()
-  let promises = []
 
-  for (let dir of eachDir) {
+  return Promise.map(eachDir, (dir) => {
     currentPath = path.join(currentPath, dir)
-    promises.push(fs.mkdirAsync(currentPath))
-  }
-  return Promise.all(promises)
+    return fs.mkdirAsync(currentPath)
+  })
 }
 
 let dirCreate = (dirPath) => {
@@ -53,7 +51,8 @@ const ignoreSet = new Set()
 
 const ignore = (file) => {
   ignoreSet.add(file)
-  setTimeout(() => ignoreSet.delete(file), 20000000)
+  Promise.delay(20000000)
+    .then(() => ignoreSet.delete(file))
 }
 
 const unignore = (file) => ignoreSet.delete(file)
