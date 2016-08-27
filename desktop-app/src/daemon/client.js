@@ -51,7 +51,7 @@ export default class Client {
   }
 
   login() {
-    throw {msg: 'StoreIt auth not implemented yet'}
+    throw new Error('StoreIt auth not implemented yet')
   }
 
   connect() {

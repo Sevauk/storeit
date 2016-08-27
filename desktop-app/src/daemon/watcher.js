@@ -44,8 +44,7 @@ export class EventType {
         })
         break
       default:
-        logger.error('error here')
-        throw {msg: 'Unexpected error occured'}
+        throw new Error('Unexpected error occured')
     }
   }
 }
