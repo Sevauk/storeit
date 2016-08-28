@@ -1,6 +1,6 @@
 import ipfs from 'ipfs-api'
 import {logger} from '../../lib/log'
-import usrFile from './user-file.js'
+import userFile from './user-file.js'
 
 const MAX_RECO_TIME = 4
 
