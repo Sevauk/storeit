@@ -43,7 +43,7 @@ class OAuthProvider {
   oauth(opener=open) {
     let url = this.generateAuthUrl()
     let authorized = Promise.resolve(url ? this.waitAuthorized() : true)
-    if (url) open(url)
+    if (url) opener(url)
 
     return authorized
       .then((code) => this.getToken(code))
