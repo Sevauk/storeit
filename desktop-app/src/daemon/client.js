@@ -12,8 +12,8 @@ import tree from './tree.js'
 import IPFSnode from './ipfs'
 import settings from './settings'
 
-fs = Promise.promisifyAll(fs)
-WebSocket = Promise.promisifyAll(WebSocket)
+Promise.promisifyAll(fs)
+Promise.promisifyAll(WebSocket)
 
 const MAX_RECO_TIME = 4
 

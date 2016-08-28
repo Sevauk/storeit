@@ -52,9 +52,10 @@ ipc.on 'auth', (ev, authType) ->
   auth(authType)
     .then -> ev.sender.send 'auth', 'done'
     .catch -> ev.sender.send 'auth', 'done'
+
 ipc.on 'reload', (ev) -> # daemon.restart() #TODO
 
-exports = run: (program) ->
+exports.run = (program) ->
   global.OPTIONS = program
   global.daemon = new StoreItClient
   app.on 'ready', -> init()

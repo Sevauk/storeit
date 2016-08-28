@@ -6,7 +6,7 @@ import del from 'del'
 import logger from '../../lib/log.js'
 import settings from './settings'
 
-fs = Promise.promisifyAll(fs)
+Promise.promisifyAll(fs)
 
 let fullPathStoreDir = () => path.resolve(settings.getStoreDir())
 

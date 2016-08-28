@@ -6,8 +6,8 @@ import fbgraph from 'fbgraph'
 import logger from '../../lib/log'
 import settings from './settings'
 
-fbgraph = Promise.promisifyAll(fbgraph)
-gapi = Promise.promisifyAll(gapi)
+Promise.promisifyAll(fbgraph)
+Promise.promisifyAll(gapi)
 
 const REDIRECT_URI = 'http://localhost:7777/'
 const HTTP_PORT = 7777
