@@ -32,14 +32,9 @@ export default class IPFSNode {
       .then(() => this.connect())
   }
 
-  addRelative(filePath) {
-    return this.ready()
-      .then(() => this.add(usrFile.fullPathStoreDir() + filePath))
-  }
-
   add(filePath) {
     return this.ready()
-      .then(() => this.node.add(filePath))
+      .then(() => this.node.add(userFile.path(filePath)))
       .catch(() => this.reconnect().then(() => {
         logger.debug('adding again ' + filePath)
         this.add(filePath)

@@ -12,6 +12,8 @@ import tree from './tree.js'
 import IPFSnode from './ipfs'
 import settings from './settings'
 
+WebSocket = Promise.promisifyAll(WebSocket)
+
 const MAX_RECO_TIME = 4
 
 export default class Client {
@@ -28,21 +30,19 @@ export default class Client {
     let service
     switch (type) {
       case 'fb':
+      break
         service = new FacebookService()
-        break
       case 'gg':
         service = new GoogleService()
         break
       case 'developer':
         return this.developer()
       default:
-        return this.login() // TODO
+        return this.login()
     }
 
     return service.oauth(opener)
       .then((tokens) => this.join(type, tokens.access_token))
-      .then((cmd) =>
-        this.addResponseHandler(cmd.uid, (data) => this.getRemoteTree(data))
     )
   }
 
@@ -51,133 +51,80 @@ export default class Client {
   }
 
   login() {
-    throw new Error('StoreIt auth not implemented yet')
+    throw new Error('StoreIt auth not implemented yet') // TODO
   }
 
   connect() {
     const {SERVER_ADDR, SERVER_PORT} = process.env
-    return new Promise((resolve) => {
-      this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
-      logger.debug('attempting connection')
+    this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
+    logger.debug('[SOCK] attempting connection')
 
-      this.sock.on('open', resolve)
-      this.sock.on('close', () => this.reconnect())
-      this.sock.on('error', () => logger.error('socket error occured'))
-      this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
-    })
+    this.sock.on('close', () => this.reconnect())
+    this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
+    this.sock.on('message', (data) => this.manageResponses(JSON.parse(data)))
+
+    return new Promise((resolve) => this.sock.on('open', resolve))
       .then(() => this.recoTime = 1)
-      .then(() => logger.debug('sock opened'))
+      .tap(() => logger.info('[SOCK] connection established'))
   }
 
   reconnect() {
-    logger.error(`attempting to reconnect in ${this.recoTime} seconds`)
-    Promise.delay(this.recoTime * 1000).then(() => this.connect())
+    logger.error(`[SOCK] attempting to reconnect in ${this.recoTime} seconds`)
+    let done = Promise.delay(this.recoTime * 1000).then(() => this.connect())
 
-    if (this.recoTime < MAX_RECO_TIME) {
-      ++this.recoTime
-    }
+    if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
+    return done
   }
 
-  addResponseHandler(uid, listener) {
-    logger.debug('attaching response handler for command', uid)
-    this.responseHandlers[uid] = listener
-  }
-
-  handleResponse(res) {
+  manageResponses(res) {
     let handler = this.responseHandlers[res.commandUid]
-    if (handler != null) {
-      this.responseHandlers[res.commandUid] = null
-    }
-    else {
-      handler = this[`recv${res.command}`] // set to default handler
-    }
+    if (handler != null) delete this.responseHandlers[res.commandUid]
+    else handler = this[`recv${res.command}`] // set to default handler
 
-    if (handler === null) {
-      logger.error(`received unhandled response: ${JSON.stringify(res)}`)
-      return null
-    }
-    else {
-      return handler.call(this, res.parameters, res)
-    }
+    if (handler != null) handler.call(this, res)
+    else logger.error(`[PROTO] unhandled response: ${JSON.stringify(res)}`)
   }
 
-  answerSuccess(uid) {
-    return this.sendObject(new Response(0, '', uid))
-  }
-
-  answerFailure(uid, code=1, msg='error') {
-    return this.sendObject(new Response(code, msg, uid))
-  }
-
-  send(cmd, params) {
-    let data = new Command(cmd, params)
-    return this.sendObject(data)
-  }
-
-  sendObject(obj) {
-    logger.info(`sending object ${JSON.stringify(obj)}`)
+  waitResponse(req) {
+    let msg = `[PROTO] request' ${JSON.stringify(req)} `
 
     return new Promise((resolve, reject) =>
-    this.sock.send(JSON.stringify(obj), (err) => {
-      if (err) {
-        console.log(err)
-        return reject(err)
-      }
-      this.addResponseHandler(obj.uid, (params, command) => {
-        if (command.code === 0) {
-          logger.debug('command ' + JSON.stringify(command) + ' is successful')
-          return resolve(params)
-        }
-        return reject(command)
-      })
-    }))
+      this.responseHandlers[req.uid] = (res) =>
+        res.code === 0 ? : resolve(res) : reject(new Error(`${msg} failed`))
+    )
+      .then((res) => res.params)
+      .tap(() => logger.info(`${msg} succeeded`))
   }
 
-  checkoutTree(tr) {
+  response(uid, msg='', code=0) {
+    return this.send(new Response(code, msg, uid))
+  }
 
-    /*
-    return new Promise((resolve) => {
+  sendSuccess(uid, msg='') {
+    return this.response(uid, msg, 0)
+  }
 
-    const realPath = userFile.makeFullPath(tr.path)
+  sendError(uid, msg='error', code=1) {
+    return this.response(uid, msg, code)
+  }
 
-    fs.stat(realPath, (err, stat) => {
+  request(req, params) {
+    let data = new Command(req, params)
+    return this.send(data)
+      .then(() => this.waitResponse(data))
+  }
 
-    const exists = !err
-    const isDir = exists ? stat.isDir : false
-
-    // TODO: handle sync edge cases (folder -> file, new files added when daemon was offline, etc.)
-    if (isDir) {
-    if (!exists) {
-    fs.mkdir(realPath, (err) => {
-    if (err)
-    logger.error(err)
-  })
-}
-}
-else {
-this.ipfs.add()
-.then((hash) => {
-})
-}
-
-if (!tr.files)
-return resolve()
-
-for (const file of tr.files) {
-this.checkoutTree(tr[file])
-}
-})
-})
-*/
+  send(data) {
+    logger.info(`[PROTO] sending data ${JSON.stringify(data)}`)
+    return this.sock.sendAsync(JSON.stringify(data))
   }
 
   join(authType, accessToken) {
     return store.getHostedChunks()
-      .then((hashes) => this.send('JOIN', {authType, accessToken, hosting: hashes}))
-      .then((params) => {
-        return this.recvFADD({files: [params.home]})
-      })
-      .then(() => logger.info('home has loaded'))
+      .then((hashes) => {authType, accessToken, hosting: hashes})
+      .then((data) => this.sendReq('JOIN', data))
+      .then((params) => this.recvFADD({files: [params.home]})
+      .then(() => logger.info('[PROTO] home loaded'))
       .catch((err) => logger.error(err))
   }
 
@@ -207,7 +154,7 @@ this.checkoutTree(tr[file])
       }
       else {
 
-        fs.stat(realPath, (err, stat) => {
+        fs.stat(realPath, (err) => {
 
           const getFile = () => {
             userFile.create(file.path, '') // TODO: show user that we are syncing
@@ -218,16 +165,16 @@ this.checkoutTree(tr[file])
                 return userFile.create(file.path, buf)
               })
               .then(() => userFile.unignore(file.path))
-              .catch((err) => userFile.unignore(file.path))
+              .catch(() => userFile.unignore(file.path))
               .delay(500)  // QUCIK FIX, FIMXE
-              .then(() => this.ipfs.addRelative(file.path))
+              .then(() => this.ipfs.add(file.path))
               .catch((err) => logger.error(err))
           }
 
           const exists = !err
 
           if (exists) {
-            this.ipfs.addRelative(file.path)
+            this.ipfs.add(file.path)
               .then((hash) => {
                 if (hash[0].Hash === file.IPFSHash) {
                   userFile.unignore(file.path)
@@ -269,29 +216,29 @@ this.checkoutTree(tr[file])
   recvFSTR(params) {
     logger.info(`received FSTR => ${JSON.stringify(params)}`)
     return store.FSTR(this.ipfs, params.hash, params.keep)
-      .then(() => this.answerSuccess())
+      .then(() => this.success())
       .catch((err) => logger.error('FSTR: ' + err))
   }
 
   sendFADD(filePath) {
     return tree.createTree(filePath, this.ipfs)
-      .then((file) => this.send('FADD', {files: [file]}))
+      .then((file) => this.sendReq('FADD', {files: [file]}))
       .catch((err) => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {
     return tree.createTree(filePath, this.ipfs)
-      .then((file) => this.send('FUPT', {files: [file]}))
+      .then((file) => this.sendReq('FUPT', {files: [file]}))
       .catch((err) => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
-    return this.send('FDEL', {files: [userFile.toStoreitPath(filePath)]})
+    return this.sendReq('FDEL', {files: [userFile.toStoreitPath(filePath)]})
       .catch((err) => logger.error('FDEL: ' + err.text))
   }
 
   sendFMOV(src, dst) {
-    return this.send('FMOV', {src, dst})
+    return this.sendReq('FMOV', {src, dst})
       .catch((err) => logger.error('FMOV: ' + err.text))
   }
 
@@ -305,11 +252,6 @@ this.checkoutTree(tr[file])
     }
     else logger.warn(`[FileWatcher] unhandled event ${ev}`)
   }
-
-  getRemoteTree(files) {
-    return files
-  }
-
 
   reloadSettings() {
     // TODO

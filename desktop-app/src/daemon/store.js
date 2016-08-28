@@ -27,7 +27,7 @@ const getHostedChunks = () => new Promise((resolve, reject) => {
 
 const FSTR = (ipfs, hash, keep) => {
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
 
     if (!keep) {
       ipfs.rm(hash)
@@ -35,7 +35,7 @@ const FSTR = (ipfs, hash, keep) => {
     }
 
     if (hash.substr(0, 2) !== 'Qm')
-      return reject('bad IPFS Hash ' + hash)
+      throw new Error('bad IPFS Hash ' + hash)
 
     logger.debug(ipfsStore + hash)
     return ipfs.get(hash, ipfsStore + hash)
