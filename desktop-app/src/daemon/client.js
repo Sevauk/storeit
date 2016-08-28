@@ -220,7 +220,7 @@ this.checkoutTree(tr[file])
               .then(() => userFile.unignore(file.path))
               .catch((err) => userFile.unignore(file.path))
               .delay(500)  // QUCIK FIX, FIMXE
-              .then(() => this.ipfs.addRelative(file.path), 500))
+              .then(() => this.ipfs.addRelative(file.path))
               .catch((err) => logger.error(err))
           }
 
