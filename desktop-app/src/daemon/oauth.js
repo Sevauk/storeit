@@ -40,6 +40,17 @@ class OAuthProvider {
     this.authSettings = settings.get('auth')
   }
 
+  oauth(opener=open) {
+    let url = this.generateAuthUrl()
+    let authorized = Promise.resolve(url ? this.waitAuthorized() : true)
+    if (url) open(url)
+
+    return authorized
+      .then((code) => this.getToken(code))
+      .then((tokens) => this.mangeTokens(tokens))
+      .catch((err) => logger.error(err))
+  }
+
   saveTokens(type, tokens) {
     settings.setTokens(type, tokens)
     settings.save()
@@ -59,40 +70,29 @@ export class GoogleService extends OAuthProvider {
     }
   }
 
-  oauth(opener=open) {
-    if (this.hasRefreshToken())
-      return this.getToken()
+  generateAuthUrl() {
+    if (this.hasRefreshToken()) return null
 
-    let url = this.client.generateAuthUrl({
+    return this.client.generateAuthUrl({
       scope: 'email',
-      access_type: 'offline' // eslint-disable-line camelcase
+      'access_type': 'offline'
     })
-    let tokenPromise = this.waitAuthorized()
-      .then((code) => this.getToken(code))
+  }
 
-    opener(url)
-    return tokenPromise
+  getToken(code) {
+    if (code != null) {
+      logger.info('[OAUTH:gg] exchanging code against access token')
+      return this.client.getTokenAsync(code)
+    }
+    else {
+      logger.info('[OAUTH:gg] refreshing token')
+      return this.client.refreshAccessTokenAsync()
+    }
   }
 
   manageTokens(tokens) {
     this.client.setCredentials(tokens)
     this.saveTokens('gg', tokens)
-  }
-
-  getToken(code) {
-    let req
-    if (code != null) {
-      logger.info('[OAUTH:gg] exchanging code against access token')
-      req = this.client.getTokenAsync(code)
-    }
-    else {
-      logger.info('[OAUTH:gg] refreshing token')
-      req = this.client.refreshAccessTokenAsync()
-    }
-
-    return req
-      .then((tokens) => this.manageTokens(tokens))
-      .catch((err) => logger.error(err))
   }
 
   hasRefreshToken() {
@@ -118,7 +118,7 @@ export class FacebookService extends OAuthProvider {
     })
   }
 
-  oauth(opener=open) {
+  generateAuthUrl() {
     const ENDPOINT = 'auth/fb'
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
@@ -128,10 +128,14 @@ export class FacebookService extends OAuthProvider {
           res.send('access denied')
       }
     })
-    let tokenPromise = this.waitAuthorized()
-      .then((code) => this.getToken(code))
-    opener(`http://localhost:${HTTP_PORT}/${ENDPOINT}`)
-    return tokenPromise
+    return `http://localhost:${HTTP_PORT}/${ENDPOINT}`
+  }
+
+  getToken(code) {
+    let params = Object.assign({code}, this.credentials)
+
+    return this.client.authorizeAsync(params)
+      .catch((err) => Promise.reject(err.message))
   }
 
   manageTokens(tokens, extended=false) {
@@ -140,14 +144,6 @@ export class FacebookService extends OAuthProvider {
 
     return this.client.extendAccessTokenAsync(this.prepareToken())
       .then((tokens) => this.manageTokens(tokens, true))
-  }
-
-  getToken(code) {
-    let params = Object.assign({code}, this.credentials)
-
-    return this.client.authorizeAsync(params)
-      .then((tokens) => this.manageTokens(tokens))
-      .catch((err) => logger.error(err.message))
   }
 
   prepareToken() {
