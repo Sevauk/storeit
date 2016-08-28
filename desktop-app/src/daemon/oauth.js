@@ -6,6 +6,8 @@ import fbgraph from 'fbgraph'
 import {logger} from '../../lib/log'
 import settings from './settings'
 
+fbgraph = Promise.promisifyAll(fbgraph)
+
 const REDIRECT_URI = 'http://localhost:7777/'
 const HTTP_PORT = 7777
 
@@ -135,31 +137,20 @@ export class FacebookService extends OAuthProvider {
     return tokenPromise
   }
 
+  manageTokens(tokens, extended=false) {
+    this.saveTokens('fb', tokens)
+    if (extended) return tokens
+
+    return this.client.extendAccessTokenAsync(this.prepareToken())
+      .then((tokens) => this.manageTokens(tokens, true))
+  }
+
   getToken(code) {
-    return new Promise((resolve, reject) => {
-      let params = Object.assign({code}, this.credentials)
-      let extended = false
+    let params = Object.assign({code}, this.credentials)
 
-      /*
-      * Is called twice
-      */
-      let manageTokens = (err, tokens) => {
-        if (!err) {
-          this.saveTokens('fb', tokens)
-          if (!extended)
-            this.client.extendAccessToken(this.prepareToken(), manageTokens)
-          else
-            resolve(tokens)
-        }
-        else {
-          logger.error(err.message)
-          reject(err)
-        }
-        extended = !extended // becomes true after first call back
-      }
-
-      this.client.authorize(params, manageTokens)
-    })
+    return this.client.authorizeAsync(params)
+      .then((tokens) => this.manageTokens(tokens))
+      .catch((err) => logger.error(err.message))
   }
 
   prepareToken() {
