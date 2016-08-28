@@ -7,6 +7,7 @@ import {logger} from '../../lib/log'
 import settings from './settings'
 
 fbgraph = Promise.promisifyAll(fbgraph)
+gapi = Promise.promisifyAll(gapi)
 
 const REDIRECT_URI = 'http://localhost:7777/'
 const HTTP_PORT = 7777
@@ -73,29 +74,25 @@ export class GoogleService extends OAuthProvider {
     return tokenPromise
   }
 
-  getToken(code) {
-    return new Promise((resolve, reject) => {
-      let manageTokens = (err, tokens) => {
-        if(!err) {
-          this.client.setCredentials(tokens)
-          this.saveTokens('gg', tokens)
-          resolve(tokens)
-        }
-        else {
-          logger.error(err)
-          reject(err)
-        }
-      }
+  manageTokens(tokens) {
+    this.client.setCredentials(tokens)
+    this.saveTokens('gg', tokens)
+  }
 
-      if (code != null) {
-        logger.info('exchanging code against access token')
-        this.client.getToken(code, manageTokens)
-      }
-      else {
-        logger.info('refreshing token')
-        this.client.refreshAccessToken(manageTokens)
-      }
-    })
+  getToken(code) {
+    let req
+    if (code != null) {
+      logger.info('[OAUTH:gg] exchanging code against access token')
+      req = this.client.getTokenAsync(code)
+    }
+    else {
+      logger.info('[OAUTH:gg] refreshing token')
+      req = this.client.refreshAccessTokenAsync()
+    }
+
+    return req
+      .then((tokens) => this.manageTokens(tokens))
+      .catch((err) => logger.error(err))
   }
 
   hasRefreshToken() {
