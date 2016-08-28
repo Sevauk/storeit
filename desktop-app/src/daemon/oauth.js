@@ -3,7 +3,7 @@ import express from 'express'
 import gapi from 'googleapis'
 import fbgraph from 'fbgraph'
 
-import {logger} from '../../lib/log'
+import logger from '../../lib/log'
 import settings from './settings'
 
 fbgraph = Promise.promisifyAll(fbgraph)

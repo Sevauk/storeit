@@ -4,7 +4,7 @@ import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
-import {logger} from '../../lib/log'
+import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
 import store from './store.js'
@@ -57,7 +57,7 @@ export default class Client {
   connect() {
     const {SERVER_ADDR, SERVER_PORT} = process.env
     this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
-    logger.debug('[SOCK] attempting connection')
+    logger.info('[SOCK] attempting connection')
 
     this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
@@ -71,7 +71,6 @@ export default class Client {
   reconnect() {
     logger.error(`[SOCK] attempting to reconnect in ${this.recoTime} seconds`)
     let done = Promise.delay(this.recoTime * 1000).then(() => this.connect())
-
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
     return done
   }
@@ -129,7 +128,7 @@ export default class Client {
   }
 
   recvFADD(params, log=true) {
-    if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
+    if (log) logger.info(`[PROTO] received FADD => ${JSON.stringify(params)}`)
 
     if (!params.files) return Promise.resolve()
 
@@ -144,6 +143,7 @@ export default class Client {
           .then(() => this.recvFADD({files: file.files}, false))
       }
       else {
+        logger.info(`[DL] file: ${file.path} [${file.IPFSHash}]`)
         return fs.accessAsync(userFile.fullPath(file.path), fs.constants.F_OK)
           .catch(() => userFile.create(file.path, ''))
           .then(() => this.ipfs.add(file.path))
@@ -151,11 +151,10 @@ export default class Client {
           .then((hashMatches) => {
             if (!hashMatches) return this.ipfs.get(file.IPFSHash)
               .then((buf) => userFile.create(file.path, buf))
-              .tap(() => logger.info(`[DL] ${file.path} downloaded`))
               .finally(() => userFile.unignore(file.path))
               .delay(500)  // QUCIK FIX, FIXME
               .then(() => this.ipfs.add(file.path))
-              .catch((err) => logger.error(err))
+              .catch(logger.error)
           })
       }
     })
@@ -216,7 +215,7 @@ export default class Client {
     let handler = this[`send${ev.type}`]
     if (handler) {
       handler.call(this, ev.path)
-        .catch((err) => logger.debug(err))
+        .catch(logger.debug)
 
       // TODO: manage FMOV
     }

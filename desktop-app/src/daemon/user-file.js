@@ -3,7 +3,7 @@ import * as path from 'path'
 
 import del from 'del'
 
-import {logger} from '../../lib/log.js'
+import logger from '../../lib/log.js'
 import settings from './settings'
 
 fs = Promise.promisifyAll(fs)

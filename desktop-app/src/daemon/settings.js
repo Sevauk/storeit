@@ -2,7 +2,7 @@ import * as path from 'path'
 
 import storage from 'node-persist'
 
-import {logger} from '../../lib/log'
+import logger from '../../lib/log'
 
 const storeItData = 'user-settings'
 const USER_HOME = process.env[

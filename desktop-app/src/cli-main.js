@@ -1,6 +1,6 @@
 import Client from './daemon/client'
 import userFile from './daemon/user-file'
-import {logger} from '../lib/log'
+import logger from '../lib/log'
 
 export const run = (program) => {
   if (program.store) userFile.setStoreDir(program.store)
@@ -8,5 +8,5 @@ export const run = (program) => {
   let client = new Client()
   client.connect()
     .then(() => client.auth('fb'))
-    .catch(() => logger.error('something happened'))
+    .catch(() => logger.error('An unexpected error occured'))
 }

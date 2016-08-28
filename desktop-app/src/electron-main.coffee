@@ -2,9 +2,9 @@ electron = require 'electron'
 {app} = electron
 ipc = electron.ipcMain
 
-logger = (require '../lib/log').logger
-StoreItClient = (require "../build/daemon/client.js").default
-global.settings = (require "../build/daemon/settings").default
+{logger} = (require '../lib/log')
+StoreItClient = (require '../build/daemon/client.js').default
+global.settings = (require '../build/daemon/settings').default
 
 display = null
 mainWin = null
@@ -54,8 +54,7 @@ ipc.on 'auth', (ev, authType) ->
     .catch -> ev.sender.send 'auth', 'done'
 ipc.on 'reload', (ev) -> # daemon.restart() #TODO
 
-module.exports = run: (program) ->
-
+exports = run: (program) ->
   global.OPTIONS = program
   global.daemon = new StoreItClient
   app.on 'ready', -> init()

@@ -2,7 +2,7 @@ import * as path from 'path'
 
 import chokidar from 'chokidar'
 
-import {logger} from '../../lib/log'
+import logger from '../../lib/log'
 import settings from './settings'
 import userFile from './user-file'
 
