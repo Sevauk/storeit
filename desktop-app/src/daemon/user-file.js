@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import {logger} from '../lib/log.js'
+import {logger} from '../../lib/log.js'
 var rimraf = require('rimraf') // SORRY :(
 
 let storeDir = './storeit'

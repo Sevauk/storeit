@@ -1,14 +1,12 @@
-import * as fs from 'fs'
-
 import open from 'open'
 import express from 'express'
 import gapi from 'googleapis'
 import fbgraph from 'fbgraph'
 
-import {logger} from '../lib/log'
+import {logger} from '../../lib/log'
+import settings from './settings'
 
 const REDIRECT_URI = 'http://localhost:7777/'
-const TOKENS_FILE = `${(global.STOREIT_RELATIVE_PATH || '.')}/.tokens.json`
 const HTTP_PORT = 7777
 
 class OAuthProvider {
@@ -36,13 +34,12 @@ class OAuthProvider {
   }
 
   loadTokens() {
-    let file = fs.readFileSync(TOKENS_FILE)
-    this.tokens = JSON.parse(file)
+    this.authSettings = settings.get('auth')
   }
 
-  saveTokens(tokens) {
-    Object.assign(this.tokens, tokens)
-    fs.writeFileSync(TOKENS_FILE, JSON.stringify(this.tokens))
+  saveTokens(type, tokens) {
+    settings.setTokens(type, tokens)
+    settings.save()
   }
 }
 
@@ -55,13 +52,7 @@ export class GoogleService extends OAuthProvider {
     this.client = new gapi.auth.OAuth2(GAPI_CLIENT_ID,
       GAPI_CLIENT_SECRET, REDIRECT_URI)
     if (this.hasRefreshToken()) {
-      /* eslint-disable camelcase */
-      let {access_token, refresh_token} = this.tokens.google
-      this.client.setCredentials({
-        access_token,
-        refresh_token
-      })
-      /* eslint-enable camelcase */
+      this.client.setCredentials(settings.getTokens('gg'))
     }
   }
 
@@ -85,7 +76,7 @@ export class GoogleService extends OAuthProvider {
       let manageTokens = (err, tokens) => {
         if(!err) {
           this.client.setCredentials(tokens)
-          this.saveTokens({google: tokens})
+          this.saveTokens('gg', tokens)
           resolve(tokens)
         }
         else {
@@ -106,7 +97,7 @@ export class GoogleService extends OAuthProvider {
   }
 
   hasRefreshToken() {
-    return this.tokens.google.refresh_token != null
+    return settings.getTokens('gg') != null
   }
 }
 
@@ -154,8 +145,7 @@ export class FacebookService extends OAuthProvider {
       */
       let manageTokens = (err, tokens) => {
         if (!err) {
-          console.log('SUCCESS', tokens)
-          this.saveTokens(tokens)
+          this.saveTokens('fb', tokens)
           if (!extended)
             this.client.extendAccessToken(this.prepareToken(), manageTokens)
           else
@@ -174,7 +164,7 @@ export class FacebookService extends OAuthProvider {
 
   prepareToken() {
     return {
-      'access_token': this.tokens.facebook['access_token'],
+      'access_token': settings.getTokens('fb')['access_token'],
       'client_id': this.credentials['client_id'],
       'client_secret':  this.credentials['client_secret']
     }

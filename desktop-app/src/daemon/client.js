@@ -1,15 +1,16 @@
+import * as fs from 'fs'
+
 import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
-import {logger} from '../lib/log'
+import {logger} from '../../lib/log'
 import Watcher from './watcher'
-import {Command, Response} from '../lib/protocol-objects'
+import {Command, Response} from '../../lib/protocol-objects'
 import store from './store.js'
 import tree from './tree.js'
-import * as path from 'path'
-import * as fs from 'fs'
 import IPFSnode from './ipfs'
+import settings from './settings'
 
 const MAX_RECO_TIME = 4
 
@@ -26,18 +27,16 @@ export default class Client {
   auth(type, opener) {
     let service
     switch (type) {
-     case 'facebook':
-      service = new FacebookService()
-      type = 'fb'
-      break
-     case 'google':
-      service = new GoogleService()
-      type = 'gg'
-      break
-     case 'developer':
-      return this.developer()
+      case 'fb':
+        service = new FacebookService()
+        break
+      case 'gg':
+        service = new GoogleService()
+        break
+      case 'developer':
+        return this.developer()
       default:
-      return this.login() // TODO
+        return this.login() // TODO
     }
 
     return service.oauth(opener)
@@ -63,6 +62,7 @@ export default class Client {
       logger.debug('attempting connection')
 
       this.sock.on('open', () => {
+        logger.debug('sock opened')
         this.recoTime = 1
         resolve()
       })
@@ -320,5 +320,11 @@ this.checkoutTree(tr[file])
 
   getRemoteTree(files) {
     return files
+  }
+
+
+  reloadSettings() {
+    // TODO
+    settings.reload()
   }
 }

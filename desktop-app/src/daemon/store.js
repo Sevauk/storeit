@@ -2,7 +2,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import {logger} from '../lib/log.js'
+import {logger} from '../../lib/log.js'
 
 let home = process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME']
 if (!home) {
