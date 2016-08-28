@@ -33,11 +33,10 @@ class OAuthProvider {
 
   waitAuthorized() {
     return new Promise((resolve) => {
-      this.express.use('/', (req, res) => resolve({req, res}))
+      this.express.use('/', (req, res) => resolve(this.getCode(req, res)))
       this.http = this.express.listen(HTTP_PORT)
       logger.info(`Http server listening on port ${HTTP_PORT}`)
     })
-      .then((done) => this.getCode(done.req, done.res))
   }
 
   getCode(req, res) {

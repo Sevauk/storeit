@@ -55,9 +55,9 @@ export default class Client {
   }
 
   connect() {
-    const {SERVER_HOST, SERVER_PORT} = process.env
+    const {SERVER_ADDR, SERVER_PORT} = process.env
     return new Promise((resolve) => {
-      this.sock = new WebSocket(`ws://${SERVER_HOST}:${SERVER_PORT}`)
+      this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
       logger.debug('attempting connection')
 
       this.sock.on('open', resolve)

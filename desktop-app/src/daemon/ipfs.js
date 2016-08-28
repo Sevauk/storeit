@@ -12,8 +12,8 @@ export default class IPFSNode {
   }
 
   connect() {
-
-    this.node = ipfs(`/ip4/127.0.0.1/tcp/${process.env.IPFS_PORT}`)
+    const {IPFS_ADDR, IPFS_PORT} = process.env
+    this.node = ipfs(`/ip4/${IPFS_ADDR}/tcp/${IPFS_PORT}`)
 
     return this.ready()
       .then(() => {
