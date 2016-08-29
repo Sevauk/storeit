@@ -5,14 +5,25 @@ import FilesService from './files_service'
 import {html as template} from './file_explorer.jade!'
 import './file_explorer.css!'
 
-let fileExplorerComponent = {
+const name = 'files'
+
+const component = {
   template,
   controller: FileExplorerController,
   controllerAs: 'vm',
 }
 
+const config = ($stateProvider) => {
+  $stateProvider
+    .state(name, {
+      url: `/${name}`,
+      component: name
+    })
+}
+
 const DEPENDENCIES = []
 export default angular.module('storeit.app.file-explorer', DEPENDENCIES)
   .service('FilesService', FilesService)
-  .component('fileExplorer', fileExplorerComponent)
+  .component(name, component)
+  .config(config)
   .name

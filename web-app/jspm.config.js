@@ -18,6 +18,7 @@ System.config({
     "angular-animate": "github:angular/bower-angular-animate@1.5.8",
     "angular-aria": "github:angular/bower-angular-aria@1.5.8",
     "angular-material": "github:angular/bower-material@1.1.0",
+    "angular-ui-router": "github:angular-ui/angular-ui-router-bower@1.0.0-beta.1",
     "babel": "npm:babel-core@5.8.38",
     "babel-runtime": "npm:babel-runtime@5.8.38",
     "core-js": "npm:core-js@1.2.7",
@@ -25,7 +26,6 @@ System.config({
     "express": "npm:express@4.14.0",
     "hellojs": "npm:hellojs@1.13.4",
     "jade": "github:johnsoftek/plugin-jade@1.1.2",
-    "ngComponentRouter": "npm:ngcomponentrouter@2.1.0",
     "github:angular/bower-angular-animate@1.5.8": {
       "angular": "github:angular/bower-angular@1.5.8"
     },
@@ -503,9 +503,6 @@ System.config({
       "fs": "github:jspm/nodelibs-fs@0.1.2",
       "minimist": "npm:minimist@0.0.8",
       "path": "github:jspm/nodelibs-path@0.1.0",
-      "process": "github:jspm/nodelibs-process@0.1.2"
-    },
-    "npm:ngcomponentrouter@2.1.0": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:on-finished@2.3.0": {

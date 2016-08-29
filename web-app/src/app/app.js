@@ -1,6 +1,6 @@
 import angular from 'angular'
 
-import {html} from './app.jade!'
+import {html as template} from './app.jade!'
 import './app.css!'
 
 import auth from './auth/auth_module'
@@ -11,14 +11,14 @@ const DEPENDENCIES = [
   fileExplorer,
 ]
 
-let appComponent = {
-  template: html,
-  $routeConfig: [
-    {path: '/auth', name: 'Auth', component: 'auth', useAsDefault: true},
-    {path: '/files', name: 'FileExplorer', component: 'fileExplorer'},
-  ],
+const appComponent = {template}
+
+const config = ($urlRouterProvider) => {
+  'ngInject'
+  $urlRouterProvider.otherwise('/auth')
 }
 
 export default angular.module('storeit.app', DEPENDENCIES)
   .component('app', appComponent)
+  .config(config)
   .name

@@ -2,18 +2,20 @@ import hello from 'hellojs'
 
 export default class AuthController
 {
-  constructor(Facebook, Auth) {
+  constructor($state, Facebook, Auth) {
     'ngInject'
 
     this.facebook = Facebook
     this.auth = Auth
+    this.$state = $state
+
     hello.on('auth.login', () => this.getProfile('facebook'))
   }
 
   login(profile) {
     console.log(profile) // TODO
     this.auth.login()
-      .then(() => this.$router.navigate(['FileExplorer']))
+      .then(() => this.$state.go('files'))
       .catch(err => console.error(err))
   }
 
