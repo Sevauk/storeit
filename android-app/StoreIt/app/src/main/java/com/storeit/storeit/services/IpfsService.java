@@ -125,7 +125,12 @@ public class IpfsService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                Log.v(LOGTAG, "Downloading : " + hash);
                 launchCommand(Arrays.asList(IPFS_BINARY, "get", hash));
+                Log.v(LOGTAG, "Downloaded : " + hash);
+                Log.v(LOGTAG, "Adding : " + hash);
+                launchCommand(Arrays.asList(IPFS_BINARY, "app", hash));
+                Log.v(LOGTAG, "Added : " + hash);
             }
         }).run();
 

@@ -79,6 +79,7 @@ public class SocketService extends Service {
                                 public void onTextMessage(WebSocket websocket, String message) {
                                     Log.v(LOGTAG, "received : " + message);
                                     int cmdType = CommandManager.getCommandType(message);
+                                    Log.v(LOGTAG, "Command : " +  cmdType);
                                     switch (cmdType) {
                                         case CommandManager.RESP:
                                             if (lastCmd.equals("JOIN")) {
@@ -123,11 +124,11 @@ public class SocketService extends Service {
                                                 FileStoreCommand fileStoreCommand = gson.fromJson(message, FileStoreCommand.class);
                                                 mFileCommandHandler.handleFSTR(fileStoreCommand);
                                             }
+                                            break;
                                         default:
                                             Log.v(LOGTAG, "Invalid command received :/");
                                             break;
                                     }
-
                                 }
                             })
                             .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
@@ -249,7 +250,7 @@ public class SocketService extends Service {
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
         server = SP.getString("pref_key_server_url", "ws://192.168.1.3:7641");
 
-        //  server = "ws://121.181.166.188:7641";
+        server = "ws://121.181.166.188:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();
@@ -265,7 +266,6 @@ public class SocketService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         Log.v(LOGTAG, "On destroy :o");
     }
 
