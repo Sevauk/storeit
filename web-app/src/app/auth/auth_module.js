@@ -1,8 +1,8 @@
 import angular from 'angular'
 import hello from 'hellojs'
 
-import AuthController from './auth_controller.js'
-import AuthService from './auth_service.js'
+import AuthController from './auth_controller'
+import AuthService from './auth_service'
 import {html as template} from './auth.jade!'
 import './auth.css!'
 

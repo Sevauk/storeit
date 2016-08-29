@@ -3,8 +3,8 @@ import angular from 'angular'
 import {html} from './app.jade!'
 import './app.css!'
 
-import auth from './auth/auth_module.js'
-import fileExplorer from './file_explorer/file_explorer_module.js'
+import auth from './auth/auth_module'
+import fileExplorer from './file_explorer/file_explorer_module'
 
 const DEPENDENCIES = [
   auth,

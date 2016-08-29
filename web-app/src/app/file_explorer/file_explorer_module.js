@@ -1,7 +1,7 @@
 import angular from 'angular'
 
-import FileExplorerController from './file_explorer_controller.js'
-import FilesService from './files_service.js'
+import FileExplorerController from './file_explorer_controller'
+import FilesService from './files_service'
 import {html as template} from './file_explorer.jade!'
 import './file_explorer.css!'
 
