@@ -81,7 +81,7 @@ class WebSocketManager {
     
     private func moveFile(src: String, file: File) {
         let updateElementForDeletion = UpdateElement(path: src)
-        let updateElementForAddition = UpdateElement(file: file)
+        let updateElementForAddition = UpdateElement(file: file, isMoving: true)
         
         let index = self.navigationManager.updateTree(updateElementForDeletion)
         let index_2 = self.navigationManager.updateTree(updateElementForAddition)
@@ -97,7 +97,7 @@ class WebSocketManager {
 
     private func addFiles(files: [File]) {
         for file in files {
-            let updateElement = UpdateElement(file: file)
+            let updateElement = UpdateElement(file: file, isMoving: false)
 
             let index = self.navigationManager.updateTree(updateElement)
             

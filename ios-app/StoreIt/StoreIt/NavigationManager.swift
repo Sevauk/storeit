@@ -34,15 +34,17 @@ class MovingOptions {
 struct UpdateElement {
     
     let updateType: UpdateType
+    var isMoving = false
     
     var fileToAdd: File? = nil
     var pathToDelete: String? = nil
     var pathToRenameWith: (src, dest)? = nil
     var propertyToUpdate: (Property, File)? = nil
     
-    init(file: File) {
+    init(file: File, isMoving: Bool) {
         updateType = UpdateType.ADD
         fileToAdd = file
+        self.isMoving = isMoving
     }
     
     init(path: String) {
@@ -248,6 +250,12 @@ class NavigationManager {
             switch updateElement.updateType {
                 case .ADD:
                     storeit[fileName] = updateElement.fileToAdd!
+                    if let file = storeit[fileName] {
+                        // We need to change the path of the subdir
+                        if (file.isDir && updateElement.isMoving) {
+                            self.updateFilePathsAfterRename(&storeit[fileName]!.files, newPath: file.path)
+                        }
+                    }
                 case .DELETE:
                     storeit.removeValueForKey(fileName)
                 case .RENAME:
