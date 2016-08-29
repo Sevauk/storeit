@@ -3,7 +3,7 @@ electron = require 'electron'
 ipc = electron.ipcMain
 
 {logger} = (require '../lib/log')
-StoreItClient = (require '../build/daemon/client.js').default
+StoreItClient = (require '../build/daemon/client').default
 global.settings = (require '../build/daemon/settings').default
 
 display = null
@@ -44,7 +44,7 @@ init = ->
     {label: 'Logout', click: -> daemon.logout()} #TODO
     {type: 'separator'}
     {label: 'Restart', click: -> daemon.restart()} #TODO
-    {label: 'Quit', click: -> app.quit() }
+    {label: 'Quit', click: -> app.quit()}
   ]
   daemon.connect().then -> loadPage()
 
