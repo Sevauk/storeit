@@ -2,14 +2,15 @@ import hello from 'hellojs'
 
 export default class AuthController
 {
-  constructor($state, Facebook, Auth) {
+  constructor($state, Facebook, Google, Auth) {
     'ngInject'
 
     this.facebook = Facebook
+    this.google = Google
     this.auth = Auth
     this.$state = $state
 
-    hello.on('auth.login', () => this.getProfile('facebook'))
+    hello.on('auth.login', (res) => this.getProfile(res.network))
   }
 
   login(profile) {

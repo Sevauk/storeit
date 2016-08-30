@@ -23,15 +23,10 @@ const config = ($stateProvider, STOREIT) => {
       component: name
     })
 
-  let credentials = {
+  hello.init({
     facebook: STOREIT.facebookId,
-    google: STOREIT.googleId
-  }
-  let options = {
-    'redirect_uri': `${window.location.origin}/#/auth`
-  }
-
-  hello.init(credentials, options)
+    google: `${STOREIT.googleId}.apps.googleusercontent.com`
+  }, {'redirect_uri': `${window.location.origin}/auth`})
 }
 
 const DEPENDENCIES = []

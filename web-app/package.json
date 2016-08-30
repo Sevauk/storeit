@@ -31,7 +31,8 @@
       "css": "github:systemjs/plugin-css@^0.1.27",
       "express": "npm:express@^4.14.0",
       "hellojs": "npm:hellojs@^1.13.4",
-      "jade": "github:johnsoftek/plugin-jade@^1.1.2"
+      "jade": "github:johnsoftek/plugin-jade@^1.1.2",
+      "morgan": "npm:morgan@^1.7.0"
     },
     "devDependencies": {
       "babel": "npm:babel-core@^5.8.24",

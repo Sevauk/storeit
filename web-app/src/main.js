@@ -11,7 +11,7 @@ import app from './app/app.js'
 
 let coreConfig = ($locationProvider) => {
   'ngInject'
-  $locationProvider.html5Mode(false) // TODO
+  $locationProvider.html5Mode(true)
 }
 
 let run = ($rootScope) => {

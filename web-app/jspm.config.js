@@ -1,4 +1,9 @@
 System.config({
+  meta: {
+    "server.js": {
+      format: "cjs"
+    }
+  },
   baseURL: "/",
   defaultJSExtensions: true,
   transpiler: "babel",
@@ -26,6 +31,7 @@ System.config({
     "express": "npm:express@4.14.0",
     "hellojs": "npm:hellojs@1.13.4",
     "jade": "github:johnsoftek/plugin-jade@1.1.2",
+    "morgan": "npm:morgan@1.7.0",
     "github:angular/bower-angular-animate@1.5.8": {
       "angular": "github:angular/bower-angular@1.5.8"
     },
@@ -163,6 +169,9 @@ System.config({
     },
     "npm:babel-runtime@5.8.38": {
       "process": "github:jspm/nodelibs-process@0.1.2"
+    },
+    "npm:basic-auth@1.0.4": {
+      "buffer": "github:jspm/nodelibs-buffer@0.1.0"
     },
     "npm:bn.js@4.11.6": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0"
@@ -503,6 +512,14 @@ System.config({
       "fs": "github:jspm/nodelibs-fs@0.1.2",
       "minimist": "npm:minimist@0.0.8",
       "path": "github:jspm/nodelibs-path@0.1.0",
+      "process": "github:jspm/nodelibs-process@0.1.2"
+    },
+    "npm:morgan@1.7.0": {
+      "basic-auth": "npm:basic-auth@1.0.4",
+      "debug": "npm:debug@2.2.0",
+      "depd": "npm:depd@1.1.0",
+      "on-finished": "npm:on-finished@2.3.0",
+      "on-headers": "npm:on-headers@1.0.1",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:on-finished@2.3.0": {
