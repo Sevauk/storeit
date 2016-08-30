@@ -20,11 +20,15 @@ html, body {
   padding-top: 20px;
 }
 
-#container file-explorer {
+#app-container, app, #container, #container :only-child {
+  height: 100%;
+}
+
+/*#container files {
   display:flex;
   height: 100%;
   flex-basis:0%;
   flex-direction:column;
   flex-grow:1;
   flex-shrink:1;
-}
+}*/

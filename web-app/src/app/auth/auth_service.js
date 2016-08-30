@@ -1,14 +1,25 @@
+const authTypes = {
+  'facebook': 'fb',
+  'google': 'gg'
+}
+
 export default class AuthService {
 
-  constructor() {
+  constructor(StoreItClient) {
     'ngInject'
+
+    this.client = StoreItClient
   }
 
-  login() {
-    // TODO
-    return new Promise((resolve, reject) => {
-      /* eslint no-unused-vars:"off" */
-      resolve('logged in')
-    })
+  devLogin() {
+    return this.join('gg', 'developer')
+  }
+
+  login(network) {
+    return this.join(authTypes[network])
+  }
+
+  join(authType, accessToken) {
+    return this.client.request('JOIN', {authType, accessToken})
   }
 }

@@ -9,8 +9,6 @@ export default class AuthController
     this.google = Google
     this.auth = Auth
     this.$state = $state
-
-    hello.on('auth.login', (res) => this.getProfile(res.network))
   }
 
   login(profile) {
@@ -20,8 +18,15 @@ export default class AuthController
       .catch(err => console.error(err))
   }
 
+  developer() {
+    this.auth.devLogin()
+      .then(() => this.$state.go('files'))
+      .catch(err => console.error(err))
+  }
+
   oauth(network) {
     this[network].login()
+    hello.on('auth.login', (res) => this.getProfile(res.network))
   }
 
   getProfile(network) {

@@ -4,11 +4,11 @@ import {html as template} from './app.jade!'
 import './app.css!'
 
 import auth from './auth/auth_module'
-import fileExplorer from './file_explorer/file_explorer_module'
+import files from './file_explorer/file_explorer_module'
 
 const DEPENDENCIES = [
   auth,
-  fileExplorer,
+  files,
 ]
 
 const appComponent = {template}

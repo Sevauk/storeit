@@ -1,9 +1,4 @@
 System.config({
-  meta: {
-    "server.js": {
-      format: "cjs"
-    }
-  },
   baseURL: "/",
   defaultJSExtensions: true,
   transpiler: "babel",
@@ -16,6 +11,12 @@ System.config({
   paths: {
     "github:*": "jspm_packages/github/*",
     "npm:*": "jspm_packages/npm/*"
+  },
+
+  meta: {
+    "server.js": {
+      "format": "cjs"
+    }
   },
 
   map: {
