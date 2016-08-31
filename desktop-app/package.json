@@ -7,7 +7,7 @@
     "postinstall": "jspm clean && jspm install && shx cp -n .env.sample .env && ipfs init || true",
     "start": "npm run build && concurrently -r -k 'npm run ipfs' 'npm run daemon'",
     "ipfs": "ipfs daemon",
-    "daemon": "node -r dotenv/config bootstrap.js'",
+    "daemon": "node -r dotenv/config bootstrap.js",
     "gui": "electron -r dotenv/config bootstrap.js --gui'",
     "build": "npm run build:lib && npm run build:daemon && npm run build:gui",
     "build:lib": "babel ../lib/js/src -s -d ./lib",
