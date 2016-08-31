@@ -19,6 +19,9 @@ const makeSubDirs = (p) => {
   return Promise.map(eachDir, (dir) => {
     currentPath = path.join(currentPath, dir)
     return fs.mkdirAsync(currentPath)
+      .catch((err) => {
+        if (err.code !== 'EEXIST') throw err
+      })
   })
 }
 
@@ -57,7 +60,7 @@ const ignore = (file) => {
 
 const unignore = (file) => ignoreSet.delete(file)
 const isIgnored = (file) => ignoreSet.has(file)
-const toStoreitPath = (p) => '/' + path.relative(settings.getFolderPath(), p)
+const toStoreitPath = (p) => '/' + path.relative(settings.getStoreDir(), p)
 
 export default {
   toStoreitPath,

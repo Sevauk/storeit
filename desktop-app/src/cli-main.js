@@ -7,6 +7,6 @@ export const run = (program) => {
 
   let client = new Client()
   client.connect()
-    .then(() => client.auth('fb'))
+    .then(() => client.auth('developer'))
     .catch(() => logger.error('An unexpected error occured'))
 }

@@ -32,7 +32,7 @@ export default class IPFSNode {
 
   add(filePath) {
     return this.ready()
-      .then(() => this.node.add(userFile.path(filePath)))
+      .then(() => this.node.add(userFile.fullPath(filePath)))
       .catch(() => this.reconnect().then(() => {
         logger.error(`[IPFS] ${filePath} sync failed. Retrying`)
         return this.add(filePath)

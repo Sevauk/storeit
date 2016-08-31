@@ -13,7 +13,6 @@ import IPFSnode from './ipfs'
 import settings from './settings'
 
 Promise.promisifyAll(fs)
-Promise.promisifyAll(WebSocket)
 
 const MAX_RECO_TIME = 4
 
@@ -43,7 +42,7 @@ export default class Client {
     }
 
     return service.oauth(opener)
-      .then((tokens) => this.reqJoin(type, tokens.access_token))
+      .then(tokens => this.reqJoin(type, tokens.access_token))
   }
 
   developer() {
@@ -57,13 +56,14 @@ export default class Client {
   connect() {
     const {SERVER_ADDR, SERVER_PORT} = process.env
     this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
+    this.sock = Promise.promisifyAll(this.sock)
     logger.info('[SOCK] attempting connection')
 
     this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
-    this.sock.on('message', (data) => this.manageResponses(JSON.parse(data)))
+    this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
 
-    return new Promise((resolve) => this.sock.on('open', resolve))
+    return new Promise(resolve => this.sock.on('open', resolve))
       .then(() => this.recoTime = 1)
       .tap(() => logger.info('[SOCK] connection established'))
   }
@@ -75,7 +75,7 @@ export default class Client {
     return done
   }
 
-  manageResponses(res) {
+  manageResponse(res) {
     let handler = this.responseHandlers[res.commandUid]
     if (handler != null) delete this.responseHandlers[res.commandUid]
     else handler = this[`recv${res.command}`] // set to default handler
@@ -91,8 +91,8 @@ export default class Client {
       this.responseHandlers[req.uid] = (res) =>
         res.code === 0 ? resolve(res) : reject(new Error(msg))
     )
-      .tap((res) => this.recvRESP(res))
-      .then((res) => res.params)
+      .tap(res => this.recvRESP(res))
+      .then(res => res.parameters)
   }
 
   send(data) {
@@ -120,11 +120,11 @@ export default class Client {
 
   reqJoin(authType, accessToken) {
     return store.getHostedChunks()
-      .then((hashes) => ({authType, accessToken, hosting: hashes}))
-      .then((data) => this.request('JOIN', data))
-      .then((params) => this.recvFADD({files: [params.home]}))
+      .then(hashes => ({authType, accessToken, hosting: hashes}))
+      .then(data => this.request('JOIN', data))
+      .then(params => this.recvFADD({files: [params.home]}))
       .then(() => logger.info('[PROTO] home loaded'))
-      .catch((err) => logger.error(err))
+      .catch(err => logger.error(err))
   }
 
   recvFADD(params, log=true) {
@@ -133,7 +133,7 @@ export default class Client {
     if (!params.files) return Promise.resolve()
 
     if (!Array.isArray(params.files)) {
-      params.files = Object.keys(params.files).map((key) => params.files[key])
+      params.files = Object.keys(params.files).map(key => params.files[key])
     }
 
     return Promise.map(params.files, (file) => {
@@ -147,10 +147,10 @@ export default class Client {
         return fs.accessAsync(userFile.fullPath(file.path), fs.constants.F_OK)
           .catch(() => userFile.create(file.path, ''))
           .then(() => this.ipfs.add(file.path))
-          .then((hash) => hash[0].Hash === file.IPFSHash)
-          .then((hashMatches) => {
+          .then(hash => hash[0].Hash === file.IPFSHash)
+          .then(hashMatches => {
             if (!hashMatches) return this.ipfs.get(file.IPFSHash)
-              .then((buf) => userFile.create(file.path, buf))
+              .then(buf => userFile.create(file.path, buf))
               .finally(() => userFile.unignore(file.path))
               .delay(500)  // QUCIK FIX, FIXME
               .then(() => this.ipfs.add(file.path))
@@ -179,36 +179,36 @@ export default class Client {
   recvFMOV(params) {
     logger.info(`[PROTO] received FMOV => ${JSON.stringify(params)}`)
     return userFile.move(params.src, params.dest)
-      .then((file) => logger.info(`moved file ${file.src} to ${file.dst}`))
+      .then(file => logger.info(`moved file ${file.src} to ${file.dst}`))
   }
 
   recvFSTR(params) {
     logger.info(`[PROTO] received FSTR => ${JSON.stringify(params)}`)
     return store.FSTR(this.ipfs, params.hash, params.keep)
       .then(() => this.success())
-      .catch((err) => logger.error('FSTR: ' + err))
+      .catch(err => logger.error('FSTR: ' + err))
   }
 
   sendFADD(filePath) {
     return tree.createTree(filePath, this.ipfs)
-      .then((file) => this.request('FADD', {files: [file]}))
-      .catch((err) => logger.error('FADD: ' + err))
+      .then(file => this.request('FADD', {files: [file]}))
+      .catch(err => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {
     return tree.createTree(filePath, this.ipfs)
-      .then((file) => this.request('FUPT', {files: [file]}))
-      .catch((err) => logger.error('FUPT: ' + err.text))
+      .then(file => this.request('FUPT', {files: [file]}))
+      .catch(err => logger.error('FUPT: ' + err.text))
   }
 
   sendFDEL(filePath) {
     return this.request('FDEL', {files: [userFile.toStoreitPath(filePath)]})
-      .catch((err) => logger.error('FDEL: ' + err.text))
+      .catch(err => logger.error('FDEL: ' + err.text))
   }
 
   sendFMOV(src, dst) {
     return this.request('FMOV', {src, dst})
-      .catch((err) => logger.error('FMOV: ' + err.text))
+      .catch(err => logger.error('FMOV: ' + err.text))
   }
 
   handleFsEvent(ev) {
