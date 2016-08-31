@@ -11,17 +11,22 @@ export default class AuthController
     this.$state = $state
   }
 
-  login(profile) {
+  login(network, profile) {
     console.log(profile) // TODO
-    this.auth.login()
+    let token = this[network].getAuthResponse().access_token
+    this.auth.login(network, token)
       .then(() => this.$state.go('files'))
       .catch(err => console.error(err))
+  }
+
+  online(session) {
+    let currentTime = (new Date()).getTime() / 1000
+    return session && session.access_token && session.expires > currentTime
   }
 
   developer() {
     this.auth.devLogin()
       .then(() => this.$state.go('files'))
-      .catch(err => console.error(err))
   }
 
   oauth(network) {
@@ -30,6 +35,6 @@ export default class AuthController
   }
 
   getProfile(network) {
-    this[network].api('/me').then((res) => this.login(res))
+    this[network].api('/me').then((res) => this.login(network, res))
   }
 }

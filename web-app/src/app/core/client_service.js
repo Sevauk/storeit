@@ -40,7 +40,7 @@ class StoreItClientService {
     console.log('received: ', JSON.stringify(res))
     let handler = this.handlers[res.commandUid]
     if (handler) {
-      handler(res)
+      handler(res.params)
       delete this.handlers[res.commandUid]
     }
   }

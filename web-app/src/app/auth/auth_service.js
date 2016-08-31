@@ -15,11 +15,11 @@ export default class AuthService {
     return this.join('gg', 'developer')
   }
 
-  login(network) {
-    return this.join(authTypes[network])
+  login(network, token) {
+    return this.join(authTypes[network], token)
   }
 
   join(authType, accessToken) {
-    return this.client.request('JOIN', {authType, accessToken})
+    return this.client.request('JOIN', {authType, accessToken, hosting: {}})
   }
 }
