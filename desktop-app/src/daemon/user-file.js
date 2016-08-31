@@ -8,9 +8,8 @@ import settings from './settings'
 
 Promise.promisifyAll(fs)
 
-let fullPathStoreDir = () => path.resolve(settings.getStoreDir())
-
-let makeFullPath = (filePath) => path.join(settings.getStoreDir(), filePath)
+const storePath = (p) => '/' + path.relative(settings.getStoreDir(), p)
+const absolutePath = (filePath) => path.join(settings.getStoreDir(), filePath)
 
 const makeSubDirs = (p) => {
   const eachDir = p.split(path.sep)
@@ -25,10 +24,10 @@ const makeSubDirs = (p) => {
   })
 }
 
-let dirCreate = (dirPath) => {
+const dirCreate = (dirPath) => {
   const dir = {path: dirPath, isDir: true}
   return makeSubDirs(dirPath)
-    .then(() => fs.mkdirAsync(makeFullPath(dirPath)))
+    .then(() => fs.mkdirAsync(absolutePath(dirPath)))
     .then(() => dir)
     .catch((err) => {
       if (err.code === 'EEXIST') return dir
@@ -37,41 +36,28 @@ let dirCreate = (dirPath) => {
     .catch((err) => logger.error(err))
 }
 
-let fileCreate = (filePath, data) => {
-  const fsPath = makeFullPath(filePath)
-  return makeSubDirs(makeFullPath(filePath))
+const fileCreate = (filePath, data) => {
+  const fsPath = absolutePath(filePath)
+  return makeSubDirs(absolutePath(filePath))
     .then(() => fs.writeFileAsync(fsPath, data))
     .then(() => ({path: filePath, data}))
 }
 
-let fileDelete = (filePath) => del(makeFullPath(filePath))
+const fileExists = (filePath) =>
+  fs.accessAsync(absolutePath(filePath), fs.constants.F_OK)
 
-let fileMove = (src, dst) =>
-  fs.renameAsync(makeFullPath(src), makeFullPath(dst))
+const fileDelete = (filePath) => del(absolutePath(filePath))
+
+const fileMove = (src, dst) =>
+  fs.renameAsync(absolutePath(src), absolutePath(dst))
     .then(() => ({src, dst}))
 
-const ignoreSet = new Set()
-
-const ignore = (file) => {
-  ignoreSet.add(file)
-  Promise.delay(20000000)
-    .then(() => ignoreSet.delete(file))
-}
-
-const unignore = (file) => ignoreSet.delete(file)
-const isIgnored = (file) => ignoreSet.has(file)
-const toStoreitPath = (p) => '/' + path.relative(settings.getStoreDir(), p)
-
 export default {
-  toStoreitPath,
-  ignoreSet,
-  ignore,
-  unignore,
-  isIgnored,
-  fullPath: makeFullPath,
+  absolutePath,
+  storePath,
   dirCreate,
   create: fileCreate,
+  exists: fileExists,
   del: fileDelete,
   move: fileMove,
-  fullPathStoreDir
 }

@@ -25,15 +25,13 @@ const defaults = {
 
 const load = () => storage.getItemSync(storeItData)
 
-// let settings = load() || defaults
-
-let settings = defaults
+let settings = load() || defaults
 
 const reload = () => {
   settings = load()
 }
 
-logger.info('[Settings]: status ', settings)
+// logger.debug('[Settings]: status ', settings)
 
 const get = (key) => {
   if (key != null) {
@@ -52,6 +50,7 @@ const reset = () => {
   const auth = settings.auth
   settings = defaults
   settings.auth = auth
+  save()
 }
 
 const getAuthType = () => settings.auth.type
@@ -69,7 +68,7 @@ const resetTokens = () => setTokens(null, null)
 const getStoreDir = () => settings.folderPath
 
 const setStoreDir = (folderPath) => {
-  settings.folderPath = folderPath
+  settings.folderPath = path.resolve(folderPath)
 }
 
 const getAllocated = () => settings.space
@@ -82,6 +81,10 @@ const getBandwidth = () => settings.bandwidth
 
 const setBandwidth = (max) => {
   settings.bandwidth = max
+}
+
+const fromArgs = (args) => {
+  if (args.store) setStoreDir(args.store)
 }
 
 export default {
@@ -98,5 +101,6 @@ export default {
   setBandwidth,
   save,
   reset,
-  reload
+  reload,
+  fromArgs
 }

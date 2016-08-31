@@ -30,17 +30,30 @@ export default class IPFSNode {
     return done
   }
 
+  ready() {
+    return this.node.id()
+  }
+
+  isInStore(filePath, ipfsHash) {
+    return this.add(filePath)
+      .then(hash => hash[0].Hash === ipfsHash)
+  }
+
+  download(filePath, ipfsHash) {
+    logger.info(`[DL] file: ${filePath} [${ipfsHash}]`)
+    return this.get(ipfsHash)
+      .then(buf => userFile.create(filePath, buf))
+      .delay(500)  // QUCIK FIX, FIXME
+      .then(() => this.ipfs.add(filePath))
+  }
+
   add(filePath) {
     return this.ready()
-      .then(() => this.node.add(userFile.fullPath(filePath)))
+      .then(() => this.node.add(userFile.absolutePath(filePath)))
       .catch(() => this.reconnect().then(() => {
         logger.error(`[IPFS] ${filePath} sync failed. Retrying`)
         return this.add(filePath)
       }))
-  }
-
-  ready() {
-    return this.node.id()
   }
 
   get(hash) {

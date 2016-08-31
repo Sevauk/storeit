@@ -12,7 +12,7 @@ const createTree = (path, ipfs) => {
       if (err)
         return reject(err)
 
-      const relativePath = userFile.toStoreitPath(path)
+      const relativePath = userFile.storePath(path)
 
       const makeObj = (IPFSHash /* , files */) => {
 

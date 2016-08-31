@@ -19,6 +19,7 @@ const authTypes = {
   'facebook': 'fb',
   'google': 'gg'
 }
+
 export default class Client {
 
   constructor() {
@@ -142,25 +143,19 @@ export default class Client {
     }
 
     return Promise.map(params.files, (file) => {
-      userFile.ignore(file.path)
+      this.fsWatcher.ignore(file.path)
       if (file.isDir) {
         return userFile.dirCreate(file.path)
           .then(() => this.recvFADD({files: file.files}, false))
       }
       else {
-        logger.info(`[DL] file: ${file.path} [${file.IPFSHash}]`)
-        return fs.accessAsync(userFile.fullPath(file.path), fs.constants.F_OK)
-          .catch(() => userFile.create(file.path, ''))
-          .then(() => this.ipfs.add(file.path))
-          .then(hash => hash[0].Hash === file.IPFSHash)
-          .then(hashMatches => {
-            if (!hashMatches) return this.ipfs.get(file.IPFSHash)
-              .then(buf => userFile.create(file.path, buf))
-              .finally(() => userFile.unignore(file.path))
-              .delay(500)  // QUCIK FIX, FIXME
-              .then(() => this.ipfs.add(file.path))
-              .catch(logger.error)
-          })
+        const {path, IPFSHash} = file
+        return userFile.exists(file.path)
+          .catch(() => userFile.create(path, ''))
+          .then(() => this.ipfs.isInStore(path, IPFSHash))
+          .then((stored) => !stored ? this.ipfs.download(path, IPFSHash) : 0)
+          .catch(logger.error)
+          .finally(() => this.fsWatcher.unignore(file.path))
       }
     })
   }
@@ -207,7 +202,7 @@ export default class Client {
   }
 
   sendFDEL(filePath) {
-    return this.request('FDEL', {files: [userFile.toStoreitPath(filePath)]})
+    return this.request('FDEL', {files: [userFile.storePath(filePath)]})
       .catch(err => logger.error('FDEL: ' + err.text))
   }
 

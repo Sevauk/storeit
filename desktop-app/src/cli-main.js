@@ -1,10 +1,7 @@
 import Client from './daemon/client'
-import userFile from './daemon/user-file'
 import logger from '../lib/log'
 
-export const run = (program) => {
-  if (program.store) userFile.setStoreDir(program.store)
-
+export const run = () => {
   let client = new Client()
   client.connect()
     .then(() => client.auth('developer'))

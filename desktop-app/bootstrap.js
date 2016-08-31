@@ -11,16 +11,22 @@ program
   .option('-d, --dev', 'run in development mode')
   .parse(process.argv)
 
-let mainPath = program.dev ? './src' : './build'
+let srcPath = program.dev ? './src' : './build'
+
+let mainPath
 
 if (program.gui) {
   if (program.dev) require('coffee-script/register')
-  mainPath += '/electron'
+  mainPath = `${srcPath}/electron`
 }
 else {
   if (program.dev) require('babel-register')
-  mainPath += '/cli'
+  mainPath = `${srcPath}/cli`
 }
+
+const settings = require(`${srcPath}/daemon/settings`).default
+settings.reset()
+settings.fromArgs(program)
 
 const {run} = require(`${mainPath}-main`)
 run(program)

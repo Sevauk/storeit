@@ -4,7 +4,6 @@ import chokidar from 'chokidar'
 
 import logger from '../../lib/log'
 import settings from './settings'
-import userFile from './user-file'
 
 const STORE_NAME = '.storeit'
 
@@ -53,6 +52,8 @@ export default class Watcher {
   constructor(dirPath) {
     this.handlers = {}
     this.ignoredEvents = []
+    this.ignoreSet = new Set()
+
     this.watcher = chokidar.watch(dirPath, {
       persistent: true,
       ignored: `.${STORE_NAME}`
@@ -94,7 +95,7 @@ export default class Watcher {
     if (ev.type === 'FDEL')
       return false
 
-    return userFile.isIgnored(fPath)
+    return this.isIgnored(fPath)
       || ev.path.indexOf('.DS_Store') >= 0 // QUICKFIX FIXME
   }
 
@@ -105,4 +106,19 @@ export default class Watcher {
   pushIgnoreEvent(ev) {
     this.ignoredEvents.push(ev)
   }
+
+  ignore(file) {
+    this.ignoreSet.add(file)
+    Promise.delay(20000000)
+      .then(() => this.ignoreSet.delete(file))
+  }
+
+  unignore(file) {
+    this.ignoreSet.delete(file)
+  }
+
+  isIgnored(file) {
+    this.ignoreSet.has(file)
+  }
+
 }
