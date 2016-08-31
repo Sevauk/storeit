@@ -8,8 +8,8 @@ import settings from './settings'
 
 Promise.promisifyAll(fbgraph)
 
-const REDIRECT_URI = 'http://localhost:7777/'
 const HTTP_PORT = 7777
+const REDIRECT_URI = `http://localhost:${HTTP_PORT}/`
 
 class OAuthProvider {
   constructor(type) {
