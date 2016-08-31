@@ -10,7 +10,7 @@ CLIENT_COUNT=0
 SRC='test-ressources/'
 
 function clean {
-  echo "cleaning first..."
+  echo "cleaning..."
   rm -rf $TESTDIR
 }
 
@@ -31,7 +31,7 @@ function init {
 }
 
 function test {
-  #echo -n .
+  echo $*
   $*
   return $?
 }
@@ -48,12 +48,12 @@ function select_client {
 }
 
 function ssleep {
-  echo -n "."
+  echo "waiting $1 seconds..."
   sleep $1
 }
 
 function someone {
-  echo $TESTDIR/client$(select_client $1)
+  echo $TESTDIR/client$1
 }
 
 #function action {
@@ -78,38 +78,33 @@ function playWithFS {
 
 function t1 {
   runcli 1
-  sleep 1
   runcli 1
-  sleep 1
+  ssleep 3
 
-  playWithFS 2
+  playWithFS 1
   sleep 4
   tree $TESTDIR > $TESTDIR/diff.txt
   diff $TESTDIR/diff.txt $SRC/diff1.txt
 }
 
 function t2 {
-  runcli 0
-  runcli 0
-  runcli 0
-  runcli 0
-  runcli 1
-  runcli 1
-  runcli 1
-  runcli 1
+  runcli 2
   runcli 2
   runcli 2
   runcli 3
+  runcli 3
+  runcli 3
   runcli 4
-  sleep 1
+  runcli 5
+  ssleep 7
 
-  playWithFS 4
-  echo "waiting 3sec..."
-  sleep 3
+  playWithFS 7
+  ssleep 12
   tree $TESTDIR > $TESTDIR/diff.txt
+  diff $TESTDIR/diff.txt $SRC/diff2.txt
 }
 
 init
 (test t1 &&
-#test t2 &&
+test t2 &&
 echo "test passed successfully") || echo "tests failure"
