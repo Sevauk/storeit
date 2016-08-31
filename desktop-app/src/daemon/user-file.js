@@ -13,34 +13,24 @@ Promise.promisifyAll(fs)
 const storePath = (p) => '/' + path.relative(settings.getStoreDir(), p)
 const absolutePath = (filePath) => path.join(settings.getStoreDir(), filePath)
 
-const makeSubDirs = (p) => {
-  const eachDir = p.split(path.sep)
-  let currentPath = settings.getStoreDir()
+const dirCreate = (dirPath) => {
+  const eachDir = dirPath.split(path.sep)
+  let currPath = settings.getStoreDir()
 
   return Promise.map(eachDir, (dir) => {
-    currentPath = path.join(currentPath, dir)
-    return fs.mkdirAsync(currentPath)
+    currPath = path.join(currPath, dir)
+    return fs.mkdirAsync(currPath)
       .catch((err) => {
         if (err.code !== 'EEXIST') throw err
       })
   })
-}
-
-const dirCreate = (dirPath) => {
-  const dir = {path: dirPath, isDir: true}
-  return makeSubDirs(dirPath)
-    .then(() => fs.mkdirAsync(absolutePath(dirPath)))
-    .then(() => dir)
-    .catch((err) => {
-      if (err.code === 'EEXIST') return dir
-      else throw err
-    })
-    .catch((err) => logger.error(err))
+    .then(() => ({path: dirPath, isDir: true}))
 }
 
 const fileCreate = (filePath, data) => {
   const fsPath = absolutePath(filePath)
-  return makeSubDirs(absolutePath(filePath))
+  logger.debug('filePath', filePath)
+  return dirCreate(path.dirname(filePath))
     .then(() => fs.writeFileAsync(fsPath, data))
     .then(() => ({path: filePath, data}))
 }

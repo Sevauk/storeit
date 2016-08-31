@@ -42,7 +42,7 @@ const get = (key) => {
 }
 
 const save = () => {
-  logger.debug('saving settings', settings)
+  // logger.debug('saving settings', settings)
   storage.setItem(storeItData, settings)
 }
 

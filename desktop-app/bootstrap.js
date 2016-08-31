@@ -25,7 +25,7 @@ else {
 }
 
 const settings = require(`${srcPath}/daemon/settings`).default
-settings.reset()
+settings.reset() // TODO
 settings.fromArgs(program)
 
 const {run} = require(`${mainPath}-main`)

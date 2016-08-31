@@ -45,7 +45,8 @@ class IPFSNode {
     return this.get(ipfsHash)
       .then(buf => userFile.create(filePath, buf))
       .delay(500)  // QUCIK FIX, FIXME
-      .then(() => this.ipfs.add(filePath))
+      .then(() => this.add(filePath))
+      .tap(() => logger.info(`[DL:COMPLETE] file: ${filePath} [${ipfsHash}]`))
   }
 
   add(filePath) {
@@ -64,7 +65,6 @@ class IPFSNode {
   get(hash) {
     let data = []
 
-    logger.info(`[IPFS] downloading file ${hash} from ipfs`)
     return this.ready()
       .then(() => this.node.cat(hash))
       .then((res) => new Promise((resolve, reject) => {
@@ -73,7 +73,6 @@ class IPFSNode {
         res.on('close', () => reject())
         res.on('error', () => reject())
       }))
-      .tap(() => logger.info(`[IPFS] file ${hash} downloaded`))
       .catch(() => this.reconnect().then(() => {
         logger.error(`[IPFS] ${hash} download failed. Retrying`)
         return this.get(hash)
