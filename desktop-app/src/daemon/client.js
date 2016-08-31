@@ -1,5 +1,3 @@
-import * as fs from 'fs'
-
 import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
@@ -11,8 +9,6 @@ import store from './store.js'
 import tree from './tree.js'
 import IPFSnode from './ipfs'
 import settings from './settings'
-
-Promise.promisifyAll(fs)
 
 const MAX_RECO_TIME = 4
 const authTypes = {
