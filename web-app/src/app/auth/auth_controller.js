@@ -30,7 +30,7 @@ export default class AuthController
   }
 
   oauth(network) {
-    this[network].login()
+    this[network].login({scope: 'email'})
     hello.on('auth.login', (res) => this.getProfile(res.network))
   }
 
