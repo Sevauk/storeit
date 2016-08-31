@@ -56,18 +56,24 @@ function someone {
   echo $TESTDIR/client$(select_client $1)
 }
 
+#function action {
+#  TARGETNAME=${@:-1}
+#  $1 $*
+#  while true; do
+#    ssleep 0.5
+#    test -e $TARGETNAME && return
+#  done
+#}
+
+
 function playWithFS {
   MAX=$1
-  cp $SRC/hello.txt $(someone $MAX)/hi.txt
-  ##ssleep 0.5
-  ##mkdir $(someone $MAX)/pic
-  ##ssleep 0.5
-  ##cp $SRC/logo.png $(someone $MAX)/pic
-  ##ssleep 0.5
-  ##cli=$(someone $MAX)
-  ##mv $cli/pic/logo.png $cli/pic/renamed.png
-  ##ssleep 0.5
-  ##mv $cli/pic/renamed.png $cli/renamed.png
+  cli=$(someone $MAX)
+  cp $SRC/hello.txt $cli/hi.txt
+  mkdir $cli/pic
+  cp $SRC/logo.png $cli/pic
+  mv $cli/pic/logo.png $cli/pic/renamed.png
+  mv $cli/pic/renamed.png $cli/renamed.png
 }
 
 function t1 {
@@ -77,7 +83,7 @@ function t1 {
   sleep 1
 
   playWithFS 2
-  sleep 1
+  sleep 4
   tree $TESTDIR > $TESTDIR/diff.txt
   diff $TESTDIR/diff.txt $SRC/diff1.txt
 }
