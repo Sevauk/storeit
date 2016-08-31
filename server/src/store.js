@@ -31,14 +31,11 @@ export const keepChunkAlive = (hash) => {
   const amountNeeded = targetCount - instances
   const users = storeTable.selectA(hash, amountNeeded)
 
-  logger.debug('--->' + JSON.stringify(storeTable.map1))
-
   if (users.size < amountNeeded)
     logger.warn('insufficient amount of users needed to have good redundancy')
 
   for (const usr of users) {
     storeTable.add(usr, hash)
-    logger.debug('ADD' + JSON.stringify(storeTable.map1))
     user.getSocketFromUid(usr).sendObj(new api.Command('FSTR', {hash, 'keep': true}), (err) => {
       if (err) {
         return logger.debug('user did not FSTR as asked (TODO: punish him and try with someone else)')
