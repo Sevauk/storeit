@@ -51,7 +51,6 @@ export class EventType {
 export default class Watcher {
   constructor(dirPath) {
     this.handlers = {}
-    this.ignoredEvents = []
     this.ignoreSet = new Set()
 
     this.watcher = chokidar.watch(dirPath, {
@@ -78,7 +77,7 @@ export default class Watcher {
     let ev = new EventType(evType, path, stats)
 
     if (!ev.type) {
-      logger.error('event type is undefined ' + ev)
+      logger.error(`[FileWatcher] event type ${ev.type} is undefined ` + ev)
       return null
     }
     logger.debug(`[FileWatcher] ${JSON.stringify(ev)} ${ev.fileKind} ${path}`)
@@ -103,14 +102,10 @@ export default class Watcher {
     this.handler = listener
   }
 
-  pushIgnoreEvent(ev) {
-    this.ignoredEvents.push(ev)
-  }
-
   ignore(file) {
     this.ignoreSet.add(file)
     Promise.delay(20000000)
-      .then(() => this.ignoreSet.delete(file))
+      .then(() => this.unignore(file))
   }
 
   unignore(file) {
@@ -120,5 +115,4 @@ export default class Watcher {
   isIgnored(file) {
     this.ignoreSet.has(file)
   }
-
 }

@@ -6,8 +6,7 @@ import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
 import store from './store.js'
-import tree from './tree.js'
-import IPFSnode from './ipfs'
+import * as ipfs from './ipfs'
 import settings from './settings'
 
 const MAX_RECO_TIME = 4
@@ -21,7 +20,7 @@ export default class Client {
   constructor() {
     this.recoTime = 1
     this.responseHandlers = {} // custom server response handlers
-    this.ipfs = new IPFSnode()
+    this.ipfs = ipfs.createNode()
     this.fsWatcher = new Watcher(settings.getStoreDir())
     this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
@@ -168,8 +167,9 @@ export default class Client {
 
   recvFDEL(params) {
     logger.info(`[PROTO] received FDEL => ${JSON.stringify(params)}`)
-    return Promise.map(params.files, (file) => userFile.del(file))
-      .each((file) => logger.info(`removed file ${file.path}`))
+    return Promise
+      .map(params.files, file => userFile.del(file))
+      .each(file => logger.info(`removed file ${file.path}`))
   }
 
   recvFMOV(params) {
@@ -186,13 +186,13 @@ export default class Client {
   }
 
   sendFADD(filePath) {
-    return tree.createTree(filePath, this.ipfs)
+    return userFile.generateTree(filePath)
       .then(file => this.request('FADD', {files: [file]}))
       .catch(err => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {
-    return tree.createTree(filePath, this.ipfs)
+    return userFile.generateTree(filePath)
       .then(file => this.request('FUPT', {files: [file]}))
       .catch(err => logger.error('FUPT: ' + err.text))
   }
@@ -210,10 +210,7 @@ export default class Client {
   handleFsEvent(ev) {
     let handler = this[`send${ev.type}`]
     if (handler) {
-      handler.call(this, ev.path)
-        .catch(logger.debug)
-
-      // TODO: manage FMOV
+      handler.call(this, ev.path).catch(logger.error)
     }
     else logger.warn(`[FileWatcher] unhandled event ${ev}`)
   }

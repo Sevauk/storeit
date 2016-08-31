@@ -4,6 +4,8 @@ import * as path from 'path'
 import del from 'del'
 
 import logger from '../../lib/log.js'
+import {FileObj} from '../../lib/protocol-objects.js'
+import * as ipfs from './ipfs'
 import settings from './settings'
 
 Promise.promisifyAll(fs)
@@ -52,6 +54,22 @@ const fileMove = (src, dst) =>
   fs.renameAsync(absolutePath(src), absolutePath(dst))
     .then(() => ({src, dst}))
 
+const generateTree = (filePath) => {
+  const objPath = storePath(filePath)
+  logger.debug('path:', filePath)
+  logger.debug('storePath:', objPath)
+  return fs.statAsync(filePath)
+    .then((stat) => {
+      if (stat.isDirectory()) {
+        return fs.readdirAsync(filePath)
+          .map(file => generateTree(path.join(filePath, file)))
+          .then(files => new FileObj(objPath, null, files))
+      }
+      return ipfs.getFileHash(objPath)
+        .then(hash => new FileObj(objPath, hash))
+    })
+}
+
 export default {
   absolutePath,
   storePath,
@@ -60,4 +78,5 @@ export default {
   exists: fileExists,
   del: fileDelete,
   move: fileMove,
+  generateTree
 }

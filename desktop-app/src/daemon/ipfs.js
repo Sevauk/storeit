@@ -4,8 +4,9 @@ import logger from '../../lib/log'
 import userFile from './user-file.js'
 
 const MAX_RECO_TIME = 4
+let singleton
 
-export default class IPFSNode {
+class IPFSNode {
   constructor() {
     this.connecting = false
     this.recoTime = 1
@@ -56,6 +57,10 @@ export default class IPFSNode {
       }))
   }
 
+  getFileHash(filePath) {
+    return this.add(filePath).then(res => res[0].Hash)
+  }
+
   get(hash) {
     let data = []
 
@@ -74,4 +79,14 @@ export default class IPFSNode {
         return this.get(hash)
       }))
   }
+}
+
+export const createNode = () => {
+  if (singleton == null)
+    singleton = new IPFSNode
+  return singleton
+}
+export const getFileHash = filePath => {
+  if (singleton == null) throw new Error('[IPFS] not instanciated')
+  return singleton.getFileHash(filePath)
 }
