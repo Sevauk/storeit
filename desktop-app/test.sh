@@ -20,7 +20,7 @@ function build {
 }
 
 function init {
-  trap 'kill $(jobs -p)' EXIT
+  trap "trap - EXIT && kill -- -$$" SIGINT SIGTERM EXIT
   clean
   mkdir -p $TESTDIR
   build
