@@ -7,7 +7,6 @@ import logger from '../../lib/log'
 import settings from './settings'
 
 Promise.promisifyAll(fbgraph)
-Promise.promisifyAll(gapi)
 
 const REDIRECT_URI = 'http://localhost:7777/'
 const HTTP_PORT = 7777
@@ -25,17 +24,19 @@ class OAuthProvider {
     if (url) opener(url)
 
     return authorized
-      .then((code) => this.getToken(code))
-      .then((tokens) => this.mangeTokens(tokens))
-      .then((tokens) => this.saveTokens(tokens))
-      .catch((err) => logger.error(err))
+      .then(code => this.getToken(code))
+      .tap(tokens => this.setCredentials(tokens))
+      .then(tokens => this.extendAccesToken(tokens))
+      .tap(tokens => this.saveTokens(tokens))
   }
 
   waitAuthorized() {
     return new Promise((resolve) => {
-      this.express.use('/', (req, res) => resolve(this.getCode(req, res)))
+      this.express.use('/', (req, res) => {
+        if (this.http != null) resolve(this.getCode(req, res))
+      })
       this.http = this.express.listen(HTTP_PORT)
-      logger.info(`Http server listening on port ${HTTP_PORT}`)
+      logger.debug(`[OAUTH] Http server listening on port ${HTTP_PORT}`)
     })
   }
 
@@ -44,7 +45,8 @@ class OAuthProvider {
     res.send(`StoreIt: ${msg}`)
 
     this.http.close()
-    logger.info('Access granted, Http server stopped')
+    delete this.http
+    logger.debug('[OAUTH] Access granted, Http server stopped')
 
     let code = req.query.code
     if (code == null) throw new Error('oauth: could not get code')
@@ -71,11 +73,12 @@ export class GoogleService extends OAuthProvider {
     this.client = new gapi.auth.OAuth2(GAPI_CLIENT_ID,
       GAPI_CLIENT_SECRET, REDIRECT_URI)
 
+    this.client = Promise.promisifyAll(this.client)
     if (this.hasTokens()) this.client.setCredentials(this.tokens)
   }
 
   generateAuthUrl() {
-    if (this.hasToken()) return null
+    if (this.hasTokens()) return null
 
     return this.client.generateAuthUrl({
       scope: 'email',
@@ -94,8 +97,12 @@ export class GoogleService extends OAuthProvider {
     }
   }
 
-  manageTokens(tokens) {
+  setCredentials(tokens) {
     this.client.setCredentials(tokens)
+  }
+
+  extendAccesToken(tokens) {
+    return tokens // TODO
   }
 }
 
@@ -121,8 +128,9 @@ export class FacebookService extends OAuthProvider {
     const ENDPOINT = 'auth/fb'
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
-        if (!req.query.error)
+        if (!req.query.error) {
           res.redirect(this.authUrl)
+        }
         else
           res.send('access denied')
       }
@@ -137,18 +145,15 @@ export class FacebookService extends OAuthProvider {
       .catch((err) => Promise.reject(err.message))
   }
 
-  manageTokens(tokens, extended=false) {
-    if (extended) return tokens
-
-    return this.client.extendAccessTokenAsync(this.prepareToken())
-      .then((tokens) => this.manageTokens(tokens, true))
-  }
-
-  prepareToken() {
-    return {
-      'access_token': this.tokens['access_token'],
+  setCredentials(tokens) {
+    this.credentials = {
+      'access_token': tokens['access_token'],
       'client_id': this.credentials['client_id'],
       'client_secret':  this.credentials['client_secret']
     }
+  }
+
+  extendAccesToken() {
+    return this.client.extendAccessTokenAsync(this.credentials)
   }
 }

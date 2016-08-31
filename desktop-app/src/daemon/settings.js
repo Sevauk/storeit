@@ -25,7 +25,9 @@ const defaults = {
 
 const load = () => storage.getItemSync(storeItData)
 
-let settings = load() || defaults
+// let settings = load() || defaults
+
+let settings = defaults
 
 const reload = () => {
   settings = load()

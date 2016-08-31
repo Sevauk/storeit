@@ -8,5 +8,5 @@ export const run = (program) => {
   let client = new Client()
   client.connect()
     .then(() => client.auth('developer'))
-    .catch(() => logger.error('An unexpected error occured'))
+    .catch(err => logger.error('An unexpected error occured:', err))
 }

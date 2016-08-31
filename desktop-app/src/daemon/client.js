@@ -15,7 +15,10 @@ import settings from './settings'
 Promise.promisifyAll(fs)
 
 const MAX_RECO_TIME = 4
-
+const authTypes = {
+  'facebook': 'fb',
+  'google': 'gg'
+}
 export default class Client {
 
   constructor() {
@@ -29,10 +32,10 @@ export default class Client {
   auth(type, opener) {
     let service
     switch (type) {
-      case 'fb':
+      case 'facebook':
         service = new FacebookService()
         break
-      case 'gg':
+      case 'google':
         service = new GoogleService()
         break
       case 'developer':
@@ -42,7 +45,7 @@ export default class Client {
     }
 
     return service.oauth(opener)
-      .then(tokens => this.reqJoin(type, tokens.access_token))
+      .then(tokens => this.reqJoin(authTypes[type], tokens.access_token))
   }
 
   developer() {
@@ -59,11 +62,13 @@ export default class Client {
     this.sock = Promise.promisifyAll(this.sock)
     logger.info('[SOCK] attempting connection')
 
-    this.sock.on('close', () => this.reconnect())
     this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
     this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
 
-    return new Promise(resolve => this.sock.on('open', resolve))
+    return new Promise(resolve => {
+      this.sock.on('open', resolve)
+      this.sock.on('close', () => resolve(this.reconnect()))
+    })
       .then(() => this.recoTime = 1)
       .tap(() => logger.info('[SOCK] connection established'))
   }
