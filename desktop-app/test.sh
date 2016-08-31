@@ -14,24 +14,32 @@ function clean {
   rm -rf $TESTDIR
 }
 
+function build {
+  echo "building..."
+ # npm run build > /dev/null && (cd ../server/; npm run build > /dev/null; cd - > /dev/null)
+}
+
 function init {
   trap 'kill $(jobs -p)' EXIT
   clean
   mkdir -p $TESTDIR
-  npm run build & (cd ../server/; npm run build; cd -)
-  ipfs daemon& 2> /dev/null
-  node $SERVER& > $TESTDIR/server.log
+  build
+  (ipfs daemon > /dev/null 2>&1)&
+  node $SERVER --logfile $TESTDIR/server.log&
+  echo "cat $TESTDIR/server.log"
   echo "starting tests on server '$SERVER_ADDR:$PORT'"
 }
 
 function test {
-  echo -n .
-  $* || echo " Failure."
+  #echo -n .
+  $*
+  return $?
 }
 
 function runcli {
   echo "running client #$CLIENT_COUNT with account developer$1"
-  node $MAIN --server $SERVER_ADDR:$PORT --developer $1 -d $TESTDIR/client$CLIENT_COUNT 2> $TESTDIR/client$CLIENT_COUNT.log&
+  echo "cat $TESTDIR/client$CLIENT_COUNT.log"
+  node $MAIN --server $SERVER_ADDR:$PORT --developer $1 -d $TESTDIR/client$CLIENT_COUNT --logfile $TESTDIR/client$CLIENT_COUNT.log&
   return $((CLIENT_COUNT++))
 }
 
@@ -96,6 +104,6 @@ function t2 {
 }
 
 init
-test t1 &&
+(test t1 &&
 #test t2 &&
-echo "test passed successfully"
+echo "test passed successfully") || echo "tests failure"
