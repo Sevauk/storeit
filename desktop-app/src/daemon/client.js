@@ -125,9 +125,9 @@ export default class Client {
     return store.getHostedChunks()
       .then(hashes => ({authType, accessToken, hosting: hashes}))
       .then(data => this.request('JOIN', data))
-      .tap(() => logger.debug('[JOIN] fetching home'))
+      .tap(() => logger.info('[JOIN] Logged in'))
       .then(params => this.recvFADD({files: [params.home]}))
-      .tap(() => logger.debug('[JOIN] home synchronized'))
+      .tap(() => logger.info('[JOIN] home synchronized'))
       .catch(err => logger.error(err))
   }
 
