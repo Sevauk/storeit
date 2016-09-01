@@ -108,7 +108,7 @@ export default class Client {
     let msg
     return new Promise((resolve, reject) => {
       this.responseHandlers[req.uid] = res => {
-        let msg = `[RESP:${res.code === 0 ? 'ok' : 'err'}] ${logger.toJson(res)}`
+        msg = `[RESP:${res.code === 0 ? 'ok' : 'err'}] ${logger.toJson(res)}`
         res.code === 0 ? resolve(res) : reject(new Error(msg))
       }
     }).tap(() => logger.debug(msg))
