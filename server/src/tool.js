@@ -18,7 +18,7 @@ map2:
   }
 */
 
-import {logger} from './common/log.js'
+import {logger} from './lib/log.js'
 
 export class TwoHashMap {
 

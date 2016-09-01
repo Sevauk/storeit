@@ -1,23 +1,10 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import * as api from './common/protocol-objects.js'
-import * as tree from './common/tree.js'
+import * as api from './lib/protocol-objects.js'
+import * as tree from './lib/tree.js'
 import * as store from './store.js'
-import {logger} from './common/log.js'
-
-let usersDir = null
-
-export const setUsersDir = (name) => {
-  usersDir = name
-  try {
-    fs.mkdirSync(name)
-  }
-  catch(e) {
-    logger.debug('userdir already there')
-  }
-}
-
-setUsersDir('storeit-users' + path.sep)
+import {logger} from './lib/log.js'
+import cmd from './main.js'
 
 export const makeBasicHome = () => {
 
@@ -29,7 +16,7 @@ export const makeBasicHome = () => {
 
 export const createUser = (email, handlerFn) => {
 
-  const userHomePath = `${usersDir}${path.sep}${email}`
+  const userHomePath = `${cmd.usrdir}${email}`
 
   const basicHome = makeBasicHome()
 
@@ -37,7 +24,7 @@ export const createUser = (email, handlerFn) => {
 }
 
 const readHome = (email, handlerFn) => {
-  fs.readFile(usersDir + email, 'utf8', (err, data) => {
+  fs.readFile(cmd.usrdir + email, 'utf8', (err, data) => {
     if (err) {
       return handlerFn(err)
     }
@@ -102,6 +89,8 @@ export class User {
   renameFile(src, dest) {
 
     let takenTree = tree.setTree(this.home, src, (treeParent, name) => {
+	if (!treeParent.files)
+		return
       const tree = treeParent.files[name]
       delete treeParent.files[name]
       return tree
@@ -173,7 +162,7 @@ export class User {
   }
 
   flushHome() {
-    fs.writeFile(usersDir + this.email, JSON.stringify(this.home, null, 2))
+    fs.writeFile(cmd.usrdir + this.email, JSON.stringify(this.home, null, 2))
   }
 }
 

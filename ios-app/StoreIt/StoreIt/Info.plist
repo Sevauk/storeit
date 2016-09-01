@@ -23,15 +23,15 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.929129451297-scre09deafvcfip9tvkefoe590uenv9l</string>
-				<string>fb272118223126605</string>
+				<string>com.googleusercontent.apps.279687106087-jljuo1c0a5lbic9lkkpau1qitr4bioum</string>
+				<string>fb615629721922275</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>FacebookAppID</key>
-	<string>272118223126605</string>
+	<string>615629721922275</string>
 	<key>FacebookDisplayName</key>
 	<string>StoreIt</string>
 	<key>LSApplicationQueriesSchemes</key>
