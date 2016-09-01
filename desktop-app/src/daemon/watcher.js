@@ -109,6 +109,6 @@ export default class Watcher {
   }
 
   isIgnored(file) {
-    this.ignoreSet.has(file)
+    return this.ignoreSet.has(file)
   }
 }

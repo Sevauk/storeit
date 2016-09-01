@@ -195,17 +195,17 @@ export default class Client {
   sendFUPT(filePath) {
     return userFile.generateTree(filePath)
       .then(file => this.request('FUPT', {files: [file]}))
-      .catch(err => logger.error('FUPT: ' + err.text))
+      .catch(err => logger.error('FUPT: ' + err))
   }
 
   sendFDEL(filePath) {
     return this.request('FDEL', {files: [filePath]})
-      .catch(err => logger.error('FDEL: ' + err.text))
+      .catch(err => logger.error('FDEL: ' + err))
   }
 
   sendFMOV(src, dst) {
     return this.request('FMOV', {src, dst})
-      .catch(err => logger.error('FMOV: ' + err.text))
+      .catch(err => logger.error('FMOV: ' + err))
   }
 
   handleFsEvent(ev) {
