@@ -149,13 +149,13 @@ export default class Client {
     }
 
     return Promise.map(params.files, (file) => {
-      logger.info(`[SYNC:start] ${file.path}`)
       this.fsWatcher.ignore(file.path)
       if (file.isDir) {
         return userFile.dirCreate(file.path)
           .then(() => this.recvFADD({files: file.files}, false))
       }
       else {
+        logger.info(`[SYNC:start] ${file.path}`)
         return userFile.exists(file.path)
           .catch(() => userFile.create(file.path, ''))
           .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
