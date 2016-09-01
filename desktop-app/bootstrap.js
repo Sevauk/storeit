@@ -2,6 +2,7 @@
  eslint-disable import/no-commonjs
 */
 const program = require('commander')
+const logger = require('./lib/log').default
 global.Promise = require('bluebird')
 
 program
@@ -11,18 +12,19 @@ program
   .option('-d, --dev', 'run in development mode')
   .parse(process.argv)
 
-let srcPath = program.dev ? './src' : './build'
+let srcPath
 
-let mainPath
-
-if (program.gui) {
-  if (program.dev) require('coffee-script/register')
-  mainPath = `${srcPath}/electron`
+if (program.dev) {
+  logger.setLevel('debug')
+  srcPath = './src'
+  require(program.gui ? 'coffee-script/register' : 'babel-register')
 }
 else {
-  if (program.dev) require('babel-register')
-  mainPath = `${srcPath}/cli`
+  logger.setLevel('info')
+  srcPath = './build'
 }
+
+const mainPath = srcPath + '/' + (program.gui ? 'electron' : 'cli')
 
 const settings = require(`${srcPath}/daemon/settings`).default
 settings.reset() // TODO
