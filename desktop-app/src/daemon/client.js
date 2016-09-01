@@ -133,13 +133,14 @@ export default class Client {
       .then(hashes => ({authType, accessToken, hosting: hashes}))
       .then(data => this.request('JOIN', data))
       .tap(() => logger.info('[JOIN] Logged in'))
-      .then(params => this.recvFADD({files: [params.home]}))
+      .then(params => this.recvFADD({parameters: {files: [params.home]}}))
       .tap(() => logger.info('[JOIN] home synchronized'))
       .tap(() => this.watch())
       .catch(err => logger.error(err))
   }
 
-  recvFADD(params, print=true) {
+  recvFADD(req, print=true) {
+    const params = req.parameters
     if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
 
     if (!params.files) return Promise.resolve()
@@ -152,7 +153,9 @@ export default class Client {
       this.fsWatcher.ignore(file.path)
       if (file.isDir) {
         return userFile.dirCreate(file.path)
-          .then(() => this.recvFADD({files: file.files}, false))
+          .tap(() => logger.info(`[DIR-SYNC] ${file.path}`))
+          .then(() => this.recvFADD({parameters: {files: file.files}}, false))
+          .tap(() => logger.info(`[DIR-SYNC:end] ${file.path} `))
       }
       else {
         logger.info(`[SYNC:start] ${file.path}`)
@@ -169,28 +172,28 @@ export default class Client {
     })
   }
 
-  recvFUPT(params) {
-    logger.debug(`[RECV:FUPT] ${logger.toJson(params)}`)
-    return this.recvFADD(params, false)
+  recvFUPT(req) {
+    logger.debug(`[RECV:FUPT] ${logger.toJson(req)}`)
+    return this.recvFADD(req, false)
   }
 
-  recvFDEL(params) {
-    logger.debug(`[RECV:FDEL] ${logger.toJson(params)}`)
+  recvFDEL(req) {
+    logger.debug(`[RECV:FDEL] ${logger.toJson(req)}`)
     return Promise
-      .map(params.files, file => userFile.del(file))
+      .map(req.parameters.files, file => userFile.del(file))
       .each(file => logger.debug(`removed file ${file.path}`))
   }
 
-  recvFMOV(params) {
-    logger.debug(`[RECV:FMOV] ${logger.toJson(params)}`)
-    return userFile.move(params.src, params.dest)
+  recvFMOV(req) {
+    logger.debug(`[RECV:FMOV] ${logger.toJson(req)}`)
+    return userFile.move(req.parameters.src, req.parameters.dest)
       .tap(file => logger.debug(`moved file ${file.src} to ${file.dst}`))
   }
 
-  recvFSTR(params) {
-    logger.debug(`[RECV:FSTR] ${logger.toJson(params)}`)
-    return store.FSTR(this.ipfs, params.hash, params.keep)
-      .then(() => this.success())
+  recvFSTR(req) {
+    logger.debug(`[RECV:FSTR] ${logger.toJson(req)}`)
+    return store.FSTR(this.ipfs, req.parameters.hash, req.parameters.keep)
+      .then(() => this.success(req.uid))
       .catch(err => logger.error('FSTR: ' + err))
   }
 
