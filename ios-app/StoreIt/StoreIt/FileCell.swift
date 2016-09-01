@@ -9,6 +9,6 @@
 import UIKit
 
 class FillCell: UITableViewCell {
-    
+    @IBOutlet weak var contextualMenu: UIButton!
     @IBOutlet weak var itemName: UILabel!
 }

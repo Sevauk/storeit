@@ -1,17 +1,17 @@
 import 'angular-material/angular-material.css!'
 
 import angular from 'angular'
+import 'angular-ui-router'
 import 'angular-animate'
 import 'angular-aria'
 import 'angular-material'
-import 'ngComponentRouter'
 
 import constants from './app/core/constants.js'
 import app from './app/app.js'
 
 let coreConfig = ($locationProvider) => {
   'ngInject'
-  $locationProvider.html5Mode(false) // TODO
+  $locationProvider.html5Mode(true)
 }
 
 let run = ($rootScope) => {
@@ -21,7 +21,7 @@ let run = ($rootScope) => {
 }
 
 const DEPENDENCIES = [
-  'ngComponentRouter',
+  'ui.router',
   'ngMaterial',
   constants,
   app

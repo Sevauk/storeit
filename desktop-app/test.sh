@@ -16,7 +16,7 @@ function clean {
 
 function build {
   echo "building..."
- # npm run build > /dev/null && (cd ../server/; npm run build > /dev/null; cd - > /dev/null)
+  npm run build > /dev/null && (cd ../server/; npm run build > /dev/null; cd - > /dev/null)
 }
 
 function init {

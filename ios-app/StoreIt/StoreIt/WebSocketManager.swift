@@ -16,10 +16,108 @@ class WebSocketManager {
     let ws: WebSocket
     let navigationManager: NavigationManager
     
-    init(host: String, port: Int, navigationManager: NavigationManager) {
+    var uidFactory: UidFactory
+    
+    init(host: String, port: Int, uidFactory: UidFactory, navigationManager: NavigationManager) {
         self.url = NSURL(string: "ws://\(host):\(port)/")!
         self.ws = WebSocket(url: url)
         self.navigationManager = navigationManager
+        self.uidFactory = uidFactory
+    }
+    
+    private func closeMoveToolbar() {
+        self.navigationManager.moveToolBar?.hidden = true
+    }
+    
+    private func updateList() {
+        if let list = self.navigationManager.list {
+            dispatch_async(dispatch_get_main_queue()) {
+                list.reloadData()
+            }
+        }
+    }
+    
+    private func removeRowAtIndex(index: Int) {
+        if let list = self.navigationManager.list {
+            let indexPath = NSIndexPath(forRow: index, inSection: 0)
+            list.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+			list.reloadData()
+        }
+    }
+    
+    private func deletePaths(paths: [String]) {
+        for path in paths {
+            let updateElement = UpdateElement(path: path)
+                        
+            let index = self.navigationManager.updateTree(updateElement)
+            
+            if (index != -1) {
+                self.removeRowAtIndex(index)
+            }
+        }
+    }
+    
+    private func isRenaming(src: String, dest: String) -> Bool {
+        // Drop file name to compare path (if the path is the same, it's only a rename)
+        let srcComponents = src.componentsSeparatedByString("/").dropLast()
+        let destComponents = dest.componentsSeparatedByString("/").dropLast()
+
+        if (srcComponents == destComponents) {
+            return true
+        }
+        
+        return false
+    }
+    
+    private func renameFile(src: String, dest: String) {
+        let updateElementForRename = UpdateElement(src: src, dest: dest)
+
+        let index = self.navigationManager.updateTree(updateElementForRename)
+        
+        if (index != -1) {
+            self.updateList()
+        }
+    }
+    
+    private func moveFile(src: String, file: File) {
+        let updateElementForDeletion = UpdateElement(path: src)
+        let updateElementForAddition = UpdateElement(file: file)
+        
+        let index = self.navigationManager.updateTree(updateElementForDeletion)
+        let index_2 = self.navigationManager.updateTree(updateElementForAddition)
+        
+        self.navigationManager.movingOptions = MovingOptions()
+        
+        self.closeMoveToolbar()
+        
+        if (index != -1 || index_2 != -1) {
+            self.updateList()
+        }
+    }
+
+    private func addFiles(files: [File]) {
+        for file in files {
+            let updateElement = UpdateElement(file: file)
+
+            let index = self.navigationManager.updateTree(updateElement)
+            
+            if (index != -1) {
+                self.updateList()
+            }
+        }
+    }
+    
+    private func updateFiles(files: [File]) {
+        for file in files {
+            if (file.IPFSHash != "") {
+                let updateElement = UpdateElement(property: Property.IPFSHash, file: file)
+                self.navigationManager.updateTree(updateElement)
+            }
+            if (file.metadata != "") {
+                let updateElement = UpdateElement(property: Property.Metadata, file: file)
+                self.navigationManager.updateTree(updateElement)
+            }
+        }
     }
     
     func eventsInitializer(loginFunction: () -> Void, logoutFunction: () -> Void) {
@@ -32,40 +130,142 @@ class WebSocketManager {
         	print("[Client.WebSocketManager] Websocket is disconnected from \(self.url) with error: \(error?.localizedDescription)")
             logoutFunction()
         }
-                
+
         self.ws.onText = { (request: String) in
             print("[Client.WebSocketManager] Client recieved a request : \(request)")
 
-            let command: ResponseResolver? = Mapper<ResponseResolver>().map(request)
+            let cmdInfos = CommandInfos()
             
-            // Server has responded
-            if (command?.command == "RESP") {
-                let response: Response? = Mapper<Response>().map(request)
-               
-                // TODO: structure with different response texts
-                if (response?.text == "welcome") {
-                    let home: File? = response?.parameters!["home"]
-                    self.navigationManager.setItems((home?.files)!)
-                    self.updateListView()
-                }
-            }
-            
-            // Server sent a command (FADD, FUPT, FDEL)
-            else if (command != nil && CommandInfos().SERVER_TO_CLIENT_CMD.contains(command!.command)) {
-                if (command!.command == "FDEL") {
-                	let _: Command? = Mapper<Command<FdelParameters>>().map(request)
+            if let command: ResponseResolver = Mapper<ResponseResolver>().map(request) {
+                if (command.command == cmdInfos.RESP) {
+                    
+                    // SEREVR HAS RESPONDED
+                    if let response: Response = Mapper<Response>().map(request) {
+                        
+                        // JOIN RESPONSE
+                        if (response.text == cmdInfos.JOIN_RESPONSE_TEXT) {
+                            if let params = response.parameters {
+                                let home: File? = params["home"]
+                                
+                                if let files = home?.files {
+                                    self.navigationManager.setItems(files)
+                                    self.updateList()
+                                }
+                            }
+                        }
+                            
+                        // SUCCESS CMD RESPONSE
+                        else if (response.text == cmdInfos.SUCCESS_TEXT) {
+                            let uid = response.commandUid
 
-                } else if (command!.command == "FMOV") {
-                    let _: Command? = Mapper<Command<FmovParameters>>().map(request)
-                } else {
-                    let _: Command? = Mapper<Command<DefaultParameters>>().map(request)
+                            if (self.uidFactory.isWaitingForReponse(uid)) {
+                                
+                                let commandType = self.uidFactory.getCommandNameForUid(uid)
+
+                                // FADD
+                                if (commandType == cmdInfos.FADD) {
+                                    let files = self.uidFactory.getObjectForUid(uid) as! [File]
+                                    
+                                	self.addFiles(files)
+                                }
+                                // FDEL
+                                else if (commandType == cmdInfos.FDEL) {
+                                	let paths = self.uidFactory.getObjectForUid(uid) as! [String]
+                                    
+                                	self.deletePaths(paths)
+                                }
+                                
+                                // FMOVE
+                                else if (commandType == cmdInfos.FMOV) {
+                                	let movingOptions = self.uidFactory.getObjectForUid(uid) as! MovingOptions
+
+                                    if (movingOptions.isMoving) {
+                                        self.moveFile(movingOptions.src!, file: movingOptions.file!)
+                                    } else {
+                                    	self.renameFile(movingOptions.src!, dest: movingOptions.dest!)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // ERROR CMD RESPONSE
+                        // TODO
+                    }
+                }
+                    
+                // Server has sent a command (FADD, FUPT, FDEL, FUPT)
+                else if (cmdInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
+                    
+                    // FDEL
+                    if (command.command == cmdInfos.FDEL) {
+                        let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(request)
+                        
+                        if let cmd = fdelCmd {
+                            if let paths = cmd.parameters?.files {
+                                self.deletePaths(paths)
+                            }
+                        }
+                    }
+                    
+                    // FMOV
+                    else if (command.command == cmdInfos.FMOV) {
+                        let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(request)
+
+                        if let cmd = fmovCmd {
+                            if let parameters = cmd.parameters {
+                                if (self.isRenaming(parameters.src, dest: parameters.dest)) {
+                                    self.renameFile(parameters.src, dest: parameters.dest)
+                                } else {
+                                    if let file = self.navigationManager.getFileObjByPath(parameters.src) {
+                                        file.path = parameters.dest
+                                        self.moveFile(parameters.src, file: file)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                        
+                    else if (command.command == cmdInfos.FSTR) {
+                        // TODO
+                    }
+                    
+                    // FADD / FUPT
+                    else {
+                        let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(request)
+                        
+                        if let files = defaultCmd?.parameters?.files {
+                            if (command.command == cmdInfos.FADD) {
+                            	self.addFiles(files)
+                            } else if (command.command == cmdInfos.FUPT) {
+                                self.updateFiles(files)
+                            }
+                        }
+                    }
+                    
+                    // TODO: Respond to server with response depending of the success of the update in the tree
+                    var response: Response?
+                    var jsonResponse: String?
+                    
+                    if (command.command == cmdInfos.FSTR) {
+                        response = ErrorResponse(code: cmdInfos.NOT_IMPLEMENTED.0, text: cmdInfos.NOT_IMPLEMENTED.1, commandUid: command.uid)
+                    } else {
+                        response = SuccessResponse(commandUid: command.uid)
+                    }
+                    
+                    if let unwrapResp = response {
+                        jsonResponse = Mapper().toJSONString(unwrapResp)
+                        if let response = jsonResponse {
+                            self.sendRequest(response, completion: nil)
+                        }
+                    }
+                }
+                    
+                // We don't know what the server wants
+                else {
+                    print("[Client.Client.WebSocketManager] Request cannot be processed")
                 }
             }
-                
-            // We don't know what the server wants
-            else {
-                print("[Client.Client.WebSocketManager] Request cannot be processed")
-            }
+            
         }
         
         self.ws.onData = { (data: NSData) in
@@ -73,19 +273,6 @@ class WebSocketManager {
         }
         
         self.ws.connect()
-    }
-    
-    func updateListView() {
-        // TODO: find a maybe better way to get StoreItSynchDirectoryView
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        let mainNavigationController = appDelegate.window?.rootViewController as! UINavigationController
-        let tabBarController = mainNavigationController.viewControllers[1] as! UITabBarController
-        let navigationController = tabBarController.viewControllers![0] as! UINavigationController
-        let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
-
-        dispatch_async(dispatch_get_main_queue()) {
-            listView.list!.reloadData()
-        }
     }
     
     func sendRequest(request: String, completion: (() -> ())?) {

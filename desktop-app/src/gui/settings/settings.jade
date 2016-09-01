@@ -1,0 +1,20 @@
+#config
+  h1 Configuration Panel
+  hr
+  
+  form(role="form")
+    .form-group
+      label(for="storeit-dir") Synced Directory Path
+      input#storeit-dir.form-control(type="text")
+    .form-group
+      label(for="storeit-space") Allocated space
+      .input-group
+        input#storeit-space.form-control(type="number")
+        .input-group-addon MB
+    .form-group
+      label(for="storeit-bandwidth") Bandwidth restriction (0 for unlimited)
+      .input-group
+        input#storeit-bandwidth.form-control(type="number")
+        .input-group-addon kB/s
+    button#storeit-validate.btn.btn-primary(type="submit") Save
+    button#storeit-reset.btn.btn-primary Restore defaults

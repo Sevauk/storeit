@@ -13,13 +13,14 @@ class OAuth2Google : OAuth2 {
     
     private let oauth2: OAuth2CodeGrant
     
+    // TODO: do not stock ids like this !
     init() {
         self.oauth2 = OAuth2CodeGrant(settings: [
-                "client_id": "929129451297-scre09deafvcfip9tvkefoe590uenv9l.apps.googleusercontent.com",
+                "client_id": "279687106087-jljuo1c0a5lbic9lkkpau1qitr4bioum.apps.googleusercontent.com",
                 "authorize_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://www.googleapis.com/oauth2/v3/token",
                 "scope": "profile email",
-                "redirect_uris": ["com.googleusercontent.apps.929129451297-scre09deafvcfip9tvkefoe590uenv9l:/oauth-storeit"],
+                "redirect_uris": ["com.googleusercontent.apps.279687106087-jljuo1c0a5lbic9lkkpau1qitr4bioum:/oauth-storeit"],
             ])
         onFailureOrAuthorizeAddEvents()
     }
