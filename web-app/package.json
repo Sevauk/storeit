@@ -3,7 +3,8 @@
   "main": "server.js",
   "scripts": {
     "build": "gulp build",
-    "start": "concurrently -r -k \"npm run serve\" \"npm run watch\"",
+    "start": "npm run build:lib && concurrently -r -k \"npm run serve\" \"npm run watch\"",
+    "build:lib": "babel ../lib/js/src -s -d ./lib",
     "test": "echo 'to do' && exit 1",
     "watch": "gulp watch",
     "serve": "jspm run server.js",

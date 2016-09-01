@@ -1,5 +1,5 @@
 md-content.content(flex layout-align="center center")
-  #login(flex layout="column" layout-align="center center")
+  #login(flex layout="column" layout-align="0 center")
     md-button.md-raised.login-facebook(
       layout="row" layout-align="center center"
       ng-click="vm.oauth('facebook')"
@@ -11,3 +11,13 @@ md-content.content(flex layout-align="center center")
       ng-click="vm.oauth('google')"
     )
       | Login with Google
+    md-button.md-raised.login-storeit(
+      layout="row" layout-align="center center"
+    )
+      | Login with StoreIt
+    hr
+    md-button.md-raised.login-dev(
+      layout="row" layout-align="center center"
+      ng-click="vm.developer()"
+    )
+      | Login as Developer

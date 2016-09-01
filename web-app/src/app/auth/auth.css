@@ -4,10 +4,18 @@
   width: 500px;
 }
 
-#login .login-facebook {
-  background-color: #3F5C9A;
+.login-facebook {
+  background-color: #3F5C9A !important;
 }
 
-#login .login-google {
-  background-color: #DB4437;
+.login-google {
+  background-color: #DB4437 !important;
+}
+
+.login-storeit {
+  background-color: #79B1C2 !important;
+}
+
+.login-dev {
+  background-color: #b7b7b7 !important;
 }
