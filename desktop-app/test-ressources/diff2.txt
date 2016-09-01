@@ -1,0 +1,56 @@
+/tmp/storeit-test
+├── client0
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client0.log
+├── client1
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client1.log
+├── client2
+│   └── readme.txt
+├── client2.log
+├── client3
+│   └── readme.txt
+├── client3.log
+├── client4
+│   └── readme.txt
+├── client4.log
+├── client5
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client5.log
+├── client6
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client6.log
+├── client7
+│   ├── hi.txt
+│   ├── pic
+│   ├── readme.txt
+│   └── renamed.png
+├── client7.log
+├── client8
+│   └── readme.txt
+├── client8.log
+├── client9
+│   └── readme.txt
+├── client9.log
+├── diff.txt
+├── server.log
+└── userdata
+    ├── adrien.morel1@me.com
+    ├── adrien.morel2@me.com
+    ├── adrien.morel3@me.com
+    ├── adrien.morel4@me.com
+    └── adrien.morel5@me.com
+
+16 directories, 37 files
