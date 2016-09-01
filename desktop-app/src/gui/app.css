@@ -1,0 +1,40 @@
+html, body {
+  height: 100%;
+}
+
+#header {
+  height: 10%;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  text-align: center;
+}
+
+#header .logo {
+  height: 100%;
+}
+
+h1 {
+  font-size: 29px;
+  margin-top: 10px !important;
+}
+
+#container {
+  margin: 0 auto;
+  width: 70%;
+}
+
+#container hr {
+  border-color: #a2a0a0;
+}
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+input, button, textarea, :focus {
+    outline: none; // You should add some other style for :focus to help UX/a11y
+}

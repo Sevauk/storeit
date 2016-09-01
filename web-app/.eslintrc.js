@@ -56,7 +56,7 @@ module.exports = {
     'brace-style': ['warn', 'stroustrup'],
     'camelcase': ['warn', {'properties': 'always'}],
     'func-style': ['warn', 'expression', {'allowArrowFunctions': true}],
-    'indent': ['warn', 2],
+    'indent': ['warn', 2, { "SwitchCase": 1 }],
     'no-mixed-spaces-and-tabs': ['error', 'smart-tabs'],
     'no-spaced-func': ['warn'],
     'object-curly-spacing': ['error', 'never'],
