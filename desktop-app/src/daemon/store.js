@@ -30,7 +30,8 @@ const FSTR = (ipfs, hash, keep) => {
   return new Promise((resolve) => {
 
     if (!keep) {
-      ipfs.rm(hash)
+      if (ipfs.rm != null)
+        ipfs.rm(hash) // QUICK FIX, FIXME
       return resolve()
     }
 

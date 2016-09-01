@@ -40,16 +40,18 @@ export default class Client {
         return this.login()
     }
 
+    logger.info(`[AUTH] login with ${type} OAuth`)
     return service.oauth(opener)
       .then(tokens => this.reqJoin(authTypes[type], tokens.access_token))
   }
 
   developer() {
+    logger.info('[AUTH] login as developer')
     return this.reqJoin('gg', 'developer')
   }
 
   login() {
-    throw new Error('StoreIt auth not implemented yet') // TODO
+    throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
   }
 
   connect() {
@@ -82,27 +84,16 @@ export default class Client {
     else handler = this[`recv${res.command}`] // set to default handler
 
     if (handler != null) handler.call(this, res)
-    else logger.error(`[PROTO] unhandled response: ${JSON.stringify(res)}`)
+    else logger.error(`[RESPONSE:orphan] ${logger.toJson(res)}`)
   }
 
-  waitResponse(req) {
-    let msg = `[PROTO] request ${JSON.stringify(req)} failed`
-
-    return new Promise((resolve, reject) =>
-      this.responseHandlers[req.uid] = (res) =>
-        res.code === 0 ? resolve(res) : reject(new Error(msg))
-    )
-      .tap(res => this.recvRESP(res))
-      .then(res => res.parameters)
-  }
-
-  send(data) {
-    logger.info(`[PROTO] sending data ${JSON.stringify(data)}`)
+  send(data, type='') {
+    logger.debug(`[SEND:${type}] ${logger.toJson(data)}`)
     return this.sock.sendAsync(JSON.stringify(data))
   }
 
   response(uid, msg='', code=0) {
-    return this.send(new Response(code, msg, uid))
+    return this.send(new Response(code, msg, uid), 'response')
   }
 
   success(uid, msg='') {
@@ -113,23 +104,35 @@ export default class Client {
     return this.response(uid, msg, code)
   }
 
+  waitResponse(req) {
+    let msg
+    return new Promise((resolve, reject) => {
+      this.responseHandlers[req.uid] = res => {
+        let msg = `[RESP:${res.code === 0 ? 'ok' : 'err'}] ${logger.toJson(res)}`
+        res.code === 0 ? resolve(res) : reject(new Error(msg))
+      }
+    }).tap(() => logger.debug(msg))
+  }
+
   request(req, params) {
     let data = new Command(req, params)
-    return this.send(data)
+    return this.send(data, 'request')
       .then(() => this.waitResponse(data))
+      .then(res => res.parameters)
   }
 
   reqJoin(authType, accessToken) {
     return store.getHostedChunks()
       .then(hashes => ({authType, accessToken, hosting: hashes}))
       .then(data => this.request('JOIN', data))
+      .tap(() => logger.debug('[JOIN] fetching home'))
       .then(params => this.recvFADD({files: [params.home]}))
-      .then(() => logger.info('[PROTO] home loaded'))
+      .tap(() => logger.debug('[JOIN] home synchronized'))
       .catch(err => logger.error(err))
   }
 
-  recvFADD(params, log=true) {
-    if (log) logger.info(`[PROTO] received FADD => ${JSON.stringify(params)}`)
+  recvFADD(params, print=true) {
+    if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
 
     if (!params.files) return Promise.resolve()
 
@@ -138,48 +141,46 @@ export default class Client {
     }
 
     return Promise.map(params.files, (file) => {
+      logger.info(`[SYNC:start] ${file.path}`)
       this.fsWatcher.ignore(file.path)
       if (file.isDir) {
         return userFile.dirCreate(file.path)
           .then(() => this.recvFADD({files: file.files}, false))
       }
       else {
-        const {path, IPFSHash} = file
         return userFile.exists(file.path)
-          .catch(() => userFile.create(path, ''))
-          .then(() => this.ipfs.isInStore(path, IPFSHash))
-          .then((stored) => !stored ? this.ipfs.download(path, IPFSHash) : 0)
+          .catch(() => userFile.create(file.path, ''))
+          .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
+          .then(isInStore => {
+            if (!isInStore) return this.ipfs.download(file.path, file.IPFSHash)
+            logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
+          })
           .catch(logger.error)
           .finally(() => this.fsWatcher.unignore(file.path))
       }
     })
   }
 
-  recvRESP(res) {
-    const status = res.code === 0 ? 'successful' : 'failure'
-    logger.info(`[PROTO] received ${status} ${res.code} response`)
-  }
-
   recvFUPT(params) {
-    logger.info(`[PROTO] received FUPT => ${JSON.stringify(params)}`)
+    logger.debug(`[RECV:FUPT] ${logger.toJson(params)}`)
     return this.recvFADD(params, false)
   }
 
   recvFDEL(params) {
-    logger.info(`[PROTO] received FDEL => ${JSON.stringify(params)}`)
+    logger.debug(`[RECV:FDEL] ${logger.toJson(params)}`)
     return Promise
       .map(params.files, file => userFile.del(file))
-      .each(file => logger.info(`removed file ${file.path}`))
+      .each(file => logger.debug(`removed file ${file.path}`))
   }
 
   recvFMOV(params) {
-    logger.info(`[PROTO] received FMOV => ${JSON.stringify(params)}`)
+    logger.info(`[RECV:FMOV] ${logger.toJson(params)}`)
     return userFile.move(params.src, params.dest)
-      .then(file => logger.info(`moved file ${file.src} to ${file.dst}`))
+      .tap(file => logger.debug(`moved file ${file.src} to ${file.dst}`))
   }
 
   recvFSTR(params) {
-    logger.info(`[PROTO] received FSTR => ${JSON.stringify(params)}`)
+    logger.info(`[RECV:FSTR] ${logger.toJson(params)}`)
     return store.FSTR(this.ipfs, params.hash, params.keep)
       .then(() => this.success())
       .catch(err => logger.error('FSTR: ' + err))
@@ -187,7 +188,7 @@ export default class Client {
 
   sendFADD(filePath) {
     return userFile.generateTree(filePath)
-      .then(file => this.request('FADD', {files: [file]}))
+      .then(files => this.request('FADD', {files: [files]}))
       .catch(err => logger.error('FADD: ' + err))
   }
 
@@ -198,7 +199,7 @@ export default class Client {
   }
 
   sendFDEL(filePath) {
-    return this.request('FDEL', {files: [userFile.storePath(filePath)]})
+    return this.request('FDEL', {files: [filePath]})
       .catch(err => logger.error('FDEL: ' + err.text))
   }
 
@@ -211,8 +212,9 @@ export default class Client {
     let handler = this[`send${ev.type}`]
     if (handler) {
       handler.call(this, ev.path).catch(logger.error)
+      return true
     }
-    else logger.warn(`[FileWatcher] unhandled event ${ev}`)
+    return false
   }
 
   reloadSettings() {

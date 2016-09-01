@@ -18,7 +18,7 @@ class IPFSNode {
     this.node = ipfs(`/ip4/${IPFS_ADDR}/tcp/${IPFS_PORT}`)
 
     return this.ready()
-      .tap(() => logger.info('[IPFS] connected'))
+      .tap(() => logger.info('[IPFS] node connected'))
       .then(() => this.recoTime = 1)
       .catch(() => this.reconnect())
   }
@@ -35,31 +35,31 @@ class IPFSNode {
     return this.node.id()
   }
 
-  isInStore(filePath, ipfsHash) {
-    return this.add(filePath)
-      .then(hash => hash[0].Hash === ipfsHash)
-  }
-
   download(filePath, ipfsHash) {
-    logger.info(`[DL] file: ${filePath} [${ipfsHash}]`)
+    logger.info(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
     return this.get(ipfsHash)
       .then(buf => userFile.create(filePath, buf))
       .delay(500)  // QUCIK FIX, FIXME
       .then(() => this.add(filePath))
-      .tap(() => logger.info(`[DL:COMPLETE] file: ${filePath} [${ipfsHash}]`))
+      .tap(() => logger.info(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
+  }
+
+  getFileHash(filePath) {
+    return this.add(filePath).then(res => res[0].Hash)
+  }
+
+  hashMatch(filePath, ipfsHash) {
+    return this.add(filePath)
+      .then(hash => hash[0].Hash === ipfsHash)
   }
 
   add(filePath) {
     return this.ready()
       .then(() => this.node.add(userFile.absolutePath(filePath)))
       .catch(() => this.reconnect().then(() => {
-        logger.error(`[IPFS] ${filePath} sync failed. Retrying`)
+        logger.error(`[SYNC:fail] file: ${filePath}. Retrying`)
         return this.add(filePath)
       }))
-  }
-
-  getFileHash(filePath) {
-    return this.add(filePath).then(res => res[0].Hash)
   }
 
   get(hash) {
@@ -83,6 +83,8 @@ class IPFSNode {
 export const createNode = () => {
   if (singleton == null)
     singleton = new IPFSNode
+  else
+    logger.warn('[IPFS] node already created')
   return singleton
 }
 export const getFileHash = filePath => {

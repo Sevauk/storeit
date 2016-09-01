@@ -1,15 +1,11 @@
-import * as path from 'path'
-
 import chokidar from 'chokidar'
 
 import logger from '../../lib/log'
-import settings from './settings'
-
-const STORE_NAME = '.storeit'
+import userFile from './user-file'
 
 export class EventType {
   constructor(type, path, stats={}) {
-    this.path = path
+    this.path = userFile.storePath(path)
     this.meta = stats
     switch (type) {
       case 'add':
@@ -43,10 +39,19 @@ export class EventType {
         })
         break
       default:
-        throw new Error('Unexpected error occured')
+        throw new Error('[WATCH] EventType: Unexpected error occured')
     }
   }
 }
+
+const OS_GENERATED = [
+  /.DS_Store$/,
+  /.DS_Store?$/,
+  /.Spotlight-V100$/,
+  /.Trashes$/,
+  /ehthumbs.db$/,
+  /Thumbs.d$/,
+]
 
 export default class Watcher {
   constructor(dirPath) {
@@ -55,14 +60,13 @@ export default class Watcher {
 
     this.watcher = chokidar.watch(dirPath, {
       persistent: true,
-      ignored: `.${STORE_NAME}`
+      ignored: [...OS_GENERATED]
     })
 
-    this.watcher.on('error', error =>
-      logger.error(`[FileWatcher] Error: ${error}`))
+    this.watcher.on('error', error => logger.error(`[WATCH] Error: ${error}`))
 
     this.watcher.on('ready', () => {
-      logger.info('[FileWatcher]Initial scan complete. Ready for changes')
+      logger.info('[WATCH] Initial scan complete. Ready for changes')
       this.watcher
         .on('add', (path, stats) => this.listener('add', path, stats))
         .on('change', (path, stats) => this.listener('change', path, stats))
@@ -76,26 +80,19 @@ export default class Watcher {
   listener(evType, path, stats) {
     let ev = new EventType(evType, path, stats)
 
-    if (!ev.type) {
-      logger.error(`[FileWatcher] event type ${ev.type} is undefined ` + ev)
-      return null
+    if (!this.ignoreEvent(ev) && this.handler != null) {
+      logger.debug(`[WATCH] emitting ${logger.toJson(ev)}`)
+      if (!this.handler(ev)) {
+        logger.error(`[WATCH] unhandled event ${ev}`)
+      }
     }
-    logger.debug(`[FileWatcher] ${JSON.stringify(ev)} ${ev.fileKind} ${path}`)
-
-    if (!this.ignoreEvent(ev)) {
-      return this.handler(ev)
-    }
-    return null
   }
 
   ignoreEvent(ev) {
-    const fPath = '/' + path.relative(settings.getStoreDir(), ev.path)
-
     if (ev.type === 'FDEL')
-      return false
+      return false // @Sevauk: ?
 
-    return this.isIgnored(fPath)
-      || ev.path.indexOf('.DS_Store') >= 0 // QUICKFIX FIXME
+    return this.isIgnored(ev.path)
   }
 
   setEventHandler(listener) {
@@ -104,8 +101,7 @@ export default class Watcher {
 
   ignore(file) {
     this.ignoreSet.add(file)
-    Promise.delay(20000000)
-      .then(() => this.unignore(file))
+    Promise.delay(20000000).then(() => this.unignore(file))
   }
 
   unignore(file) {

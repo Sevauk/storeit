@@ -3,7 +3,6 @@ import * as path from 'path'
 
 import del from 'del'
 
-import logger from '../../lib/log.js'
 import {FileObj} from '../../lib/protocol-objects.js'
 import * as ipfs from './ipfs'
 import settings from './settings'
@@ -14,22 +13,18 @@ const storePath = (p) => '/' + path.relative(settings.getStoreDir(), p)
 const absolutePath = (filePath) => path.join(settings.getStoreDir(), filePath)
 
 const dirCreate = (dirPath) => {
-  const eachDir = dirPath.split(path.sep)
   let currPath = settings.getStoreDir()
 
-  return Promise.map(eachDir, (dir) => {
+  return Promise.map(dirPath.split(path.sep), (dir) => {
     currPath = path.join(currPath, dir)
-    return fs.mkdirAsync(currPath)
-      .catch((err) => {
-        if (err.code !== 'EEXIST') throw err
-      })
-  })
-    .then(() => ({path: dirPath, isDir: true}))
+    return fs.mkdirAsync(currPath).catch((err) => {
+      if (err.code !== 'EEXIST') throw err
+    })
+  }).then(() => ({path: dirPath, isDir: true}))
 }
 
 const fileCreate = (filePath, data) => {
   const fsPath = absolutePath(filePath)
-  logger.debug('filePath', filePath)
   return dirCreate(path.dirname(filePath))
     .then(() => fs.writeFileAsync(fsPath, data))
     .then(() => ({path: filePath, data}))
@@ -38,25 +33,24 @@ const fileCreate = (filePath, data) => {
 const fileExists = (filePath) =>
   fs.accessAsync(absolutePath(filePath), fs.constants.F_OK)
 
-const fileDelete = (filePath) => del(absolutePath(filePath))
+const fileDelete = (filePath) => del(absolutePath(filePath), {force: true})
+  .then(() => ({path: filePath}))
 
 const fileMove = (src, dst) =>
   fs.renameAsync(absolutePath(src), absolutePath(dst))
     .then(() => ({src, dst}))
 
 const generateTree = (filePath) => {
-  const objPath = storePath(filePath)
-  logger.debug('path:', filePath)
-  logger.debug('storePath:', objPath)
-  return fs.statAsync(filePath)
-    .then((stat) => {
+  const absPath = absolutePath(filePath)
+  return fs.statAsync(absPath)
+    .then(stat => {
       if (stat.isDirectory()) {
-        return fs.readdirAsync(filePath)
+        return fs.readdirAsync(absPath)
           .map(file => generateTree(path.join(filePath, file)))
-          .then(files => new FileObj(objPath, null, files))
+          .then(files => new FileObj(filePath, null, files))
       }
-      return ipfs.getFileHash(objPath)
-        .then(hash => new FileObj(objPath, hash))
+      return ipfs.getFileHash(filePath)
+        .then(hash => new FileObj(filePath, hash))
     })
 }
 
