@@ -89,6 +89,8 @@ export class User {
   renameFile(src, dest) {
 
     let takenTree = tree.setTree(this.home, src, (treeParent, name) => {
+	if (!treeParent.files)
+		return
       const tree = treeParent.files[name]
       delete treeParent.files[name]
       return tree
