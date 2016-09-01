@@ -80,12 +80,14 @@ export default class Watcher {
   listener(evType, path, stats) {
     let ev = new EventType(evType, path, stats)
 
-    if (!this.ignoreEvent(ev) && this.handler != null) {
-      logger.debug(`[WATCH] emitting ${logger.toJson(ev)}`)
-      if (!this.handler(ev)) {
+    if (!this.ignoreEvent(ev)) {
+      if (!this.handler(ev) || this.handler == null) {
         logger.error(`[WATCH] unhandled event ${ev}`)
       }
     }
+    // else {
+    //   logger.debug(`[WATCH] ignored event: ${logger.toJson(ev)}`)
+    // }
   }
 
   ignoreEvent(ev) {

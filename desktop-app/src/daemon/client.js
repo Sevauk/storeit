@@ -22,7 +22,6 @@ export default class Client {
     this.responseHandlers = {} // custom server response handlers
     this.ipfs = ipfs.createNode()
     this.fsWatcher = new Watcher(settings.getStoreDir())
-    this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
   }
 
   auth(type, opener) {
@@ -78,6 +77,14 @@ export default class Client {
     return done
   }
 
+  watch() {
+    this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
+  }
+
+  unwatch() {
+    this.fsWatcher.setEventHandler(null)
+  }
+
   manageResponse(res) {
     let handler = this.responseHandlers[res.commandUid]
     if (handler != null) delete this.responseHandlers[res.commandUid]
@@ -128,6 +135,7 @@ export default class Client {
       .tap(() => logger.info('[JOIN] Logged in'))
       .then(params => this.recvFADD({files: [params.home]}))
       .tap(() => logger.info('[JOIN] home synchronized'))
+      .tap(() => this.watch())
       .catch(err => logger.error(err))
   }
 
@@ -174,13 +182,13 @@ export default class Client {
   }
 
   recvFMOV(params) {
-    logger.info(`[RECV:FMOV] ${logger.toJson(params)}`)
+    logger.debug(`[RECV:FMOV] ${logger.toJson(params)}`)
     return userFile.move(params.src, params.dest)
       .tap(file => logger.debug(`moved file ${file.src} to ${file.dst}`))
   }
 
   recvFSTR(params) {
-    logger.info(`[RECV:FSTR] ${logger.toJson(params)}`)
+    logger.debug(`[RECV:FSTR] ${logger.toJson(params)}`)
     return store.FSTR(this.ipfs, params.hash, params.keep)
       .then(() => this.success())
       .catch(err => logger.error('FSTR: ' + err))
