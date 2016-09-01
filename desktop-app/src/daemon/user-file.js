@@ -4,13 +4,17 @@ import * as path from 'path'
 import del from 'del'
 
 import {FileObj} from '../../lib/protocol-objects.js'
-import * as ipfs from './ipfs'
+import {getFileHash} from './ipfs'
 import settings from './settings'
 
 Promise.promisifyAll(fs)
 
-const storePath = (p) => '/' + path.relative(settings.getStoreDir(), p)
-const absolutePath = (filePath) => path.join(settings.getStoreDir(), filePath)
+const storePath = p => '/' + path.relative(settings.getStoreDir(), p)
+const absolutePath = p => path.join(settings.getStoreDir(), p)
+const chunkPath = hash => {
+  let absPath = path.join(settings.getHostDir(), hash)
+  return storePath(absPath)
+}
 
 const dirCreate = (dirPath) => {
   let currPath = settings.getStoreDir()
@@ -49,18 +53,22 @@ const generateTree = (filePath) => {
           .map(file => generateTree(path.join(filePath, file)))
           .then(files => new FileObj(filePath, null, files))
       }
-      return ipfs.getFileHash(filePath)
+      return getFileHash(filePath)
         .then(hash => new FileObj(filePath, hash))
     })
 }
 
+const getHostedChunks = () => fs.readdirAsync(settings.getHostDir())
+
 export default {
   absolutePath,
   storePath,
+  chunkPath,
   dirCreate,
   create: fileCreate,
   exists: fileExists,
   del: fileDelete,
   move: fileMove,
-  generateTree
+  generateTree,
+  getHostedChunks
 }

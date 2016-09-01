@@ -54,20 +54,21 @@ const OS_GENERATED = [
 ]
 
 export default class Watcher {
-  constructor(dirPath) {
+  constructor(watchPath, ignoredPath, notifier) {
     this.handlers = {}
     this.ignoreSet = new Set()
-
-    this.watcher = chokidar.watch(dirPath, {
+    this.notifier = notifier
+    this.monitor = chokidar.watch(watchPath, {
       persistent: true,
-      ignored: [...OS_GENERATED]
+      ignored: [...OS_GENERATED, ...ignoredPath]
     })
 
-    this.watcher.on('error', error => logger.error(`[WATCH] Error: ${error}`))
+    this.watching = false
+    this.monitor.on('error', error => logger.error(`[WATCH] Error: ${error}`))
 
-    this.watcher.on('ready', () => {
+    this.monitor.on('ready', () => {
       logger.info('[WATCH] Initial scan complete. Ready for changes')
-      this.watcher
+      this.monitor
         .on('add', (path, stats) => this.listener('add', path, stats))
         .on('change', (path, stats) => this.listener('change', path, stats))
         .on('unlink', (path, stats) => this.listener('unlink', path, stats))
@@ -77,11 +78,20 @@ export default class Watcher {
     })
   }
 
+  watch() {
+    this.watching = true
+  }
+
+  unwatch() {
+    this.watching = false
+  }
+
   listener(evType, path, stats) {
+    if (!this.watching) return
     let ev = new EventType(evType, path, stats)
 
     if (!this.ignoreEvent(ev)) {
-      if (!this.handler(ev) || this.handler == null) {
+      if (!this.notifier(ev)) {
         logger.error(`[WATCH] unhandled event ${ev}`)
       }
     }

@@ -35,13 +35,14 @@ class IPFSNode {
     return this.node.id()
   }
 
-  download(filePath, ipfsHash) {
-    logger.info(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
+  download(filePath, ipfsHash, isChunk=false) {
+    let log = isChunk ? logger.debug : logger.info
+    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
     return this.get(ipfsHash)
       .then(buf => userFile.create(filePath, buf))
       .delay(500)  // QUCIK FIX, FIXME
       .then(() => this.add(filePath))
-      .tap(() => logger.info(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
+      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
   }
 
   getFileHash(filePath) {
@@ -78,6 +79,28 @@ class IPFSNode {
         return this.get(hash)
       }))
   }
+
+  rm(hash) {
+    if (ipfs.rm != null) return ipfs.rm(hash)
+    return Promise.resolve()
+  }
+
+  downloadChunk(hash) {
+    return this.download(userFile.chunkPath(hash), hash, true)
+  }
+
+  rmChunk(hash) {
+    return this.rm(hash).then(() => userFile.chunkDel(hash))
+  }
+  
+  // @Sevauk: not sure I understood this one, correct this if I'm wrong
+  // downloadChunk(hash) {
+  //   if (hash.substr(0, 2) !== 'Qm')
+  //     throw new Error('bad IPFS Hash ' + hash)
+  //   return this.get(hash)
+  //     .then((data) => fs.writeFile(ipfsStore + hash, data))
+  //     // TODO: ipfs add directly instead
+  // }
 }
 
 export const createNode = () => {

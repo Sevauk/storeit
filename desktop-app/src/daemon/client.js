@@ -5,7 +5,6 @@ import userFile from './user-file.js'
 import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
-import store from './store.js'
 import * as ipfs from './ipfs'
 import settings from './settings'
 
@@ -19,9 +18,11 @@ export default class Client {
 
   constructor() {
     this.recoTime = 1
-    this.responseHandlers = {} // custom server response handlers
+    this.responseHandlers = {}
     this.ipfs = ipfs.createNode()
-    this.fsWatcher = new Watcher(settings.getStoreDir())
+    this.fsWatcher = new Watcher(settings.getStoreDir(), [/\.storeit*/],
+      (ev) => this.getFsEvent(ev))
+    this.fsWatcher.watch()
   }
 
   auth(type, opener) {
@@ -77,12 +78,9 @@ export default class Client {
     return done
   }
 
-  watch() {
-    this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
-  }
-
-  unwatch() {
-    this.fsWatcher.setEventHandler(null)
+  reloadSettings() {
+    // TODO
+    settings.reload()
   }
 
   manageResponse(res) {
@@ -129,13 +127,13 @@ export default class Client {
   }
 
   reqJoin(authType, accessToken) {
-    return store.getHostedChunks()
+    return userFile.getHostedChunks()
       .then(hashes => ({authType, accessToken, hosting: hashes}))
       .then(data => this.request('JOIN', data))
       .tap(() => logger.info('[JOIN] Logged in'))
       .then(params => this.recvFADD({parameters: {files: [params.home]}}))
       .tap(() => logger.info('[JOIN] home synchronized'))
-      .tap(() => this.watch())
+      .tap(() => this.fsWatcher.watch())
       .catch(err => logger.error(err))
   }
 
@@ -192,9 +190,22 @@ export default class Client {
 
   recvFSTR(req) {
     logger.debug(`[RECV:FSTR] ${logger.toJson(req)}`)
-    return store.FSTR(this.ipfs, req.parameters.hash, req.parameters.keep)
+    let fstr
+    if (req.parameters.keep)
+      fstr = this.ipfs.downloadChunk(req.parameters.hash)
+    else
+      fstr = this.ipfs.removeChunk(req.parameters.hash)
+    return fstr
       .then(() => this.success(req.uid))
       .catch(err => logger.error('FSTR: ' + err))
+  }
+
+  getFsEvent(ev) {
+    let handler = this[`send${ev.type}`]
+    if (handler != null) return false
+
+    handler.call(this, ev.path).catch(logger.error)
+    return true
   }
 
   sendFADD(filePath) {
@@ -217,19 +228,5 @@ export default class Client {
   sendFMOV(src, dst) {
     return this.request('FMOV', {src, dst})
       .catch(err => logger.error('FMOV: ' + err))
-  }
-
-  handleFsEvent(ev) {
-    let handler = this[`send${ev.type}`]
-    if (handler) {
-      handler.call(this, ev.path).catch(logger.error)
-      return true
-    }
-    return false
-  }
-
-  reloadSettings() {
-    // TODO
-    settings.reload()
   }
 }
