@@ -42,12 +42,14 @@ let files = [
   }
 ]
 
+// if (window.userFiles) files = window.userFiles
+//
 export default class FilesService {
   constructor() {
     'ngInject'
   }
 
   getFiles() {
-    return Promise.resolve(files)
+    return window.join().then((res) => res.home)
   }
 }

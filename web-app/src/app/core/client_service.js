@@ -9,7 +9,7 @@ class StoreItClientService {
   constructor(STOREIT) {
     'ngInject'
 
-    this.handlers = []
+    this.handlers = {}
     this.addr = STOREIT.serverAddr
     this.port = STOREIT.serverPort
     this.recoTime = 1
@@ -40,7 +40,7 @@ class StoreItClientService {
     console.log('received: ', JSON.stringify(res))
     let handler = this.handlers[res.commandUid]
     if (handler) {
-      handler(res.params)
+      handler(res.parameters)
       delete this.handlers[res.commandUid]
     }
   }

@@ -1,16 +1,15 @@
-div(layout="row" flex)
+div.page-layout(layout="row" flex)
   md-sidenav.md-whiteframe-4dp(md-is-locked-open="true" flex)
     md-toolbar#files-tree(layout="column" layout-align="center center")
       .md-toolbar-tools
         md-button.md-raised(
           flex layout="row" layout-align="center center"
-          ng-click="vm.oauth('facebook')"
         )
           | Import new file
     md-list
       md-list-item(
         ng-repeat="folder in vm.cwd.files"
-        ng-if="folder.kind === 'dir'"
+        ng-if="folder.isDir"
       )
         p
           md-icon(md-font-set="material-icons") folder
@@ -21,8 +20,8 @@ div(layout="row" flex)
         md-icon(md-font-set="material-icons") folder
         p ..
       md-list-item(ng-repeat="file in vm.cwd.files" ng-click="vm.action($index)")
-        md-icon(ng-if="file.kind === 'dir'" md-font-set="material-icons") folder
-        md-icon(ng-if="file.kind === 'file'" md-font-set="material-icons") insert_drive_file
+        md-icon(ng-if="file.isDir" md-font-set="material-icons") folder
+        md-icon(ng-if="!file.isDir" md-font-set="material-icons") insert_drive_file
         p {{file.path.split('/').slice(-1)[0]}}
         md-menu
           md-button(ng-click="$mdOpenMenu($event)")

@@ -20,6 +20,9 @@ export default class AuthService {
   }
 
   join(authType, accessToken) {
-    return this.client.request('JOIN', {authType, accessToken, hosting: {}})
+    window.join = () => {
+      return this.client.request('JOIN', {authType, accessToken, hosting: {}})
+    }
+    return Promise.resolve()
   }
 }

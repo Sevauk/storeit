@@ -20,7 +20,7 @@ html, body {
   padding-top: 20px;
 }
 
-#app-container, app, #container, #container :only-child {
+#app-container, app, #container, .page-layout {
   height: 100%;
 }
 
