@@ -3,107 +3,112 @@ import express from 'express'
 import gapi from 'googleapis'
 import fbgraph from 'fbgraph'
 
-import {logger} from '../../lib/log'
+import logger from '../../lib/log'
 import settings from './settings'
 
-const REDIRECT_URI = 'http://localhost:7777/'
+Promise.promisifyAll(fbgraph)
+
 const HTTP_PORT = 7777
+const REDIRECT_URI = `http://localhost:${HTTP_PORT}/`
 
 class OAuthProvider {
-  constructor() {
+  constructor(type) {
     this.express = express()
-    this.loadTokens()
+    this.type = type
+    this.tokens = settings.getTokens(type)
+  }
+
+  oauth(opener=open) {
+    let url = this.generateAuthUrl()
+    let authorized = Promise.resolve(url ? this.waitAuthorized() : true)
+    if (url) opener(url)
+
+    return authorized
+      .then(code => this.getToken(code))
+      .tap(tokens => this.setCredentials(tokens))
+      .then(tokens => this.extendAccesToken(tokens))
+      .tap(tokens => this.saveTokens(tokens))
   }
 
   waitAuthorized() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.express.use('/', (req, res) => {
-        let msg = 'Thank you for authenticating, you can now quit this page.'
-        res.send(`StoreIt: ${msg}`)
-
-        this.http.close()
-        logger.info('Access granted, Http server stopped')
-
-        let code = req.query.code
-        code != null ? resolve(code) : reject({err: 'could not get code'})
+        if (this.http != null) resolve(this.getCode(req, res))
       })
-
       this.http = this.express.listen(HTTP_PORT)
-      logger.info(`Http server listening on port ${HTTP_PORT}`)
+      logger.debug(`[OAUTH] Http server listening on port ${HTTP_PORT}`)
     })
   }
 
-  loadTokens() {
-    this.authSettings = settings.get('auth')
+  getCode(req, res) {
+    let msg = 'Thank you for authenticating, you can now quit this page.'
+    res.send(`StoreIt: ${msg}`)
+
+    this.http.close()
+    delete this.http
+    logger.debug('[OAUTH] Access granted, Http server stopped')
+
+    let code = req.query.code
+    if (code == null) throw new Error('oauth: could not get code')
+    return code
   }
 
-  saveTokens(type, tokens) {
-    settings.setTokens(type, tokens)
+  saveTokens(tokens) {
+    this.tokens = tokens
+    settings.setTokens(this.type, tokens)
     settings.save()
+  }
+
+  hasTokens() {
+    return this.tokens != null
   }
 }
 
 export class GoogleService extends OAuthProvider {
   constructor() {
-    super()
+    super('gg')
 
     const {GAPI_CLIENT_ID, GAPI_CLIENT_SECRET} = process.env
 
     this.client = new gapi.auth.OAuth2(GAPI_CLIENT_ID,
       GAPI_CLIENT_SECRET, REDIRECT_URI)
-    if (this.hasRefreshToken()) {
-      this.client.setCredentials(settings.getTokens('gg'))
-    }
+
+    this.client = Promise.promisifyAll(this.client)
+    if (this.hasTokens()) this.client.setCredentials(this.tokens)
   }
 
-  oauth(opener=open) {
-    if (this.hasRefreshToken())
-      return this.getToken()
+  generateAuthUrl() {
+    if (this.hasTokens()) return null
 
-    let url = this.client.generateAuthUrl({
+    return this.client.generateAuthUrl({
       scope: 'email',
-      access_type: 'offline' // eslint-disable-line camelcase
+      'access_type': 'offline'
     })
-    let tokenPromise = this.waitAuthorized()
-      .then((code) => this.getToken(code))
-
-    opener(url)
-    return tokenPromise
   }
 
   getToken(code) {
-    return new Promise((resolve, reject) => {
-      let manageTokens = (err, tokens) => {
-        if(!err) {
-          this.client.setCredentials(tokens)
-          this.saveTokens('gg', tokens)
-          resolve(tokens)
-        }
-        else {
-          logger.error(err)
-          reject(err)
-        }
-      }
-
-      if (code != null) {
-        logger.info('exchanging code against access token')
-        this.client.getToken(code, manageTokens)
-      }
-      else {
-        logger.info('refreshing token')
-        this.client.refreshAccessToken(manageTokens)
-      }
-    })
+    if (code != null) {
+      logger.info('[OAUTH:gg] exchanging code against access token')
+      return this.client.getTokenAsync(code)
+    }
+    else {
+      logger.info('[OAUTH:gg] refreshing token')
+      return this.client.refreshAccessTokenAsync()
+    }
   }
 
-  hasRefreshToken() {
-    return settings.getTokens('gg') != null
+  setCredentials(tokens) {
+    this.client.setCredentials(tokens)
+  }
+
+  extendAccesToken(tokens) {
+    return tokens // TODO
   }
 }
 
 export class FacebookService extends OAuthProvider {
   constructor() {
-    super()
+    super('fb')
 
     const {FBAPI_CLIENT_ID, FBAPI_CLIENT_SECRET} = process.env
     this.client = fbgraph
@@ -119,54 +124,36 @@ export class FacebookService extends OAuthProvider {
     })
   }
 
-  oauth(opener=open) {
+  generateAuthUrl() {
     const ENDPOINT = 'auth/fb'
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
-        if (!req.query.error)
+        if (!req.query.error) {
           res.redirect(this.authUrl)
+        }
         else
           res.send('access denied')
       }
     })
-    let tokenPromise = this.waitAuthorized()
-      .then((code) => this.getToken(code))
-    opener(`http://localhost:${HTTP_PORT}/${ENDPOINT}`)
-    return tokenPromise
+    return `http://localhost:${HTTP_PORT}/${ENDPOINT}`
   }
 
   getToken(code) {
-    return new Promise((resolve, reject) => {
-      let params = Object.assign({code}, this.credentials)
-      let extended = false
+    let params = Object.assign({code}, this.credentials)
 
-      /*
-      * Is called twice
-      */
-      let manageTokens = (err, tokens) => {
-        if (!err) {
-          this.saveTokens('fb', tokens)
-          if (!extended)
-            this.client.extendAccessToken(this.prepareToken(), manageTokens)
-          else
-            resolve(tokens)
-        }
-        else {
-          logger.error(err.message)
-          reject(err)
-        }
-        extended = !extended // becomes true after first call back
-      }
-
-      this.client.authorize(params, manageTokens)
-    })
+    return this.client.authorizeAsync(params)
+      .catch((err) => Promise.reject(err.message))
   }
 
-  prepareToken() {
-    return {
-      'access_token': settings.getTokens('fb')['access_token'],
+  setCredentials(tokens) {
+    this.credentials = {
+      'access_token': tokens['access_token'],
       'client_id': this.credentials['client_id'],
       'client_secret':  this.credentials['client_secret']
     }
+  }
+
+  extendAccesToken() {
+    return this.client.extendAccessTokenAsync(this.credentials)
   }
 }

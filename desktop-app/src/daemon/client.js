@@ -1,332 +1,232 @@
-import * as fs from 'fs'
-
 import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
-import cmd from './main.js'
-import {logger} from '../lib/log'
+import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
-import store from './store.js'
-import tree from './tree.js'
-import IPFSnode from './ipfs'
+import * as ipfs from './ipfs'
 import settings from './settings'
 
 const MAX_RECO_TIME = 4
+const authTypes = {
+  'facebook': 'fb',
+  'google': 'gg'
+}
 
 export default class Client {
 
   constructor() {
     this.recoTime = 1
-    this.responseHandlers = {} // custom server response handlers
-    this.ipfs = new IPFSnode()
-    this.fsWatcher = new Watcher(cmd.store)
-    this.fsWatcher.setEventHandler((ev) => this.handleFsEvent(ev))
+    this.responseHandlers = {}
+    this.ipfs = ipfs.createNode()
+    this.fsWatcher = new Watcher(settings.getStoreDir(), [/\.storeit*/],
+      (ev) => this.getFsEvent(ev))
+    this.fsWatcher.watch()
   }
 
   auth(type, devId, opener) {
     let service
     switch (type) {
-      case 'fb':
+      case 'facebook':
         service = new FacebookService()
         break
-      case 'gg':
+      case 'google':
         service = new GoogleService()
         break
       case 'developer':
         return this.developer()
       default:
-        return this.login() // TODO
+        return this.login()
     }
 
+    logger.info(`[AUTH] login with ${type} OAuth`)
     return service.oauth(opener)
-      .then((tokens) => this.join(type, tokens.access_token))
-      .then((cmd) =>
-        this.addResponseHandler(cmd.uid, (data) => this.getRemoteTree(data))
-    )
+      .then(tokens => this.reqJoin(authTypes[type], tokens.access_token))
   }
 
   developer(devId) {
+    logger.info('[AUTH] login as developer')
     return this.join('gg', `developer${devId}`)
   }
 
   login() {
-    throw {msg: 'StoreIt auth not implemented yet'}
+    throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
   }
 
   connect() {
-    const {SERVER_HOST, SERVER_PORT} = process.env
-    return new Promise((resolve) => {
-      const server = cmd.server ? cmd.server : `${SERVER_HOST}:${SERVER_PORT}`
-      this.sock = new WebSocket(`ws://${server}`)
+    const {SERVER_ADDR, SERVER_PORT} = process.env
+    this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
+    this.sock = Promise.promisifyAll(this.sock)
+    logger.info('[SOCK] attempting connection')
 
-      logger.debug(`attempting connection on ${server}`)
+    this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
+    this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
 
-      this.sock.on('open', () => {
-        logger.debug('sock opened')
-        this.recoTime = 1
-        resolve()
-      })
-      this.sock.on('close', () => {
-        this.reconnect()
-      })
-
-      this.sock.on('error', () => logger.error('socket error occured'))
-      this.sock.on('message', (data) => this.handleResponse(JSON.parse(data)))
+    return new Promise(resolve => {
+      this.sock.on('open', resolve)
+      this.sock.on('close', () => resolve(this.reconnect()))
     })
+      .then(() => this.recoTime = 1)
+      .tap(() => logger.info('[SOCK] connection established'))
   }
 
   reconnect() {
-    logger.error(`attempting to reconnect in ${this.recoTime} seconds`)
-    setTimeout(() => this.connect(), this.recoTime * 1000)
-
-    if (this.recoTime < MAX_RECO_TIME) {
-      ++this.recoTime
-    }
+    logger.error(`[SOCK] attempting to reconnect in ${this.recoTime} seconds`)
+    let done = Promise.delay(this.recoTime * 1000).then(() => this.connect())
+    if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
+    return done
   }
-
-  addResponseHandler(uid, listener) {
-    logger.debug('attaching response handler for command', uid)
-    this.responseHandlers[uid] = listener
-  }
-
-  handleResponse(res) {
-    let handler = this.responseHandlers[res.commandUid]
-    if (handler != null) {
-      this.responseHandlers[res.commandUid] = null
-    }
-    else {
-      handler = this[`recv${res.command}`] // set to default handler
-    }
-
-    if (handler === null) {
-      logger.error(`received unhandled response: ${JSON.stringify(res)}`)
-      return null
-    }
-    else {
-      return handler.call(this, res.parameters, res)
-    }
-  }
-
-  answerSuccess(uid) {
-    return this.sendObject(new Response(0, '', uid))
-  }
-
-  answerFailure(uid, code=1, msg='error') {
-    return this.sendObject(new Response(code, msg, uid))
-  }
-
-  send(cmd, params) {
-    let data = new Command(cmd, params)
-    return this.sendObject(data)
-  }
-
-  sendObject(obj) {
-    logger.info(`sending object ${JSON.stringify(obj)}`)
-
-    return new Promise((resolve, reject) =>
-    this.sock.send(JSON.stringify(obj), (err) => {
-      if (err) {
-        console.log(err)
-        return reject(err)
-      }
-      this.addResponseHandler(obj.uid, (params, command) => {
-        if (command.code === 0) {
-          logger.debug('command ' + JSON.stringify(command) + ' is successful')
-          return resolve(params)
-        }
-        return reject(command)
-      })
-    }))
-  }
-
-  checkoutTree(tr) {
-
-    /*
-    return new Promise((resolve) => {
-
-    const realPath = userFile.makeFullPath(tr.path)
-
-    fs.stat(realPath, (err, stat) => {
-
-    const exists = !err
-    const isDir = exists ? stat.isDir : false
-
-    // TODO: handle sync edge cases (folder -> file, new files added when daemon was offline, etc.)
-    if (isDir) {
-    if (!exists) {
-    fs.mkdir(realPath, (err) => {
-    if (err)
-    logger.error(err)
-  })
-}
-}
-else {
-this.ipfs.add()
-.then((hash) => {
-})
-}
-
-if (!tr.files)
-return resolve()
-
-for (const file of tr.files) {
-this.checkoutTree(tr[file])
-}
-})
-})
-*/
-  }
-
-  join(authType, accessToken) {
-    return store.getHostedChunks()
-      .then((hashes) => this.send('JOIN', {authType, accessToken, hosting: hashes}))
-      .then((params) => {
-        return this.recvFADD({files: [params.home]})
-      })
-      .then(() => logger.info('home has loaded'))
-      .catch((err) => logger.error(err))
-  }
-
-  recvFADD(params, log=true) {
-    if (log) logger.info(`received FADD => ${JSON.stringify(params)}`)
-
-    if (!params.files) {
-      return Promise.resolve()
-    }
-
-    if (!Array.isArray(params.files)) {
-      params.files = Object.keys(params.files).map((key) => params.files[key])
-    }
-
-    let status = []
-    let res
-
-    for (let file of params.files) {
-
-      userFile.ignore(file.path)
-
-      const realPath = userFile.storeitPathToFSPath(file.path)
-
-      if (file.isDir) {
-        res = userFile.dirCreate(file.path)
-          .then(() => this.recvFADD({files: file.files}, false))
-      }
-      else {
-
-        fs.stat(realPath, (err, stat) => {
-
-          const getFile = () => {
-            userFile.create(file.path, '') // TODO: show user that we are syncing
-            logger.info(`downloading file ${file.path} from ipfs`)
-            res = this.ipfs.get(file.IPFSHash)
-              .then((buf) => {
-                logger.info(`download of ${file.path} is over`)
-                return userFile.create(file.path, buf)
-              })
-              .then(() => userFile.unignore(file.path))
-              .catch((err) => userFile.unignore(file.path))
-              .then(() => {
-                setTimeout(() => this.ipfs.addRelative(file.path), 500) // QUCIK FIX, FIMXE
-              })
-              .catch((err) => logger.error(err))
-          }
-
-          const exists = !err
-
-          if (exists) {
-            this.ipfs.addRelative(file.path)
-              .then((hash) => {
-                if (hash[0].Hash === file.IPFSHash) {
-                  userFile.unignore(file.path)
-                  return
-                }
-                getFile()
-              })
-              .catch((err) => logger.error(err))
-          }
-          else getFile()
-        })
-      }
-      status.push(res)
-    }
-    return Promise.all(status)
-  }
-
-  recvRESP(params, command) {
-    logger.info(`received ${command.code === 0 ? 'successful' : `failure ${command.code}`} response`)
-  }
-
-  recvFUPT(params) {
-    logger.info(`received FUPT => ${JSON.stringify(params)}`)
-    return this.recvFADD(params, false)
-  }
-
-  recvFDEL(params) {
-    logger.info(`received FDEL => ${JSON.stringify(params)}`)
-    let status = []
-    for (let file of params.files) {
-      status.push(userFile.del(file))
-    }
-    return Promise.all(status)
-      .then((files) =>
-    files.forEach((file) => logger.info(`removed file ${file.path}`))
-  )}
-
-  recvFMOV(params) {
-    logger.info(`received FMOV => ${JSON.stringify(params)}`)
-    return userFile.move(params.src, params.dest)
-      .then((file) => logger.info(`moved file ${file.src} to ${file.dst}`))
-  }
-
-  recvFSTR(params) {
-    logger.info(`received FSTR => ${JSON.stringify(params)}`)
-    return store.FSTR(this.ipfs, params.hash, params.keep)
-      .then(() => this.answerSuccess())
-      .catch((err) => logger.error('FSTR: ' + err))
-  }
-
-  sendFADD(filePath) {
-    return tree.createTree(filePath, this.ipfs)
-      .then((file) => this.send('FADD', {files: [file]}))
-      .catch((err) => logger.error('FADD: ' + err))
-  }
-
-  sendFUPT(filePath) {
-    return tree.createTree(filePath, this.ipfs)
-      .then((file) => this.send('FUPT', {files: [file]}))
-      .catch((err) => logger.error('FUPT: ' + err.text))
-  }
-
-  sendFDEL(filePath) {
-    return this.send('FDEL', {files: [userFile.toStoreitPath(filePath)]})
-      .catch((err) => logger.error('FDEL: ' + err.text))
-  }
-
-  sendFMOV(src, dst) {
-    return this.send('FMOV', {src, dst})
-      .catch((err) => logger.error('FMOV: ' + err.text))
-  }
-
-  handleFsEvent(ev) {
-    let handler = this[`send${ev.type}`]
-    if (handler) {
-      handler.call(this, ev.path)
-        .catch((err) => logger.debug(err))
-
-      // TODO: manage FMOV
-    }
-    else logger.warn(`[FileWatcher] unhandled event ${ev}`)
-  }
-
-  getRemoteTree(files) {
-    return files
-  }
-
 
   reloadSettings() {
     // TODO
     settings.reload()
+  }
+
+  manageResponse(res) {
+    let handler = this.responseHandlers[res.commandUid]
+    if (handler != null) delete this.responseHandlers[res.commandUid]
+    else handler = this[`recv${res.command}`] // set to default handler
+
+    if (handler != null) handler.call(this, res)
+    else logger.error(`[RESPONSE:orphan] ${logger.toJson(res)}`)
+  }
+
+  send(data, type='') {
+    logger.debug(`[SEND:${type}] ${logger.toJson(data)}`)
+    return this.sock.sendAsync(JSON.stringify(data))
+  }
+
+  response(uid, msg='', code=0) {
+    return this.send(new Response(code, msg, uid), 'response')
+  }
+
+  success(uid, msg='') {
+    return this.response(uid, msg, 0)
+  }
+
+  error(uid, msg='error', code=1) {
+    return this.response(uid, msg, code)
+  }
+
+  waitResponse(req) {
+    let msg
+    return new Promise((resolve, reject) => {
+      this.responseHandlers[req.uid] = res => {
+        msg = `[RESP:${res.code === 0 ? 'ok' : 'err'}] ${logger.toJson(res)}`
+        res.code === 0 ? resolve(res) : reject(new Error(msg))
+      }
+    }).tap(() => logger.debug(msg))
+  }
+
+  request(req, params) {
+    let data = new Command(req, params)
+    return this.send(data, 'request')
+      .then(() => this.waitResponse(data))
+      .then(res => res.parameters)
+  }
+
+  reqJoin(authType, accessToken) {
+    return userFile.getHostedChunks()
+      .then(hashes => ({authType, accessToken, hosting: hashes}))
+      .then(data => this.request('JOIN', data))
+      .tap(() => logger.info('[JOIN] Logged in'))
+      .then(params => this.recvFADD({parameters: {files: [params.home]}}))
+      .tap(() => logger.info('[JOIN] home synchronized'))
+      .tap(() => this.fsWatcher.watch())
+      .catch(err => logger.error(err))
+  }
+
+  recvFADD(req, print=true) {
+    const params = req.parameters
+    if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
+
+    if (!params.files) return Promise.resolve()
+
+    if (!Array.isArray(params.files)) {
+      params.files = Object.keys(params.files).map(key => params.files[key])
+    }
+
+    return Promise.map(params.files, (file) => {
+      this.fsWatcher.ignore(file.path)
+      if (file.isDir) {
+        return userFile.dirCreate(file.path)
+          .tap(() => logger.info(`[DIR-SYNC] ${file.path}`))
+          .then(() => this.recvFADD({parameters: {files: file.files}}, false))
+          .tap(() => logger.info(`[DIR-SYNC:end] ${file.path} `))
+      }
+      else {
+        logger.info(`[SYNC:start] ${file.path}`)
+        return userFile.exists(file.path)
+          .catch(() => userFile.create(file.path, ''))
+          .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
+          .then(isInStore => {
+            if (!isInStore) return this.ipfs.download(file.path, file.IPFSHash)
+            logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
+          })
+          .catch(logger.error)
+          .finally(() => this.fsWatcher.unignore(file.path))
+      }
+    })
+  }
+
+  recvFUPT(req) {
+    logger.debug(`[RECV:FUPT] ${logger.toJson(req)}`)
+    return this.recvFADD(req, false)
+  }
+
+  recvFDEL(req) {
+    logger.debug(`[RECV:FDEL] ${logger.toJson(req)}`)
+    return Promise
+      .map(req.parameters.files, file => userFile.del(file))
+      .each(file => logger.debug(`removed file ${file.path}`))
+  }
+
+  recvFMOV(req) {
+    logger.debug(`[RECV:FMOV] ${logger.toJson(req)}`)
+    return userFile.move(req.parameters.src, req.parameters.dest)
+      .tap(file => logger.debug(`moved file ${file.src} to ${file.dst}`))
+  }
+
+  recvFSTR(req) {
+    logger.debug(`[RECV:FSTR] ${logger.toJson(req)}`)
+    let fstr
+    if (req.parameters.keep)
+      fstr = this.ipfs.downloadChunk(req.parameters.hash)
+    else
+      fstr = this.ipfs.removeChunk(req.parameters.hash)
+    return fstr
+      .then(() => this.success(req.uid))
+      .catch(err => logger.error('FSTR: ' + err))
+  }
+
+  getFsEvent(ev) {
+    let handler = this[`send${ev.type}`]
+    if (handler != null) return false
+
+    handler.call(this, ev.path).catch(logger.error)
+    return true
+  }
+
+  sendFADD(filePath) {
+    return userFile.generateTree(filePath)
+      .then(files => this.request('FADD', {files: [files]}))
+      .catch(err => logger.error('FADD: ' + err))
+  }
+
+  sendFUPT(filePath) {
+    return userFile.generateTree(filePath)
+      .then(file => this.request('FUPT', {files: [file]}))
+      .catch(err => logger.error('FUPT: ' + err))
+  }
+
+  sendFDEL(filePath) {
+    return this.request('FDEL', {files: [filePath]})
+      .catch(err => logger.error('FDEL: ' + err))
+  }
+
+  sendFMOV(src, dst) {
+    return this.request('FMOV', {src, dst})
+      .catch(err => logger.error('FMOV: ' + err))
   }
 }

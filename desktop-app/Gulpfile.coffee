@@ -1,7 +1,7 @@
 gulp = require 'gulp'
 eslint = require 'gulp-eslint'
 
-SRC = 'src/*.js'
+SRC = 'src/**/*.js'
 
 gulp.task 'default', ['watch:lint']
 

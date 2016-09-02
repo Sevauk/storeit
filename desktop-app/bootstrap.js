@@ -16,18 +16,25 @@ program
   .option('-l, --logfile <filename>', 'log to a file instead of the console')
   .parse(process.argv)
 
-let mainPath = program.dev ? './src' : './build'
+let srcPath
 
 if (program.logfile) log.logToFile(program.logfile)
 
-if (program.gui) {
-  if (program.dev) require('coffee-script/register')
-  mainPath += '/electron'
+if (program.dev) {
+  log.setLevel('debug')
+  srcPath = './src'
+  require(program.gui ? 'coffee-script/register' : 'babel-register')
 }
 else {
-  if (program.dev) require('babel-register')
-  mainPath += '/cli'
+  log.setLevel('info')
+  srcPath = './build'
 }
+
+const mainPath = srcPath + '/' + (program.gui ? 'electron' : 'cli')
+
+const settings = require(`${srcPath}/daemon/settings`).default
+settings.reset() // TODO
+settings.fromArgs(program)
 
 const {run} = require(`${mainPath}-main`)
 run(program)

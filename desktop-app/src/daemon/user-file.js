@@ -1,83 +1,74 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import {logger} from '../lib/log.js'
-import cmd from './main.js'
-var rimraf = require('rimraf') // SORRY :(
 
-const storeitPathToFSPath = (filePath) => path.join(cmd.store, filePath)
+import del from 'del'
 
-const makeSubDirs = (p) => new Promise((resolve) => {
+import {FileObj} from '../../lib/protocol-objects.js'
+import {getFileHash} from './ipfs'
+import settings from './settings'
 
-  const eachDir = p.split(path.sep)
-  let currentPath = cmd.store
-  for (let i = 0; i < eachDir.length - 1; i++) {
+Promise.promisifyAll(fs)
 
-    currentPath += eachDir[i] + path.sep
-    try {
-      fs.mkdirSync(currentPath)
-    }
-    catch (e) {
-    }
-  }
-  resolve()
-})
-
-let dirCreate = (dirPath) => new Promise((resolve) => {
-
-  const fsPath = storeitPathToFSPath(dirPath)
-  return makeSubDirs(dirPath)
-    .then(() =>
-      fs.mkdir(fsPath, (err) => !err || err.code === 'EEXIST' ?
-        resolve({path: dirPath, isDir: true}) : resolve(err)
-    ))
-    .catch((err) => logger.error(err))
-})
-
-let fileCreate = (filePath, data) => new Promise((resolve, reject) => {
-
-  const fsPath = storeitPathToFSPath(filePath)
-  return makeSubDirs(filePath)
-    .then(() => {
-      return fs.writeFile(fsPath, data, (err) => !err ?
-        resolve({path: filePath, data}) : reject(err)
-      )
-    }
-    )
-})
-
-let fileDelete = (filePath) => new Promise((resolve, reject) => {
-
-  const fPath = cmd.store + filePath
-  rimraf(fPath, (err) => !err ? resolve({path: fPath}) : reject(err))
-})
-
-
-let fileMove = (src, dst) => new Promise((resolve, reject) => {
-  const fullSrc = storeitPathToFSPath(src)
-  const fullDst = storeitPathToFSPath(dst)
-  return fs.rename(fullSrc, fullDst, (err) => !err ? resolve({src, dst}) : reject(err))
-})
-
-const ignoreSet = new Set()
-
-const ignore = (file) => {
-  ignoreSet.add(file)
-  setTimeout(() => ignoreSet.delete(file), 20000000)
+const storePath = p => '/' + path.relative(settings.getStoreDir(), p)
+const absolutePath = p => path.join(settings.getStoreDir(), p)
+const chunkPath = hash => {
+  let absPath = path.join(settings.getHostDir(), hash)
+  return storePath(absPath)
 }
 
-const unignore = (file) => ignoreSet.delete(file)
-const isIgnored = (file) => ignoreSet.has(file)
-const toStoreitPath = (p) => '/' + path.relative(cmd.store, p)
+const dirCreate = (dirPath) => {
+  let currPath = settings.getStoreDir()
+
+  return Promise.map(dirPath.split(path.sep), (dir) => {
+    currPath = path.join(currPath, dir)
+    return fs.mkdirAsync(currPath).catch((err) => {
+      if (err.code !== 'EEXIST') throw err
+    })
+  }).then(() => ({path: dirPath, isDir: true}))
+}
+
+const fileCreate = (filePath, data) => {
+  const fsPath = absolutePath(filePath)
+  return dirCreate(path.dirname(filePath))
+    .then(() => fs.writeFileAsync(fsPath, data))
+    .then(() => ({path: filePath, data}))
+}
+
+const fileExists = (filePath) =>
+  fs.accessAsync(absolutePath(filePath), fs.constants.F_OK)
+
+const fileDelete = (filePath) => del(absolutePath(filePath), {force: true})
+  .then(() => ({path: filePath}))
+
+const fileMove = (src, dst) =>
+  fs.renameAsync(absolutePath(src), absolutePath(dst))
+    .then(() => ({src, dst}))
+
+const generateTree = (filePath) => {
+  const absPath = absolutePath(filePath)
+  return fs.statAsync(absPath)
+    .then(stat => {
+      if (stat.isDirectory()) {
+        return fs.readdirAsync(absPath)
+          .map(file => generateTree(path.join(filePath, file)))
+          .then(files => new FileObj(filePath, null, files))
+      }
+      return getFileHash(filePath)
+        .then(hash => new FileObj(filePath, hash))
+    })
+}
+
+const getHostedChunks = () => fs.readdirAsync(settings.getHostDir())
 
 export default {
-  storeitPathToFSPath,
-  toStoreitPath,
-  ignoreSet,
-  ignore,
-  unignore,
-  isIgnored,
+  absolutePath,
+  storePath,
+  chunkPath,
   dirCreate,
   create: fileCreate,
+  exists: fileExists,
   del: fileDelete,
   move: fileMove,
+  generateTree,
+  getHostedChunks
 }

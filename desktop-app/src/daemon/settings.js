@@ -2,7 +2,7 @@ import * as path from 'path'
 
 import storage from 'node-persist'
 
-import {logger} from '../../lib/log'
+import logger from '../../lib/log'
 
 const storeItData = 'user-settings'
 const USER_HOME = process.env[
@@ -23,7 +23,11 @@ const defaults = {
   bandwidth: 0
 }
 
-const load = () => storage.getItemSync(storeItData)
+const load = () => {
+  let loaded = storage.getItemSync(storeItData)
+  logger.debug(`[SETTINGS] ${logger.toJson(loaded)}`)
+  return loaded
+}
 
 let settings = load() || defaults
 
@@ -31,18 +35,14 @@ const reload = () => {
   settings = load()
 }
 
-logger.info('[Settings]: status ', settings)
-
 const get = (key) => {
   if (key != null) {
-    logger.debug('getting from localstorage', settings[key])
     return settings[key]
   }
   return settings
 }
 
 const save = () => {
-  logger.debug('saving settings', settings)
   storage.setItem(storeItData, settings)
 }
 
@@ -50,11 +50,12 @@ const reset = () => {
   const auth = settings.auth
   settings = defaults
   settings.auth = auth
+  save()
 }
 
 const getAuthType = () => settings.auth.type
 
-const getTokens = (type) =>
+const getTokens = type =>
   type === settings.auth.type ? settings.auth.tokens : null
 
 const setTokens = (type, tokens) => {
@@ -64,11 +65,13 @@ const setTokens = (type, tokens) => {
 
 const resetTokens = () => setTokens(null, null)
 
-const getFolderPath = () => settings.folderPath
+const getStoreDir = () => settings.folderPath
 
-const setFolderPath = (folderPath) => {
-  settings.folderPath = folderPath
+const setStoreDir = folderPath => {
+  settings.folderPath = path.resolve(folderPath)
 }
+
+const getHostDir = () => path.join(settings.folderPath, '.storeit')
 
 const getAllocated = () => settings.space
 
@@ -78,23 +81,30 @@ const setAllocated = (allocatedSpace) => {
 
 const getBandwidth = () => settings.bandwidth
 
-const setBandwidth = (max) => {
+const setBandwidth = max => {
   settings.bandwidth = max
 }
 
+const fromArgs = args => {
+  if (args.store) setStoreDir(args.store)
+}
+
 export default {
+  USER_HOME,
   get,
   getAuthType,
   setTokens,
   getTokens,
   resetTokens,
-  setFolderPath,
-  getFolderPath,
+  setStoreDir,
+  getStoreDir,
+  getHostDir,
   getAllocated,
   setAllocated,
   getBandwidth,
   setBandwidth,
   save,
   reset,
-  reload
+  reload,
+  fromArgs
 }

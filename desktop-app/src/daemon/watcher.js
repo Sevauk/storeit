@@ -1,14 +1,11 @@
 import chokidar from 'chokidar'
-import {logger} from '../../lib/log'
-import userFile from './user-file.js'
-import * as path from 'path'
-import cmd from './main.js'
 
-const STORE_NAME = '.storeit'
+import logger from '../../lib/log'
+import userFile from './user-file'
 
 export class EventType {
   constructor(type, path, stats={}) {
-    this.path = path
+    this.path = userFile.storePath(path)
     this.meta = stats
     switch (type) {
       case 'add':
@@ -42,27 +39,36 @@ export class EventType {
         })
         break
       default:
-        logger.error('error here')
-        throw {msg: 'Unexpected error occured'}
+        throw new Error('[WATCH] EventType: Unexpected error occured')
     }
   }
 }
 
+const OS_GENERATED = [
+  /.DS_Store$/,
+  /.DS_Store?$/,
+  /.Spotlight-V100$/,
+  /.Trashes$/,
+  /ehthumbs.db$/,
+  /Thumbs.d$/,
+]
+
 export default class Watcher {
-  constructor(dirPath) {
+  constructor(watchPath, ignoredPath, notifier) {
     this.handlers = {}
-    this.ignoredEvents = []
-    this.watcher = chokidar.watch(dirPath, {
+    this.ignoreSet = new Set()
+    this.notifier = notifier
+    this.monitor = chokidar.watch(watchPath, {
       persistent: true,
-      ignored: `.${STORE_NAME}`
+      ignored: [...OS_GENERATED, ...ignoredPath]
     })
 
-    this.watcher.on('error', error =>
-      logger.error(`[FileWatcher] Error: ${error}`))
+    this.watching = false
+    this.monitor.on('error', error => logger.error(`[WATCH] Error: ${error}`))
 
-    this.watcher.on('ready', () => {
-      logger.info('[FileWatcher]Initial scan complete. Ready for changes')
-      this.watcher
+    this.monitor.on('ready', () => {
+      logger.info('[WATCH] Initial scan complete. Ready for changes')
+      this.monitor
         .on('add', (path, stats) => this.listener('add', path, stats))
         .on('change', (path, stats) => this.listener('change', path, stats))
         .on('unlink', (path, stats) => this.listener('unlink', path, stats))
@@ -72,36 +78,49 @@ export default class Watcher {
     })
   }
 
+  watch() {
+    this.watching = true
+  }
+
+  unwatch() {
+    this.watching = false
+  }
+
   listener(evType, path, stats) {
+    if (!this.watching) return
     let ev = new EventType(evType, path, stats)
 
-    if (!ev.type) {
-      logger.error('event type is undefined ' + ev)
-      return null
-    }
-    logger.debug(`[FileWatcher] ${JSON.stringify(ev)} ${ev.fileKind} ${path}`)
-
     if (!this.ignoreEvent(ev)) {
-      return this.handler(ev)
+      if (!this.notifier(ev)) {
+        logger.error(`[WATCH] unhandled event ${ev}`)
+      }
     }
-    return null
+    // else {
+    //   logger.debug(`[WATCH] ignored event: ${logger.toJson(ev)}`)
+    // }
   }
 
   ignoreEvent(ev) {
-    const fPath = '/' + path.relative(cmd.store, ev.path)
-
     if (ev.type === 'FDEL')
-      return false
+      return false // @Sevauk: ?
 
-    return userFile.isIgnored(fPath)
-      || ev.path.indexOf('.DS_Store') >= 0 // QUICKFIX FIXME
+    return this.isIgnored(ev.path)
   }
 
   setEventHandler(listener) {
     this.handler = listener
   }
 
-  pushIgnoreEvent(ev) {
-    this.ignoredEvents.push(ev)
+  ignore(file) {
+    this.ignoreSet.add(file)
+    Promise.delay(20000000).then(() => this.unignore(file))
+  }
+
+  unignore(file) {
+    this.ignoreSet.delete(file)
+  }
+
+  isIgnored(file) {
+    return this.ignoreSet.has(file)
   }
 }
