@@ -5,9 +5,11 @@ import storage from 'node-persist'
 import logger from '../../lib/log'
 
 const storeItData = 'user-settings'
-const USER_HOME = process.env[
+
+let USER_HOME = process.env[
   process.platform === 'win32' ? 'USERPROFILE' : 'HOME'
 ]
+if (process.env.NODE_ENV === 'test') USER_HOME = process.env.TMP || '/tmp'
 
 storage.initSync({
   dir: path.join(USER_HOME, '.storeitrc')
@@ -23,16 +25,46 @@ const defaults = {
   bandwidth: 0
 }
 
+const clone = (obj) => JSON.parse(JSON.stringify(obj))
+
 const load = () => {
   let loaded = storage.getItemSync(storeItData)
   logger.debug(`[SETTINGS] ${logger.toJson(loaded)}`)
   return loaded
 }
 
-let settings = load() || defaults
+const loadDefaults = () => clone(defaults)
+
+let settings = {}
+
+const set = (params) => {
+  settings.auth = params.auth
+  settings.folderPath = params.folderPath
+  settings.space = params.space
+  settings.bandwidth = params.bandwidth
+}
+
+set(load() || loadDefaults())
+
+const save = () => {
+  storage.setItemSync(storeItData, clone(settings))
+}
 
 const reload = () => {
-  settings = load()
+  let saved = load()
+  set(saved)
+}
+
+const clear = (skipSave=false) => {
+  set(loadDefaults())
+  if (!skipSave) save()
+}
+
+const reset = () => {
+  const auth = settings.auth
+  clear(true)
+  settings.auth = auth
+  save()
 }
 
 const get = (key) => {
@@ -40,17 +72,6 @@ const get = (key) => {
     return settings[key]
   }
   return settings
-}
-
-const save = () => {
-  storage.setItem(storeItData, settings)
-}
-
-const reset = () => {
-  const auth = settings.auth
-  settings = defaults
-  settings.auth = auth
-  save()
 }
 
 const getAuthType = () => settings.auth.type
@@ -85,12 +106,9 @@ const setBandwidth = max => {
   settings.bandwidth = max
 }
 
-const fromArgs = args => {
-  if (args.store) setStoreDir(args.store)
-}
-
 export default {
   USER_HOME,
+  defaults,
   get,
   getAuthType,
   setTokens,
@@ -105,6 +123,6 @@ export default {
   setBandwidth,
   save,
   reset,
-  reload,
-  fromArgs
+  clear,
+  reload
 }

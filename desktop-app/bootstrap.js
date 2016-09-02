@@ -34,7 +34,7 @@ const mainPath = srcPath + '/' + (program.gui ? 'electron' : 'cli')
 
 const settings = require(`${srcPath}/daemon/settings`).default
 settings.reset() // TODO
-settings.fromArgs(program)
+if (program.store) settings.setStoreDir(program.store)
 
 const {run} = require(`${mainPath}-main`)
 run(program)

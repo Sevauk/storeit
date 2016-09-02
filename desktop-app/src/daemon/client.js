@@ -45,7 +45,7 @@ export default class Client {
       .then(tokens => this.reqJoin(authTypes[type], tokens.access_token))
   }
 
-  developer(devId) {
+  developer(devId='') {
     logger.info('[AUTH] login as developer')
     return this.join('gg', `developer${devId}`)
   }
