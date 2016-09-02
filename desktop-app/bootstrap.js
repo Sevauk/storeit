@@ -21,12 +21,12 @@ let srcPath
 if (program.logfile) log.logToFile(program.logfile)
 
 if (program.dev) {
-  log.setLevel('debug')
+  log.logger.setLevel('debug')
   srcPath = './src'
   require(program.gui ? 'coffee-script/register' : 'babel-register')
 }
 else {
-  log.setLevel('info')
+  log.logger.setLevel('info')
   srcPath = './build'
 }
 
