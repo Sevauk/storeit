@@ -1,0 +1,17 @@
+{
+  "name": "storeit-website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "live-server .",
+    "postinstall": "bower prune && bower install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "bower": "^1.7.9",
+    "live-server": "^1.1.0"
+  }
+}
