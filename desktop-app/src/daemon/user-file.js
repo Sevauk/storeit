@@ -10,7 +10,7 @@ import settings from './settings'
 Promise.promisifyAll(fs)
 
 const storePath = p => '/' + path.relative(settings.getStoreDir(), p)
-const absolutePath = p => path.join(settings.getStoreDir(), p)
+const absolutePath = (p='') => path.join(settings.getStoreDir(), p)
 const chunkPath = hash => {
   let absPath = path.join(settings.getHostDir(), hash)
   return storePath(absPath)
@@ -44,6 +44,14 @@ const fileMove = (src, dst) =>
   fs.renameAsync(absolutePath(src), absolutePath(dst))
     .then(() => ({src, dst}))
 
+const clear = (keepChunks=false) => {
+  const store = settings.getStoreDir()
+  let keep = [store]
+  if (keepChunks) keep.push(settings.getHostDir())
+  keep = keep.map(file => `!${file}`)
+  return del([`${store}/**`, `${store}/.**`, ...keep], {force: true})
+}
+
 const generateTree = (filePath) => {
   const absPath = absolutePath(filePath)
   return fs.statAsync(absPath)
@@ -69,6 +77,7 @@ export default {
   exists: fileExists,
   del: fileDelete,
   move: fileMove,
+  clear,
   generateTree,
   getHostedChunks
 }

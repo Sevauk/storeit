@@ -1,9 +1,9 @@
 require './lib/init'
+settings = importDfl 'settings'
 
 path = require 'path'
-
-settings = importDfl 'settings'
 storage = require 'node-persist'
+
 
 describe 'Settings', ->
 
