@@ -17,14 +17,21 @@ const chunkPath = hash => {
 }
 
 const dirCreate = (dirPath) => {
-  let currPath = settings.getStoreDir()
+  const subdirs = dirPath.split('/')
+  let i = 0
 
-  return Promise.map(dirPath.split(path.sep), (dir) => {
-    currPath = path.join(currPath, dir)
-    return fs.mkdirAsync(currPath).catch((err) => {
-      if (err.code !== 'EEXIST') throw err
-    })
-  }).then(() => ({path: dirPath, isDir: true}))
+  const makeSubdirs = (currPath) => {
+    return fs.mkdirAsync(currPath)
+      .catch((err) => {
+        if (err.code !== 'EEXIST') throw err
+      })
+      .then(() => {
+        if (i >= subdirs.length) return Promise.resolve()
+        return makeSubdirs(path.join(currPath, subdirs[i++]))
+      })
+  }
+  return makeSubdirs(settings.getStoreDir())
+    .then(() => ({path: dirPath, isDir: true}))
 }
 
 const fileCreate = (filePath, data) => {
