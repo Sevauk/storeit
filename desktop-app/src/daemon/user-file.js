@@ -18,16 +18,15 @@ const chunkPath = hash => {
 
 const dirCreate = (dirPath) => {
   const subdirs = dirPath.split('/')
-  let i = 0
 
-  const makeSubdirs = (currPath) => {
+  const makeSubdirs = (currPath, i=0) => {
     return fs.mkdirAsync(currPath)
       .catch((err) => {
         if (err.code !== 'EEXIST') throw err
       })
       .then(() => {
         if (i >= subdirs.length) return Promise.resolve()
-        return makeSubdirs(path.join(currPath, subdirs[i++]))
+        return makeSubdirs(path.join(currPath, subdirs[i]), i + 1)
       })
   }
   return makeSubdirs(settings.getStoreDir())
