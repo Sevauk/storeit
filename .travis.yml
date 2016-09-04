@@ -11,6 +11,7 @@ install:
   - tar xvfz go-ipfs_v0.4.2_linux-amd64.tar.gz
   - export PATH=$PWD/go-ipfs/ipfs:$PATH
   - npm install --prefix ./desktop-app ./desktop-app
+  - npm run build --prefix ./desktop-app ./desktop-app
 
 script:
   - npm run test:lint --prefix ./desktop-app

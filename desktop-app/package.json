@@ -26,7 +26,7 @@
     "mock-server": "nodemon test/mock/server.js --watch test/mock --exec 'node -r dotenv/config -r babel-register'",
     "coverage": "gulp test --cover",
     "coverall": "npm run coverage && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
-    "test": "npm run -s test:lint && npm run build:daemon && npm run -s test:bdd",
+    "test": "npm run test:lint && npm run build:daemon && npm run test:bdd",
     "test:lint": "eslint ./src ./bootstrap.js",
     "test:bdd": "mocha --compilers coffee:coffee-script/register --require source-map-support/register --require dotenv/config"
   },
