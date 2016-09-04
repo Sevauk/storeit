@@ -64,6 +64,7 @@ describe 'User File', ->
       mkdir "#{store}/foobar"
       touch "#{store}/foobar/foo"
       touch "#{store}/.foo"
+    after -> resetStore()
 
     it 'should remove all files in user synchronized dir', ->
       userFile.clear()
