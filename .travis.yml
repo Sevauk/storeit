@@ -2,6 +2,10 @@ language: node_js
 node_js:
   - "6"
 
+before_install:
+  - npm i -g jspm
+  - jspm registry export github
+
 install:
   - wget  'https://dist.ipfs.io/go-ipfs/v0.4.2/go-ipfs_v0.4.2_linux-amd64.tar.gz'
   - tar xvfz go-ipfs_v0.4.2_linux-amd64.tar.gz
