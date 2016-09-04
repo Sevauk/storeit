@@ -15,7 +15,7 @@
     "watch:lib": "npm run build:lib -- -w",
     "build:daemon": "babel ./src -s -d ./build",
     "watch:daemon": "npm run build:daemon -- -w",
-    "build:gui": "coffee -m -o ./build -c ./src/electron-main.coffee && jspm bundle 'src/gui/app.coffee!' build/gui/app.js",
+    "build:gui": "coffee -m -o ./build -c ./src/electron-main.coffee && shx rm -rf './build/gui' && shx mkdir './build/gui' && jspm bundle 'src/gui/app.coffee!' build/gui/app.js",
     "clean": "shx rm -rf ./lib ./build && shx mkdir ./lib ./build",
     "rebuild": "npm run clean && npm run build",
     "debug": "node-inspector --web-port 8081",
