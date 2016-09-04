@@ -3,6 +3,6 @@ node_modules
 jspm_packages
 build
 .env
-.tokens.json
 lib
 storeit
+coverage
