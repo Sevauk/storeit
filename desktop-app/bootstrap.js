@@ -5,7 +5,7 @@ global.Promise = require('bluebird')
 
 const
   program = require('commander'),
-  log = require('./lib/log')
+  log = require('./lib/log').default
 
 program
   .version('0.0.1')
@@ -21,12 +21,12 @@ let srcPath
 if (program.logfile) log.logToFile(program.logfile)
 
 if (program.dev) {
-  log.logger.setLevel('debug')
+  log.setLevel('debug')
   srcPath = './src'
   require(program.gui ? 'coffee-script/register' : 'babel-register')
 }
 else {
-  log.logger.setLevel('info')
+  log.setLevel('info')
   srcPath = './build'
 }
 

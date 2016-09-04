@@ -1,9 +1,9 @@
 require './lib/init'
+settings = importDfl 'settings'
 
 path = require 'path'
-
-settings = importDfl 'settings'
 storage = require 'node-persist'
+
 
 describe 'Settings', ->
 
@@ -12,7 +12,7 @@ describe 'Settings', ->
   describe '#get()', ->
     it 'should return the current settings if no args passed', ->
       settings.get().should.eql settings.defaults
-    it 'should return the current settings property passed as arg', ->
+    it 'should return the settings property passed as arg', ->
       settings.get('space').should.equal 2048
 
   describe '#setTokens()', ->
