@@ -7,11 +7,12 @@ before_install:
   - jspm registry export github
 
 install:
-  - wget  'https://dist.ipfs.io/go-ipfs/v0.4.2/go-ipfs_v0.4.2_linux-amd64.tar.gz'
+  - wget 'https://dist.ipfs.io/go-ipfs/v0.4.2/go-ipfs_v0.4.2_linux-amd64.tar.gz'
   - tar xvfz go-ipfs_v0.4.2_linux-amd64.tar.gz
-  - export PATH=$PWD/go-ipfs/ipfs:$PATH
+  - export PATH=$PWD/go-ipfs:$PATH
+  - ipfs version
   - npm install --prefix ./desktop-app ./desktop-app
-  - npm run build --prefix ./desktop-app ./desktop-app
+  - npm run build --prefix ./desktop-app
 
 script:
   - npm run test:lint --prefix ./desktop-app
