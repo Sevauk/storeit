@@ -5,7 +5,8 @@ global.Promise = require('bluebird')
 
 const
   program = require('commander'),
-  log = require('./lib/log').default
+  log = require('./lib/log').default,
+  settings = require('./build/daemon/settings').default
 
 program
   .version('0.0.1')
@@ -16,25 +17,19 @@ program
   .option('-l, --logfile <filename>', 'log to a file instead of the console')
   .parse(process.argv)
 
-let srcPath
-
 if (program.logfile) log.logToFile(program.logfile)
 
 if (program.dev) {
   log.setLevel('debug')
-  srcPath = './src'
-  require(program.gui ? 'coffee-script/register' : 'babel-register')
 }
 else {
   log.setLevel('info')
-  srcPath = './build'
 }
 
-const mainPath = srcPath + '/' + (program.gui ? 'electron' : 'cli')
+const main = program.gui ? 'electron' : 'cli'
 
-const settings = require(`${srcPath}/daemon/settings`).default
 settings.reset() // TODO
 if (program.store) settings.setStoreDir(program.store)
 
-const {run} = require(`${mainPath}-main`)
+const {run} = require(`./build/${main}-main`)
 run(program)

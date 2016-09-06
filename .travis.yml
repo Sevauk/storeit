@@ -15,8 +15,9 @@ install:
   - npm run build --prefix ./desktop-app
 
 script:
-  - npm run test:lint --prefix ./desktop-app
-  - npm run coverall --prefix ./desktop-app
+  - npm run lint --prefix ./desktop-app
+  - npm test --prefix ./desktop-app
+  - npm run report --prefix ./desktop-app
 
 after_success:
   - coveralls
