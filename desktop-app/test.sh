@@ -7,7 +7,7 @@ MAIN='build/main.js'
 TESTDIR='/tmp/storeit-test'
 SERVER="../server/build/main.js -u $TESTDIR/userdata"
 CLIENT_COUNT=0
-SRC='test/ressources/'
+SRC='test/resources/'
 
 function clean {
   echo "cleaning..."

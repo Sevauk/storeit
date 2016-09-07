@@ -7,9 +7,10 @@ const MAX_RECO_TIME = 4
 let singleton
 
 class IPFSNode {
-  constructor() {
+  constructor(opts) {
     this.connecting = false
     this.recoTime = 1
+    this.recoUnit = opts.recoUnit || 500
     this.connect()
   }
 
@@ -25,7 +26,7 @@ class IPFSNode {
 
   reconnect() {
     logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
-    let done = Promise.delay(this.recoTime * 1000)
+    let done = Promise.delay(this.recoTime * this.recoUnit)
       .then(() => this.connect())
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
     return done
@@ -103,9 +104,9 @@ class IPFSNode {
   // }
 }
 
-export const createNode = () => {
+export const createNode = (opts) => {
   if (singleton == null)
-    singleton = new IPFSNode
+    singleton = new IPFSNode(opts)
   else
     logger.warn('[IPFS] node already created')
   return singleton

@@ -58,7 +58,7 @@ const clear = (keepChunks=false) => {
   return del([`${store}/**`, `${store}/.**`, ...keep], {force: true})
 }
 
-const generateTree = (filePath) => {
+const generateTree = (filePath='') => {
   const absPath = absolutePath(filePath)
   return fs.statAsync(absPath)
     .then(stat => {

@@ -20,7 +20,6 @@ gulp.task 'watch', (done) ->
 gulp.task 'test', ->
   gulp.src SPEC, read: false
     .pipe $.spawnMocha reporter: 'progress'
-    .on 'end', -> gulp.src('').pipe $.notify 'All tests passed'
     .on 'error', $.notify.onError 'Some tests are failing'
 
 gulp.task 'compile:all', ['compile:lib', 'compile:daemon', 'compile:gui']
