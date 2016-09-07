@@ -2,6 +2,7 @@ import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
+import fs from 'fs'
 import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
@@ -128,21 +129,57 @@ export default class Client {
   }
 
   reqJoin(authType, accessToken) {
+
+    let home = null
+
     return userFile.getHostedChunks()
       .then(hashes => ({authType, accessToken, hosting: hashes}))
       .then(data => this.request('JOIN', data))
       .tap(() => logger.info('[JOIN] Logged in'))
-      .then(params => this.recvFADD({parameters: {files: [params.home]}}))
+      .then(params => {
+        home = params.home
+        return this.recvFADD({parameters: {files: [params.home]}})
+      })
+      .then(() => this.addFilesUnknownByServ(home))
       .tap(() => logger.info('[JOIN] home synchronized'))
       .tap(() => this.fsWatcher.watch())
       .catch(err => logger.error(err))
+  }
+
+  addFilesUnknownByServ(dir) {
+    /*
+    * files that were added when the daemon wasn't running
+    * should be sent now to the server.
+    */
+
+    if (!dir || !dir.files || !dir.isDir)
+      return Promise.resolve()
+
+    return new Promise(resolve => {
+      fs.readdir(userFile.absolutePath(dir.path), (err, files) => {
+        if (err)
+          return resolve()
+
+        for (const f of files) {
+          if (!(f in dir.files)) {
+            this.sendFADD(dir.path + f)
+          }
+        }
+      })
+
+      for (const f of Object.keys(dir.files)) {
+        if (f.isDir)
+          this.addFilesUnknownByServ(f)
+      }
+      resolve()
+    })
   }
 
   recvFADD(req, print=true) {
     const params = req.parameters
     if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
 
-    if (!params.files) return Promise.resolve()
+    if (!params.files) return Promise.resolve(params)
 
     if (!Array.isArray(params.files)) {
       params.files = Object.keys(params.files).map(key => params.files[key])
