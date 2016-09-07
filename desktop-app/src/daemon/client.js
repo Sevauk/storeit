@@ -47,7 +47,7 @@ export default class Client {
 
   developer(devId='') {
     logger.info('[AUTH] login as developer')
-    return this.join('gg', `developer${devId}`)
+    return this.reqJoin('gg', `developer${devId}`)
   }
 
   login() {
@@ -56,7 +56,8 @@ export default class Client {
 
   connect() {
     const {SERVER_ADDR, SERVER_PORT} = process.env
-    this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
+    this.sock = new WebSocket(`ws:${SERVER_ADDR}:${SERVER_PORT}`)
+
     this.sock = Promise.promisifyAll(this.sock)
     logger.info('[SOCK] attempting connection')
 
