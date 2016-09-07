@@ -92,7 +92,7 @@ export default class Watcher {
 
     if (!this.ignoreEvent(ev)) {
       if (!this.notifier(ev)) {
-        logger.error(`[WATCH] unhandled event ${ev}`)
+        logger.error(`[WATCH] unhandled event ${ev.type}`)
       }
     }
     // else {

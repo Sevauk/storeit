@@ -74,8 +74,8 @@ class IPFSNode {
         res.on('close', () => reject())
         res.on('error', () => reject())
       }))
-      .catch(() => this.reconnect().then(() => {
-        logger.error(`[IPFS] ${hash} download failed. Retrying`)
+      .catch((e) => this.reconnect().then(() => {
+        logger.error(`[IPFS] ${hash} download failed (${e}). Retrying`)
         return this.get(hash)
       }))
   }
