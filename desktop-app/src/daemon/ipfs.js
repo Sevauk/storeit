@@ -10,7 +10,7 @@ class IPFSNode {
   constructor(opts) {
     this.connecting = false
     this.recoTime = 1
-    this.recoUnit = opts.recoUnit || 500
+    this.recoUnit = opts.recoUnit || 1000
     this.connect()
   }
 
@@ -25,7 +25,8 @@ class IPFSNode {
   }
 
   reconnect() {
-    logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
+    const sec = this.recoTime * this.recoUnit / 1000
+    logger.error(`[IPFS] attempting to reconnect in ${sec} seconds`)
     let done = Promise.delay(this.recoTime * this.recoUnit)
       .then(() => this.connect())
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
