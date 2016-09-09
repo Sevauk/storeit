@@ -71,7 +71,7 @@ class IPFSNode {
 
   downloadProgress(hash, totalSize, downloaded) {
     const advance = totalSize ? downloaded * 100 / totalSize : `${downloaded} bytes`
-    logger.debug(`downloaded ${Math.round(advance)} (${downloaded})`)
+    logger.debug(`downloaded ${Math.round(advance)}% (${downloaded})`)
   }
 
   get(filePath, hash) {
