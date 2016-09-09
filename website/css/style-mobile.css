@@ -90,6 +90,11 @@
 		{
 			display: block;
 			color: #fff;
+					background-image: url(../images/logo-min.png) ; 
+					width: 128px;
+					height: 30px;
+					margin-left: 33%;
+					margin-top: 2%;
 			text-align: center;
 			line-height: 44px;
 			font-weight: 300;
@@ -183,6 +188,7 @@
 	{
 		display: none;
 	}
+
 	
 	#nav
 	{
