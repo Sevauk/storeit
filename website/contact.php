@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>StoreIt</title>
+		<title>StoreIt - Contact</title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
@@ -12,9 +12,10 @@
 		<script src="js/init.js"></script>
 		<noscript>
 			<link rel="stylesheet" href="css/skel-noscript.css" />
-			<link rel="stylesheet" href="css/style.css" />
 			<link rel="stylesheet" href="css/style-desktop.css" />
 		</noscript>
+			<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/style-contact.css" />
 	</head>
 	<body class="homepage">
 
@@ -31,52 +32,73 @@
 					</ul>
 				</nav>
 			</div>
+			<div class="container"> 
+				
 				<!-- Logo -->
 				<div id="logo">
-					<h1><a href="index.html"></a></h1>
-				</div>
-
-		</div>
-
-	<!-- Featured -->
-		<div id="featured">
-			<div class="container">
-				<header>
-					<h2>Bienvenu sur StoreIt</h2>
-				</header>
-				<p>StoreIt est un projet qui propose aux utilisateurs un disque dur en ligne. En effet, sur nos ordinateurs, nous n’utilisons pas toujours toute la capacité de nos disques durs. Pourquoi ne pas mettre à disposition une certaine partie aux autres utilisateurs ?<br>
-				Nous proposons donc un service de partage d’espace de stockage en ligne, c’est à dire que n’importe quel utilisateur pourras louer une partie de stockage qu’il définiras lui-même et en contre partie nous le rémunéreront à hauteur de la capacité qu’il choisiras de partager. 
-				<hr />
-				<div class="row">
-					<section class="4u">
-						<span class="pennant"><span class="fa fa-euro"></span></span>
-						<h3>Revenu</h3>
-						<p>Partagez votre espace de stockage inutilisé, nous vous rémunèrerons.</p>
-						<!-- <a href="#" class="button button-style1">En savoir plus</a> -->
-					</section>
-					<section class="4u">
-						<span class="pennant"><span class="fa fa-lock"></span></span>
-						<h3>Protection</h3>
-						<p>Nous nous soucions avant tout de la sécurité de vos documents.</p>
-						<!-- <a href="#" class="button button-style1">En savoir plus</a> -->
-					</section>
-					<section class="4u">
-						<span class="pennant"><span class="fa fa-globe"></span></span>
-						<h3>Partage</h3>
-						<p>StoreIt se voit relier toutes les machines aux quatre coins du monde afin que chacun de nous puisse être utile à autrui.</p>
-						<!-- <a href="#" class="button button-style1">En savoir plus</a> -->
-					</section>
-
+					<h1><a href="#"></a></h1>
 				</div>
 			</div>
 		</div>
+
+		
+	<!-- Main -->
+		<div id="main">
+<?php
+  session_start();
+  ?>
+  <div >
+  <?php if(array_key_exists('errors',$_SESSION)): ?>
+  <div class="alert alert-danger">
+  <?= implode('<br>', $_SESSION['errors']); ?>
+  </div>
+  <?php endif; ?>
+  <?php if(array_key_exists('success',$_SESSION)): ?>
+  <div class="alert alert-success">
+  Votre email à bien été transmis !
+  </div>
+  <?php endif; ?>
+
+			<div id="content" class="container">
+				<section>
+					<div class='center'>
+						<div class='center1'>
+					  <div class='title'>
+					    <h1>Envoyez-nous un message !</h1>
+					  </div>
+
+       					<form class="clearfix" action="send_form.php" method="post">
+
+						<div class='name'>
+					    	<input type="text" name="firstname" id "inputname" class="first" placeholder="Prénom" value="<?php echo isset($_SESSION['inputs']['name'])? $_SESSION['inputs']['name'] : ''; ?>">
+					    	<input type="text" name="name" id "inputname" class="last" placeholder="Prénom" value="<?php echo isset($_SESSION['inputs']['name'])? $_SESSION['inputs']['name'] : ''; ?>">
+						</div>
+						<div class='contact'>
+        					<input type="text" id="inputemail" name ="email" class="email" placeholder="E-mail" value="<?php echo isset($_SESSION['inputs']['email'])? $_SESSION['inputs']['email'] : ''; ?>">
+						</div>
+						<div class='message'>
+        					<textarea class="message" id="inputmessage" name ="message" placeholder="Votre message"><?php echo isset($_SESSION['inputs']['message'])? $_SESSION['inputs']['message'] : ''; ?></textarea>
+						</div>
+						<div class="end">
+						   <button>Envoyer</button>
+						</div>
+
+
+     					 </form>
+     					 </div>
+					</div>
+					</section>
+			</div>
+		</div>
+		</div>
+	<!-- /Main -->
 
 	<!-- Tweet -->
 		<div id="tweet">
 			<div class="container">
 				<section>
 					<blockquote>&ldquo;Parce que partager est une forme de liberté.&rdquo;</blockquote>
-					<span> Claude Lelouch </span>
+					<span> Citation d'un inconnu </span>
 				</section>
 			</div>
 		</div>
@@ -108,3 +130,9 @@
 
 	</body>
 </html>
+
+  <?php
+unset($_SESSION['inputs']); // on nettoie les données précédentes
+  unset($_SESSION['success']);
+  unset($_SESSION['errors']);
+  ?>
