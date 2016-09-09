@@ -11,6 +11,7 @@ class IPFSNode {
     this.connecting = false
     this.recoTime = 1
     this.connect()
+    this.downloading = {}
   }
 
   connect() {
@@ -38,11 +39,16 @@ class IPFSNode {
   download(filePath, ipfsHash, isChunk=false) {
     let log = isChunk ? logger.debug : logger.info
     log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
-    return this.get(ipfsHash)
+
+    return this.get(filePath, ipfsHash)
       .then(buf => userFile.create(filePath, buf))
       .delay(500)  // QUCIK FIX, FIXME
-      .then(() => this.add(filePath))
+      .then(() => {
+        delete this.downloading[filePath]
+        return this.add(filePath)
+      })
       .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
+      .catch((err) => log(`[IPFS] get interrupted (${err})`))
   }
 
   getFileHash(filePath) {
@@ -63,20 +69,80 @@ class IPFSNode {
       }))
   }
 
-  get(hash) {
+  downloadProgress(hash, totalSize, downloaded) {
+    const advance = totalSize ? downloaded * 100 / totalSize : `${downloaded} bytes`
+    logger.debug(`downloaded ${Math.round(advance)} (${downloaded})`)
+  }
+
+  get(filePath, hash) {
     let data = []
+
+    if (!hash) {
+      logger.error('empty hash given :o ')
+      return Promise.reject()
+    }
+
+    logger.debug('[IPFS] GET ' + hash)
+
+    if (filePath in this.downloading) {
+
+      logger.debug(`[IPFS] cancelling previous get for ${filePath}`)
+
+      const obj = this.downloading[filePath]
+      if (obj.close)
+        obj.close()
+      else if (obj === hash) // we are already downloading this hash
+        return Promise.reject()
+    }
+
+    this.downloading[filePath] = hash // store the hash and when the download starts store the stream object (see a few lines below)
 
     return this.ready()
       .then(() => this.node.cat(hash))
       .then((res) => new Promise((resolve, reject) => {
-        res.on('end', () => resolve(Buffer.concat(data)))
-        res.on('data', (chunk) => data.push(chunk))
-        res.on('close', () => reject())
-        res.on('error', () => reject())
+
+        this.downloading[filePath] = res
+        let totalSize = null
+        let downloadedSize = 0
+        let done = false
+
+        this.node.object.stat(hash)
+          .then((res) => {
+            totalSize = res.CumulativeSize
+          })
+          .catch((err) => logger.error(`[IPFS] object stat failed ${err}`))
+
+        res.on('end', () => {
+          done = true
+          return resolve(Buffer.concat(data))
+        })
+        res.on('data', (chunk) => {
+          downloadedSize += chunk.length
+          data.push(chunk)
+        })
+
+        const doneReject = () => {
+          done = true
+          return reject()
+        }
+
+        res.on('close', () => doneReject())
+        res.on('error', () => doneReject())
+
+        const tickProgress = () => {
+          setTimeout(() => {
+            this.downloadProgress(hash, totalSize, downloadedSize)
+            if (!done)
+              tickProgress()
+          }, 500)
+        }
+
+        tickProgress()
+
       }))
       .catch((e) => this.reconnect().then(() => {
         logger.error(`[IPFS] ${hash} download failed (${e}). Retrying`)
-        return this.get(hash)
+        return this.get(filePath, hash)
       }))
   }
 
