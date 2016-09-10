@@ -69,9 +69,9 @@ class IPFSNode {
       }))
   }
 
-  downloadProgress(hash, totalSize, downloaded) {
+  downloadProgress(filePath, hash, totalSize, downloaded) {
     const advance = totalSize ? downloaded * 100 / totalSize : `${downloaded} bytes`
-    logger.debug(`downloaded ${Math.round(advance)}% (${downloaded})`)
+    logger.debug(`[${filePath}] downloaded ${Math.round(advance)}% (${downloaded})`)
   }
 
   get(filePath, hash) {
@@ -131,7 +131,7 @@ class IPFSNode {
 
         const tickProgress = () => {
           setTimeout(() => {
-            this.downloadProgress(hash, totalSize, downloadedSize)
+            this.downloadProgress(filePath, hash, totalSize, downloadedSize)
             if (!done)
               tickProgress()
           }, 500)
