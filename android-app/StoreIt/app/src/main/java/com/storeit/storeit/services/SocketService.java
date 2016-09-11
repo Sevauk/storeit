@@ -39,7 +39,7 @@ public class SocketService extends Service {
 
     private final IBinder myBinder = new LocalBinder();
 
-    public String server = "ws://192.168.0.102:7641";
+    public String server;
     private static final int TIMEOUT = 5000;
     public static final String LOGTAG = "SocketService";
 
@@ -129,6 +129,7 @@ public class SocketService extends Service {
                                 }
                             })
                             .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
+                            .setMaxPayloadSize(128000)
                             .connect();
 
                     mConnected = true;
@@ -246,10 +247,9 @@ public class SocketService extends Service {
 
 
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
-        server = SP.getString("pref_key_server_url", "ws://192.168.1.3:7641");
+//        server = SP.getString("pref_key_server_url", "ws://192.168.1.24:7641");
 
-//        server = "ws://121.181.166.188:7641";
-        server = "ws://158.69.196.83:7641";
+        server = "ws://192.168.1.24:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();
