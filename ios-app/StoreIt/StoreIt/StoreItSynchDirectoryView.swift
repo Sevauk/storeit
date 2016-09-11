@@ -108,9 +108,9 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
                 
                 fileView.navigationItem.title = self.navigationManager?.getTargetName(target)
                 fileView.showActivityIndicatory()
-                
-                self.ipfsManager?.get(target.IPFSHash) { bytes in
-                    fileView.bytes = bytes
+
+                self.ipfsManager?.get(target.IPFSHash) { data in
+                    fileView.data = data
                     fileView.presentQlPreviewController()
                 }
             }

@@ -7,32 +7,24 @@
 //
 
 import Foundation
-import SwiftIpfsApi
-import SwiftMultihash
+import Alamofire
 
 class IpfsManager {
     
-    private let ipfs: IpfsApi?
     private let host: String
     private let port: Int
     
     init?(host: String, port: Int) {
-        do {
-            self.host = host
-            self.port = port
-			self.ipfs = try IpfsApi(host: host, port: port)
-        } catch let err as NSError {
-            print("[IPFS] Error when initializing IFPS... (error: \(err))")
-            return nil
-        }
+        self.host = host
+        self.port = port
     }
     
-    func get(hash: String, completionHandler: ([UInt8] -> Void)) {
-        do {
-        	let multihash = try fromB58String(hash)
-        	try self.ipfs!.get(multihash, completionHandler: completionHandler)
+    func get(hash: String, completionHandler: (NSData? -> Void)) {
+        print("IPFS GET FILE WITH HASH \(hash) ...")
+        Alamofire.request(.GET, "http://ipfs.io/ipfs/\(hash)").responseString { response in
+            print("IPFS GET SUCCEEDED...")
+        	completionHandler(response.data)
         }
-        catch let err as NSError { print("[IPFS.GET] error: \(err)") }
     }
     
     func add(filePath: NSURL, completionHandler: (NSData?, NSURLResponse?, NSError?) -> Void) {
@@ -64,14 +56,6 @@ class IpfsManager {
         let task = session.dataTaskWithRequest(request, completionHandler: completionHandler)
         
         task.resume()
-    }
-    
-    // add method from SwiftIpfsApi, does not seem to work...
-    func add2(filePath:String, completionHandler: ([MerkleNode] -> ())) {
-        do {
-            try self.ipfs!.add(filePath, completionHandler: completionHandler)
-        }
-        catch let err as NSError { print("[IPFS.ADD] error: \(err)") }
     }
     
     private func generateBoundaryString() -> String

@@ -11,7 +11,7 @@ import QuickLook
 
 class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
 
-    var bytes: [UInt8]? = nil
+    var data: NSData? = nil
     
     let fileManager = NSFileManager.defaultManager()
     var tmpDirUrl: NSURL
@@ -61,17 +61,17 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
     
     // TODO: Try / Catch
     func createTmpFile() -> NSURL? {
-        if let unwrapBytes = self.bytes {
-            
+
+        if let unwrapData = self.data {
+
             // Creation of tmp file
             let fileName = self.navigationItem.title!
             try! self.fileManager.createDirectoryAtURL(self.tmpDirUrl, withIntermediateDirectories: true, attributes: nil)
             
             let fileURL = self.tmpDirUrl.URLByAppendingPathComponent(fileName)
-            let data = NSData(bytes: unwrapBytes)
             
             // Write data to file
-            try! data.writeToURL(fileURL, options: .AtomicWrite)
+            try! unwrapData.writeToURL(fileURL, options: .AtomicWrite)
             
             return fileURL
         }

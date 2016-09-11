@@ -11,6 +11,7 @@ target 'StoreIt' do
     pod "Plist"
     pod 'FBSDKLoginKit', '~> 4.13'
     pod 'FBSDKCoreKit', '~> 4.13'
+    pod 'Alamofire', '~> 3.5'
 end
 
 target 'StoreItTests' do
