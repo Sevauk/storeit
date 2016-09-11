@@ -58,6 +58,8 @@ public class UploadAsync extends AsyncTask<String, Integer, String> {
                 .setContentText("Upload in progress")
                 .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
         mBuilder.setProgress(100, 0, false);
+
+
         mNotifyManager.notify(id, mBuilder.build());
     }
 
