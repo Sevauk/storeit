@@ -128,9 +128,10 @@ public class MainActivity extends AppCompatActivity {
 
         Intent socketService = new Intent(this, SocketService.class);
         bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
-
+/*
         Intent ipfsService = new Intent(this, IpfsService.class);
         bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
+        */
     }
 
     @Override

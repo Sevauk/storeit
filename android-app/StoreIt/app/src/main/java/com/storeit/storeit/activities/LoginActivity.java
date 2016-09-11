@@ -68,7 +68,9 @@ public class LoginActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (joinResponse.getCode() == 0) {
+//                    if (joinResponse.getCode() == 0) {
+
+                        Log.v("LoginActivity", "ici");
 
                         // The service will be handled by MainActivity;
                         destroySocketService = false;
@@ -84,10 +86,8 @@ public class LoginActivity extends Activity {
                         intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
-                    } else {
-                        Toast.makeText(LoginActivity.this, joinResponse.getText(), Toast.LENGTH_LONG).show();
                     }
-                }
+        //        }
             });
         }
 
