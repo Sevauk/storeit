@@ -47,8 +47,11 @@ public class IPFS {
         String boundary;
         URL url;
 
-        m_nodeUrl = "http://192.168.0.102";
+       // m_nodeUrl = "http://192.168.1.3";
+        m_nodeUrl = "http://10.38.165.142";
 
+
+ //       m_nodeUrl = "http://127.0.0.1";
         try {
             url = new URL(m_nodeUrl + ":5001/api/v0/add?stream-cannels=true");
 
@@ -118,15 +121,14 @@ public class IPFS {
         }
         return "";
     }
-
     public boolean downloadFile(FileOutputStream downloadFile, String hash){
 
         HttpURLConnection connection;
         URL url;
 
-        m_nodeUrl = "http://192.168.0.102";
+        m_nodeUrl = "https://ipfs.io/ipfs/";
         try {
-            url = new URL(m_nodeUrl + ":8080/ipfs/" + hash);
+            url = new URL(m_nodeUrl + hash);
             connection = (HttpURLConnection)url.openConnection();
 
             connection.setRequestMethod("GET"); // Create the get request

@@ -5,11 +5,12 @@
         android:title="Server"
         android:key="pref_key_internet_settings">
     <EditTextPreference android:title="Gateway url"
-        android:key="gateway_url"
+        android:key="pref_key_gateway_url"
         android:summary="Please enter the ips gateway url"/>
     <EditTextPreference android:title="Server url"
-        android:key="server_url"
-        android:summary="Please enter the storeit server adress"/>
+        android:key="pref_key_server_url"
+        android:summary="Please enter the storeit server adress"
+        android:defaultValue="ws://192.168.0.102:7641"/>
     </PreferenceCategory>
 
     <PreferenceCategory

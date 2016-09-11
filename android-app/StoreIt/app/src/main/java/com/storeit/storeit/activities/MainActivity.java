@@ -1,31 +1,35 @@
 package com.storeit.storeit.activities;
 
 import android.app.Activity;
-import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
@@ -36,8 +40,14 @@ import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.protocol.FileCommandHandler;
 import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.FileCommand;
+import com.storeit.storeit.protocol.command.FileDeleteCommand;
+import com.storeit.storeit.protocol.command.FileMoveCommand;
+import com.storeit.storeit.protocol.command.FileStoreCommand;
+import com.storeit.storeit.services.IpfsService;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
+
+import java.io.File;
 
 /**
  * Main acyivity
@@ -56,42 +66,72 @@ public class MainActivity extends AppCompatActivity {
 
     static final int HOME_FRAGMENT = 1, FILES_FRAGMENT = 2, SETTINGS_FRAGMENT = 3;
 
+    static final int CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE = 1002;
+    static final int PICK_IMAGE_GALLERY_REQUEST_CODE = 1003;
+
     RecyclerView mRecyclerView;
     RecyclerView.Adapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
     DrawerLayout Drawer;
 
+    ActionBar mActionBar;
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
+    
+    public FloatingActionButton getFloatingButton() {
+        return fbtn;
+    }
 
     private FilesManager filesManager;
 
-    // Socket service is already existing
-    private boolean mIsBound = false;
-    private SocketService mBoundService = null;
+    // Socket and ipfs service are already existing
+    private boolean mSocketServiceBound = false;
+    private boolean mIpfsServiceBound = false;
+
+    private SocketService mSocketService = null;
+    private IpfsService mIpfsService = null;
 
     // Should be the same class as LoginActivity ServiceConnection
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private ServiceConnection mSocketServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mBoundService = ((SocketService.LocalBinder) service).getService();
-            mBoundService.setFileCommandandler(mFileCommandHandler);
-            mIsBound = true;
+            mSocketService = ((SocketService.LocalBinder) service).getService();
+            mSocketService.setFileCommandandler(mFileCommandHandler);
+            mSocketServiceBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mBoundService = null;
-            mIsBound = false;
+            mSocketService = null;
+            mSocketServiceBound = false;
         }
     };
+
+    private ServiceConnection mIpfsServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mIpfsService = ((IpfsService.LocalBinder) service).getService();
+            mIpfsServiceBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mIpfsService = null;
+            mIpfsServiceBound = false;
+        }
+    };
+
 
     @Override
     protected void onStart() {
         super.onStart();
 
         Intent socketService = new Intent(this, SocketService.class);
-        bindService(socketService, mConnection, Context.BIND_AUTO_CREATE);
+        bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
+/*
+        Intent ipfsService = new Intent(this, IpfsService.class);
+        bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
+        */
     }
 
     @Override
@@ -117,7 +157,9 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setHasFixedSize(true);
 
-        mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, PROFILE, this);
+        String profileUrl = getIntent().getExtras().getString("profile_url");
+
+        mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, profileUrl, this);
         mRecyclerView.setAdapter(mAdapter);
 
 
@@ -175,20 +217,38 @@ public class MainActivity extends AppCompatActivity {
         fbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this, FilePickerActivity.class);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-                i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-                i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
 
-                i.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
-                startActivityForResult(i, FILE_CODE_RESULT);
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Upload new file")
+                        .setItems(R.array.file_upload_option, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                switch (i) {
+                                    case 0:
+                                        startCameraIntent();
+                                    case 1:
+                                        startGalleryPicker();
+                                        break;
+                                    case 2:
+                                        startFilePickerIntent();
+                                        break;
+                                    case 3:
+                                        createFolder();
+                                    default:
+                                        break;
+                                }
+                            }
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 
         openFragment(new HomeFragment());
         ActionBar bar = getSupportActionBar();
-        if (bar != null)
+        if (bar != null) {
             bar.setTitle("Home");
+        }
 
         Intent intent = getIntent();
         String homeJson = intent.getStringExtra("home");
@@ -197,17 +257,95 @@ public class MainActivity extends AppCompatActivity {
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
+
+    }
+
+
+    private void createFolder() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+
+        builder.setTitle("Create Folder");
+        View dialogView = inflater.inflate(R.layout.dialog_name_file, null);
+        builder.setView(dialogView);
+
+        final EditText input = (EditText) dialogView.findViewById(R.id.dialog_file_name_input);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                String fileName = input.getText().toString();
+                fbtn.setVisibility(View.VISIBLE);
+
+
+                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container); // Get the current fragment
+                if (currentFragment instanceof FileViewerFragment) {
+                    FileViewerFragment fragment = (FileViewerFragment) currentFragment;
+
+                    // Create new folder
+                    StoreitFile folder;
+
+                    if (fragment.getCurrentFile().getPath().equals("/")) {
+                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + fileName, null, true);
+                    } else {
+                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + fileName, null, true);
+                    }
+                    filesManager.addFile(folder, fragment.getCurrentFile());
+                    refreshFileExplorer();
+                    mSocketService.sendFADD(folder);
+                }
+
+            }
+        }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        }).show();
+    }
+
+    private void startGalleryPicker() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_GALLERY_REQUEST_CODE);
+    }
+
+    private void startFilePickerIntent() {
+        Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
+        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+        intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+        intent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
+
+        intent.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
+        startActivityForResult(intent, FILE_CODE_RESULT);
+    }
+
+    private void startCameraIntent() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+            startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
+        }
+
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        if (mIsBound) {
-            unbindService(mConnection);
-            mIsBound = false;
+        if (mSocketServiceBound) {
+            unbindService(mSocketServiceConnection);
+            mSocketServiceBound = false;
         }
 
+        if (mIpfsServiceBound) {
+            unbindService(mIpfsServiceConnection);
+            mIpfsServiceBound = false;
+        }
     }
 
     public void onTouchDrawer(final int position) {
@@ -253,27 +391,70 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        return id == R.id.action_settings || super.onOptionsItemSelected(item);
+        switch (id) {
+            case R.id.action_settings:
+                break;
+            case android.R.id.home:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) {
-            if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
-                ClipData clip = data.getClipData();
+        if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
+            Uri uri = data.getData();
+            fbtn.setVisibility(View.VISIBLE);
+            new UploadAsync(this, mSocketService).execute(uri.getPath());
+        } else if (requestCode == PICK_IMAGE_GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) { // Gallery
+            fbtn.setVisibility(View.VISIBLE);
 
-                if (clip != null) {
-                    for (int i = 0; i < clip.getItemCount(); i++) {
-                        Uri uri = clip.getItemAt(i).getUri();
+            Uri uri = data.getData();
+            new UploadAsync(this, mSocketService).execute(getRealPathFromURI(uri));
+        } else if (requestCode == CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = getLayoutInflater();
 
-                        Log.v("MainActivity", "lalala " + uri.toString());
-                    }
+            builder.setTitle("Save picture");
+            View dialogView = inflater.inflate(R.layout.dialog_name_file, null);
+            builder.setView(dialogView);
+
+            final EditText input = (EditText) dialogView.findViewById(R.id.dialog_file_name_input);
+
+            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                    File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
+                    String fileName = input.getText().toString();
+
+                    File fileRenamed = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
+                    Log.v("RENAME", "result : " + file.renameTo(fileRenamed));
+
+                    fbtn.setVisibility(View.VISIBLE);
+                    new UploadAsync(MainActivity.this, mSocketService).execute(fileRenamed.getAbsolutePath());
+
                 }
-            } else {
-                Uri uri = data.getData();
-                Log.v("MainActivity", "icici " + uri.toString());
-                fbtn.setVisibility(View.VISIBLE);
-                new UploadAsync(this, mBoundService).execute(uri.getPath());
+            }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.cancel();
+                }
+            }).show();
+        }
+    }
+
+    public String getRealPathFromURI(Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
             }
         }
     }
@@ -298,22 +479,43 @@ public class MainActivity extends AppCompatActivity {
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container); // Get the current fragment
         if (currentFragment instanceof FileViewerFragment) {
 
+            FileViewerFragment f = (FileViewerFragment) currentFragment;
+            f.getAdapter().reloadFiles();
+
+            /*
             FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
             fragTransaction.detach(currentFragment);
             fragTransaction.attach(currentFragment);
             fragTransaction.commit();
+            Log.v("MainActivity", "tu fois quoi??");
+            */
         }
     }
 
     public SocketService getSocketService() {
-        return mBoundService;
+        return mSocketService;
     }
 
     private FileCommandHandler mFileCommandHandler = new FileCommandHandler() {
         @Override
-        public void handleFDEL(FileCommand command) {
+        public void handleFDEL(FileDeleteCommand command) {
             Log.v("MainActivity", "FDEL");
             filesManager.removeFile(command.getFiles());
+            mSocketService.sendRSPONSE();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    refreshFileExplorer();
+                }
+            });
+
+        }
+
+        @Override
+        public void handleFADD(FileCommand command) {
+            Log.v("MainActivity", "FADD");
+            filesManager.addFile(command.getFiles());
+            mSocketService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -323,27 +525,55 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void handleFADD(FileCommand command) {
-            Log.v("MainActivity", "FADD");
-            filesManager.addFile(command.getFiles());
-            runOnUiThread(new Runnable() {
-                              @Override
-                              public void run() {
-                                  refreshFileExplorer();
-                              }
-                          });
-        }
-
-        @Override
         public void handleFUPT(FileCommand command) {
             Log.v("MainActivity", "FUPT");
             filesManager.updateFile(command.getFiles());
+            mSocketService.sendRSPONSE();
+           /* runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    refreshFileExplorer();
+                }
+            });
+            */
+        }
+
+        @Override
+        public void handleFMOV(FileMoveCommand command) {
+            Log.v("MainActivity", "FMOV");
+            filesManager.moveFile(command.getSrc(), command.getDst());
+            mSocketService.sendRSPONSE();
             runOnUiThread(new Runnable() {
-                              @Override
-                              public void run() {
-                                  refreshFileExplorer();
-                              }
-                          });
+                @Override
+                public void run() {
+                    refreshFileExplorer();
+                }
+            });
+        }
+
+        @Override
+        public void handleFSTR(final FileStoreCommand command) {
+            boolean shouldKeep = command.shouldKeep();
+            String hash = command.getHash();
+
+            if (!shouldKeep) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mIpfsService.removeFile(command.getHash());
+                        mSocketService.sendRSPONSE();
+                    }
+                });
+                return;
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mIpfsService.addFile(command.getHash());
+                    mSocketService.sendRSPONSE();
+                }
+            });
+
         }
     };
 }

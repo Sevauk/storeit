@@ -7,10 +7,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.storeit.storeit.protocol.StoreitFile;
+import com.storeit.storeit.protocol.command.FileStoreCommand;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
@@ -37,6 +36,8 @@ public class FilesManager {
         mDataDir = new File(storageLocation);
 
 
+
+/*
         File jsonFile = new File(storageLocation + "/storeit.json");
         if (!jsonFile.exists()) {
             Log.d(LOGTAG, "Creating root json file");
@@ -77,7 +78,7 @@ public class FilesManager {
                 e.printStackTrace();
             }
         }
-
+*/
         mRootFile = rootFile;
     }
 
@@ -102,8 +103,8 @@ public class FilesManager {
     // Recursively compare new tree with existing tree
     public void recursiveCmp(StoreitFile existingFile, StoreitFile newRoot) {
 
-        if (!existingFile.getPath().equals("/storeit")) { // Don't delete root
-            StoreitFile f = getFileByHash(existingFile.getIPFSHash(), newRoot); // Look for the actual file
+        if (!existingFile.getPath().equals("/")) { // Don't delete root
+            StoreitFile f = getFileByPath(existingFile.getPath(), newRoot); // Look for the actual file
             if (f == null) { // If the file doesn't exist anymore
                 File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + existingFile.getIPFSHash());
                 if (fileToDelete.exists()) {
@@ -143,21 +144,21 @@ public class FilesManager {
         return mDataDir.getPath();
     }
 
-    private StoreitFile recursiveSearch(String hash, StoreitFile root) {
-        if (root.getIPFSHash().equals(hash))
+    public StoreitFile getFileByPath(String path, StoreitFile root) {
+        if (root.getPath().equals(path)) {
             return root;
+        }
 
         for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            if (entry.getValue().getIPFSHash().equals(hash))
+            if (entry.getValue().getPath().equals(path)) {
                 return entry.getValue();
-            else if (entry.getValue().isDirectory())
-                recursiveSearch(hash, entry.getValue());
+            }
+            if (entry.getValue().isDirectory()) {
+                getFileByPath(path, entry.getValue());
+            }
         }
-        return null;
-    }
 
-    public StoreitFile getFileByHash(String hash, StoreitFile file) {
-        return recursiveSearch(hash, file);
+        return null;
     }
 
     private StoreitFile getParentFile(StoreitFile root, String parentPath) {
@@ -193,37 +194,46 @@ public class FilesManager {
         }
     }
 
-    public void removeFile(StoreitFile file) {
-        File parentFile = new File(file.getPath());
+    public void removeFile(String path) {
+        File parentFile = new File(path);
         String parentPath = parentFile.getParentFile().getAbsolutePath();
-
         StoreitFile parent = getParentFile(mRootFile, parentPath);
-        if (parent != null) {
-            parent.getFiles().remove(file.getFileName());
 
-            File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + file.getIPFSHash());
+        StoreitFile stFileToDelete = getFileByPath(path, mRootFile); // get storeitfile for hash
+        if (stFileToDelete != null && !stFileToDelete.isDirectory() && stFileToDelete.getIPFSHash() != null) {
+            File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + stFileToDelete.getIPFSHash());
             if (fileToDelete.exists()) {
                 if (!fileToDelete.delete()) {
                     Log.e(LOGTAG, "Error while deleting " + fileToDelete);
                 }
             }
+        }
+
+        if (parent != null) {
+            parent.getFiles().remove(StoreitFile.getFileName(path));
+
             saveJson();
         }
+
     }
 
     public void addFile(StoreitFile file, StoreitFile parent) {
-        StoreitFile p = getFileByHash(parent.getIPFSHash(), mRootFile);
+        StoreitFile p = getFileByPath(parent.getPath(), mRootFile);
         if (p != null) {
             p.addFile(file);
             saveJson();
         }
-
     }
 
     public void addFile(StoreitFile file) {
 
         File parentFile = new File(file.getPath());
-        String parentPath = parentFile.getParentFile().getAbsolutePath();
+        String parentPath;
+        if (parentFile.getParent() == null) {
+            parentPath = "/";
+        } else {
+            parentPath = parentFile.getParentFile().getAbsolutePath();
+        }
 
         StoreitFile parent = getParentFile(mRootFile, parentPath);
         if (parent != null) {
@@ -233,13 +243,37 @@ public class FilesManager {
     }
 
     public void updateFile(StoreitFile file) {
-        StoreitFile toUpdate = getFileByHash(file.getIPFSHash(), mRootFile);
+        StoreitFile toUpdate = getFileByPath(file.getPath(), mRootFile);
 
         if (toUpdate != null) {
+            toUpdate.setIPFSHash(file.getIPFSHash());
             toUpdate.setFiles(file.getFiles());
             toUpdate.setIsDir(file.isDirectory());
             toUpdate.setMetadata(file.getMetadata());
-            toUpdate.setPath(file.getPath());
+        }
+    }
+
+    public void moveFile(String src, String dst) {
+        StoreitFile storeitFile = getFileByPath(src, mRootFile);
+
+        if (storeitFile != null) {
+            File srcParent = new File(src);
+            File dstParent = new File(dst);
+
+            if (srcParent.getParent() != null && dstParent.getParent() != null // Rename file
+                    && srcParent.getParent().equals(dstParent.getParent())) {
+                removeFile(storeitFile.getPath());
+                storeitFile.setPath(dst);
+                addFile(storeitFile);
+            } else { // Move File
+                StoreitFile newFile = new StoreitFile(dst, storeitFile.getIPFSHash(), // copy
+                        storeitFile.isDirectory());
+                StoreitFile parentFile = getParentFile(mRootFile, dstParent.getParent());
+                removeFile(src); // Remove the old file
+                if (parentFile != null)
+                    parentFile.addFile(newFile); // Add the new renamed file
+            }
+            saveJson();
         }
     }
 }

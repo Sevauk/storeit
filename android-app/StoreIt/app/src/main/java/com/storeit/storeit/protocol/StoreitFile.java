@@ -33,12 +33,20 @@ public class StoreitFile {
         return file.getName();
     }
 
+    public static String getFileName(String path) {
+        File file = new File(path);
+        return file.getName();
+    }
+
     public HashMap<String, StoreitFile> getFiles() {
         return files;
     }
 
     public void addFile(StoreitFile file) {
         Uri uri = Uri.parse(file.getPath());
+        if (this.files == null) {
+            this.files = new HashMap<>();
+        }
         this.files.put(uri.getLastPathSegment(), file);
     }
 

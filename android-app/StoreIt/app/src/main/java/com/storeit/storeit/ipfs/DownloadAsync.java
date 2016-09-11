@@ -31,8 +31,7 @@ public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
                 .setContentTitle("StoreIt")
                 .setContentText("Download in progress")
                 .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
-        mBuilder.setProgress(0, 0, true);
-
+        mBuilder.setProgress(100, 0, false);
         mNotifyManager.notify(id, mBuilder.build());
     }
 
@@ -71,11 +70,20 @@ public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
             outputStream = new FileOutputStream(file);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            if (!file.delete()) {
+                Log.v("DownloadAsync", "Error while deleting file");
+            }
             return false;
         } catch (IOException e) {
             e.printStackTrace();
+            if (!file.delete()) {
+                Log.v("DownloadAsync", "Error while deleting file");
+            }
         }
         if (outputStream == null){
+            if (!file.delete()) {
+                Log.v("DownloadAsync", "Error while deleting file");
+            }
             return  false;
         }
         return ipfs.downloadFile(outputStream, hash);

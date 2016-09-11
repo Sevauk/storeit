@@ -9,8 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
@@ -24,7 +22,6 @@ import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.utils.FilesManager;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,9 +67,9 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
                                         ContextMenu.ContextMenuInfo menuInfo) {
 
             menu.add(Menu.NONE, R.id.action_delete_file, Menu.NONE, "Delete");
+            menu.add(Menu.NONE, R.id.action_delete_file_disk, Menu.NONE, "Delete from storage");
             menu.add(Menu.NONE, R.id.action_rename_file, Menu.NONE, "Rename");
-
-
+            menu.add(Menu.NONE, R.id.action_move_file, Menu.NONE, "Move file");
         }
     }
 
@@ -135,7 +132,7 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
             File file = new File(storeitPath + File.separator + mFiles[position].getPath()); // To get the file type
             File phyiscalFile = new File(storeitPath + File.separator + mFiles[position].getIPFSHash()); // the location of the real file
 
-            String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
+            String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString().toLowerCase());
             String mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
             intent.setDataAndType(Uri.fromFile(phyiscalFile), mimetype);
 
@@ -149,9 +146,12 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
 
         historyStack.push(mFiles[position]);
 
-        for (Map.Entry<String, StoreitFile> entry : mFiles[position].getFiles().entrySet()) { // list all files from current folder
-            files.add(entry.getValue());
+        if (mFiles[position].getFiles() != null) {
+            for (Map.Entry<String, StoreitFile> entry : mFiles[position].getFiles().entrySet()) { // list all files from current folder
+                files.add(entry.getValue());
+            }
         }
+
         mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
 
         notifyDataSetChanged();
@@ -207,6 +207,20 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
         ArrayList<StoreitFile> files = new ArrayList<>( Arrays.asList(mFiles));
         files.remove(position);
         mFiles = files.toArray(new StoreitFile[files.size()]);
+        notifyDataSetChanged();
+    }
+
+    public void reloadFiles() {
+        StoreitFile currentFile = getCurrentFile();
+        StoreitFile newFile = manager.getFileByPath(currentFile.getPath(), manager.getRoot());
+
+        ArrayList<StoreitFile> files = new ArrayList<>();
+
+        for (Map.Entry<String, StoreitFile> entry : newFile.getFiles().entrySet()) { // list all files from current folder
+            files.add(entry.getValue());
+        }
+
+        mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
         notifyDataSetChanged();
     }
 }

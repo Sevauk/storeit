@@ -34,9 +34,19 @@ public class JoinResponse {
 
     public class Parameters{
         StoreitFile home;
+        UserProfile usrProfile;
 
         public StoreitFile getHome() {
             return home;
         }
+
+        public String getUserPicture() {
+            return usrProfile.profilePic;
+        }
+    }
+
+    public class UserProfile
+    {
+        String profilePic;
     }
 }

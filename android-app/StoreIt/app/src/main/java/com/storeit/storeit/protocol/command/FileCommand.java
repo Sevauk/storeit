@@ -2,6 +2,7 @@ package com.storeit.storeit.protocol.command;
 
 import com.storeit.storeit.protocol.StoreitFile;
 
+
 /**
  * This class will be used for FDEL, FADD, FUPT command
  * Can be send or received
@@ -23,14 +24,14 @@ public class FileCommand {
 
 
     class Parameters {
-        StoreitFile files;
+        StoreitFile[] files;
 
         public  Parameters(StoreitFile files){
-            this.files = files;
+            this.files = new StoreitFile[]{files};
         }
 
         public StoreitFile getFiles() {
-            return files;
+            return files[0];
         }
     }
 }
