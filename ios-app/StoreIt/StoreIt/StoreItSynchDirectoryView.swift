@@ -264,36 +264,42 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     }
     
     func renameFile(action: UIAlertAction) -> Void {
-        let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .Alert)
-        
-        alert.addTextFieldWithConfigurationHandler(nil)
-        
-        alert.addAction(UIAlertAction(title: "Annuler", style: .Cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
-            let input = alert.textFields![0] as UITextField
+        if let index = self.lastSelectedActionSheetForFile {
+            if let selectedFile = self.navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
+            let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .Alert)
             
-            // TODO: check input
-	
-            if let text = input.text {
-                if let index = self.lastSelectedActionSheetForFile {
-                    if let selectedFile = self.navigationManager?.getSelectedFileAtRow(NSIndexPath(forRow: index, inSection: 0)) {
-                        
-                        var components = selectedFile.path.componentsSeparatedByString("/").dropFirst()
-                        components = components.dropLast()
-                        components.append(text)
-                        
-                        let newPath = "/" + components.joinWithSeparator("/")
-                        self.navigationManager?.movingOptions.src = selectedFile.path
-                        self.navigationManager?.movingOptions.dest = newPath
-                        
-                        self.networkManager?.fmove((self.navigationManager?.movingOptions)!, completion: nil)
-                        
-                        self.lastSelectedActionSheetForFile = nil
-                    }
-                }
+            alert.addTextFieldWithConfigurationHandler { (textField) -> Void in
+                textField.becomeFirstResponder()
+                textField.selectedTextRange = textField.textRangeFromPosition(textField.beginningOfDocument, toPosition: textField.endOfDocument)
+                textField.text = selectedFile.path.componentsSeparatedByString("/").last!
+ 
             }
-        }))
-        self.presentViewController(alert, animated: true, completion: nil)
+            
+            alert.addAction(UIAlertAction(title: "Annuler", style: .Cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
+                
+                let input = alert.textFields![0] as UITextField
+                
+                // TODO: check input
+                
+                if let text = input.text {
+                    var components = selectedFile.path.componentsSeparatedByString("/").dropFirst()
+                    components = components.dropLast()
+                    components.append(text)
+                    
+                    let newPath = "/" + components.joinWithSeparator("/")
+                    self.navigationManager?.movingOptions.src = selectedFile.path
+                    self.navigationManager?.movingOptions.dest = newPath
+                    
+                    self.networkManager?.fmove((self.navigationManager?.movingOptions)!, completion: nil)
+                    
+                    self.lastSelectedActionSheetForFile = nil
+        
+                }
+        	}))
+        	self.presentViewController(alert, animated: true, completion: nil)
+        	}
+        }
     }
 
     func addActionsToActionSheets() {

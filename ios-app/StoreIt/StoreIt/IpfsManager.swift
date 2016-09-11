@@ -46,7 +46,11 @@ class IpfsManager {
         body.appendData("Content-Disposition : file; name=\"file\"; filename=\"\(fileName)\"\r\n".dataUsingEncoding(NSUTF8StringEncoding)!)
         body.appendData("Content-Transfer-Encoding: binary\r\n".dataUsingEncoding(NSUTF8StringEncoding)!)
         body.appendData("Content-Type: application/octet-stream\(CRLF)\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
-        body.appendData(data!)
+        
+        if let unwrappedData = data {
+            body.appendData(unwrappedData)
+        }
+        
         body.appendData("\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
         body.appendData("--\(boundary)--\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
         
