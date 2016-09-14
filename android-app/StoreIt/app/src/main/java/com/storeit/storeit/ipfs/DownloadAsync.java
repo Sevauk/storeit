@@ -6,14 +6,23 @@ import android.os.AsyncTask;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.storeit.storeit.R;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
-public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
+public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     private NotificationManager mNotifyManager;
     private android.support.v4.app.NotificationCompat.Builder mBuilder;
     private int id = 1;
@@ -48,21 +57,58 @@ public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
     }
 
     @Override
+    protected void onProgressUpdate(Integer... progress) {
+        mBuilder.setProgress(100, progress[0], false);
+        mNotifyManager.notify(id, mBuilder.build());
+    }
+
+    long getFileSize(String hash) {
+
+        String nodeUrl = "http://192.168.1.24";
+
+        URL url = null;
+        HttpURLConnection urlConnection = null;
+        long size = -1;
+
+        try {
+            url = new URL(nodeUrl + ":5001/api/v0/object/stat?arg=" + hash);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+
+            String result = IOUtils.toString(in);
+
+            JsonParser parser = new JsonParser();
+            JsonObject obj = parser.parse(result).getAsJsonObject();
+            size = obj.get("CumulativeSize").getAsLong();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+        Log.v("DownloadAsync", "File size : " + size);
+        return size;
+    }
+
+    @Override
     protected Boolean doInBackground(String... params) {
 
         String path = params[0];
         String hash = params[1];
 
-        IPFS ipfs = new IPFS("toto");
-
         File filePath = new File(path);
         File file = new File(filePath, hash);
+
+        long fileSize = getFileSize(hash);
+        if (fileSize == -1)
+            return false;
 
         FileOutputStream outputStream = null;
 
         try {
             if (!file.exists()) {
-                if (!file.createNewFile()){
+                if (!file.createNewFile()) {
                     Log.e("DownloadAsync", "Error while creating " + file);
                 }
             }
@@ -80,12 +126,56 @@ public class DownloadAsync extends AsyncTask<String, Void, Boolean> {
                 Log.v("DownloadAsync", "Error while deleting file");
             }
         }
-        if (outputStream == null){
+        if (outputStream == null) {
             if (!file.delete()) {
                 Log.v("DownloadAsync", "Error while deleting file");
             }
-            return  false;
+            return false;
         }
-        return ipfs.downloadFile(outputStream, hash);
+
+        HttpURLConnection connection;
+        URL url;
+
+        String m_nodeUrl = "https://ipfs.io/ipfs/";
+        try {
+            url = new URL(m_nodeUrl + hash);
+            connection = (HttpURLConnection) url.openConnection();
+
+            connection.setRequestMethod("GET"); // Create the get request
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK)
+                return false;
+
+            // Get connection stream
+            InputStream is = connection.getInputStream();
+            // Byte wich will contain the response byte
+            byte[] buffer = new byte[4096];
+
+            int bytesRead;
+            long total = 0;
+            Integer count;
+            long startTime = System.currentTimeMillis();
+            long elapsedTime = 0L;
+
+            while ((bytesRead = is.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+
+                total += bytesRead;
+                count = (int) (total * 100 / fileSize);
+
+                elapsedTime = System.currentTimeMillis() - startTime;
+
+                if (elapsedTime > 500) {
+                    publishProgress(count);
+                    startTime = System.currentTimeMillis();
+                }
+            }
+            outputStream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 }
