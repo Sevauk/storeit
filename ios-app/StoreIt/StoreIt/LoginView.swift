@@ -42,7 +42,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         print("[LoginView] Last connexion type : \(lastConnectionType). Trying to auto log if possible...")
         
         if (lastConnectionType == ConnectionType.GOOGLE.rawValue) {
-            self.initGoogle()
+            //self.initGoogle()
         } else if (lastConnectionType == ConnectionType.FACEBOOK.rawValue && FBSDKAccessToken.current() != nil) {
             // TODO: check expiration of Facebook token
             self.initFacebook()
@@ -81,7 +81,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
             let loginManager = FBSDKLoginManager()
             loginManager.logOut()
         } else if (self.connectionType != nil && self.connectionType! == ConnectionType.GOOGLE) {
-            self.connectionManager?.forgetTokens()
+            //self.connectionManager?.forgetTokens()
         }
         
 		self.networkManager?.close()
@@ -96,7 +96,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     }
     
     func logoutToLoginView() {
-        self.navigationController?.popToRootViewController(animated: true)
+        _ = self.navigationController?.popToRootViewController(animated: true)
         self.logout()
     }
     
@@ -105,7 +105,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         
         let accessToken: String? = connectionType.map { type in
             if (type == ConnectionType.GOOGLE.rawValue) {
-                return (self.connectionManager?.oauth2?.accessToken())!
+                return ""//return (self.connectionManager?.oauth2?.accessToken())!
             } else {
                 return FBSDKAccessToken.current().tokenString
             }
@@ -153,11 +153,13 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
     }
     
-    func loginButton(_ loginButton: FBSDKLoginButton!, didCompleteWith result: FBSDKLoginManagerLoginResult!, error: NSError!) {
+    func loginButton(_ loginButton: FBSDKLoginButton!, didCompleteWith result: FBSDKLoginManagerLoginResult!, error: Error!) {
         if ((error) != nil) {
+        	print(error)
             self.logout()
         }
         else if result.isCancelled {
+            print(result)
             self.logout()
         }
         else {
@@ -178,7 +180,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     
     // MARK: Login with Google
     
-    func initGoogle() {
+    /*func initGoogle() {
         if (self.connectionManager == nil) {
             self.connectionType = ConnectionType.GOOGLE
             self.connectionManager = ConnectionManager(connectionType: ConnectionType.GOOGLE)
@@ -186,10 +188,10 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         }
 
         self.connectionManager?.authorize(self)
-    }
+    }*/
     
     @IBAction func login(_ sender: AnyObject) {
-    	self.initGoogle()
+    	//self.initGoogle()
     }
 
 }

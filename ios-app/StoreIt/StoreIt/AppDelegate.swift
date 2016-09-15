@@ -41,7 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         if (loginView.connectionType != nil
             && loginView.connectionType! == ConnectionType.GOOGLE) {
-            loginView.connectionManager?.handleRedirectUrl(url)
+            //loginView.connectionManager?.handleRedirectUrl(url)
         }
         else if (loginView.connectionType != nil
             && loginView.connectionType! == ConnectionType.FACEBOOK) {

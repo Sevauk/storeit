@@ -33,7 +33,7 @@ class File: Mappable {
         self.files = files
     }
     
-   required init?(_ map: Map) {
+   required init?(map: Map) {
         self.path = ""
     	self.metadata = ""
     	self.IPFSHash = ""
@@ -41,7 +41,7 @@ class File: Mappable {
     	self.files = [:]
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
     	path <- map["path"]
         metadata <- map["metadata"]
         IPFSHash <- map["IPFSHash"]

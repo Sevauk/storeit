@@ -46,8 +46,8 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
         
         self.actionSheetsManager = ActionSheetsManager()
         self.actionSheetsManager!.addNewActionSheet(ActionSheets.upload, title: "Ajout d'un nouvel élément", message: nil)
-        self.actionSheetsManager!.addNewActionSheet(ActionSheets.dir_OPT, title: "Dossier", message: "Que voulez-vous faire ?")
-        self.actionSheetsManager!.addNewActionSheet(ActionSheets.file_OPT, title: "Fichier", message: "Que voulez-vous faire ?")
+        self.actionSheetsManager!.addNewActionSheet(ActionSheets.dirOpt, title: "Dossier", message: "Que voulez-vous faire ?")
+        self.actionSheetsManager!.addNewActionSheet(ActionSheets.fileOpt, title: "Fichier", message: "Que voulez-vous faire ?")
         self.addActionsToActionSheets()
     }
     
@@ -161,35 +161,35 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
         self.dismiss(animated: true, completion: {_ in
             let referenceUrl = editingInfo["UIImagePickerControllerReferenceURL"] as! URL
-            let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject as! PHAsset
-
-            PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
-                (imagedata, dataUTI, orientation, info) in
-                if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
-                {
-                    let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
-                    
-                    // Maybe begin some loading in interface here...
-                    self.ipfsManager?.add(filePath) {
-                        (
-                        data, response, error) in
+            if let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject {
+                PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
+                    (imagedata, dataUTI, orientation, info) in
+                    if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
+                    {
+                        let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
                         
-                        guard let _:Data = data, let _:URLResponse = response  , error == nil else {
-                            print("[IPFS.ADD] Error while IPFS ADD: \(error)")
-                            return
+                        // Maybe begin some loading in interface here...
+                        self.ipfsManager?.add(filePath) {
+                            (
+                            data, response, error) in
+                            
+                            guard let _:Data = data, let _:URLResponse = response  , error == nil else {
+                                print("[IPFS.ADD] Error while IPFS ADD: \(error)")
+                                return
+                            }
+                            
+                            // If ipfs add succeed
+                            let dataString = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
+                            let ipfsAddResponse = Mapper<IpfsAddResponse>().map(JSONString: dataString as String)
+                            let relativePath = self.navigationManager?.buildPath(filePath.lastPathComponent)
+                            
+                            let file = self.fileManager?.createFile(relativePath!, metadata: "", IPFSHash: ipfsAddResponse!.hash)
+                            
+                            self.networkManager?.fadd([file!], completion: nil)
                         }
-
-                        // If ipfs add succeed
-                        let dataString = NSString(data: data!, encoding: String.Encoding.utf8)!
-                        let ipfsAddResponse = Mapper<IpfsAddResponse>().map(dataString)
-                        let relativePath = self.navigationManager?.buildPath(filePath.lastPathComponent!)
-                        
-						let file = self.fileManager?.createFile(relativePath!, metadata: "", IPFSHash: ipfsAddResponse!.hash)
- 
-                        self.networkManager?.fadd([file!], completion: nil)
                     }
-                }
-            })
+                })
+            }
         });
     }
     
@@ -314,7 +314,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             uploadActions["Prendre avec l'appareil photo"] = takeImageWithCamera
             
             // Dir actions Action Sheet
-            let dirAS = ActionSheets.dir_OPT
+            let dirAS = ActionSheets.dirOpt
             var fileActions: [String:((UIAlertAction) -> Void)?] = [:]
             
             fileActions["Renommer"] = renameFile
@@ -322,7 +322,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             fileActions["Supprimer"] = deleteFile
             
             // File actions Action Sheet
-            let fileAS = ActionSheets.file_OPT
+            let fileAS = ActionSheets.fileOpt
             
             fileActions["Télécharger dans la pellicule"] = nil
             
@@ -346,7 +346,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     func openContextualMenu() {
         if let index = self.lastSelectedActionSheetForFile {
             if let isDir = self.navigationManager?.isSelectedFileAtRowADir(IndexPath(row: index, section: 0)) {
-                let actionSheetType: ActionSheets = isDir ? ActionSheets.dir_OPT : ActionSheets.file_OPT
+                let actionSheetType: ActionSheets = isDir ? ActionSheets.dirOpt : ActionSheets.fileOpt
                 
                 if let actionSheet = self.actionSheetsManager?.getActionSheet(actionSheetType) {
                     self.present(actionSheet, animated: true, completion: nil)

@@ -24,12 +24,12 @@ class IpfsAddResponse: Mappable {
         self.hash = hash
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.name = ""
         self.hash = ""
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         name <- map["Name"]
         hash <- map["Hash"]
     }

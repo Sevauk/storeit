@@ -339,7 +339,7 @@ class NavigationManager {
     }
     
     func goPreviousDir() {
-        self.indexes.popLast()
+        _ = self.indexes.popLast()
         self.currentDirectory = self.getFileObjectsAtIndex()
         self.items = Array(self.currentDirectory.keys)
     }

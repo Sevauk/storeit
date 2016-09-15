@@ -7,9 +7,9 @@
 //
 
 import Foundation
-import p2_OAuth2
+//import p2_OAuth2
 
-class OAuth2Google : OAuth2 {
+/*class OAuth2Google : OAuth2 {
     
     fileprivate let oauth2: OAuth2CodeGrant
     
@@ -60,4 +60,4 @@ class OAuth2Google : OAuth2 {
         }
     }
     
-}
+}*/

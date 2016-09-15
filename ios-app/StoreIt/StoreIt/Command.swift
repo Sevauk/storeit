@@ -27,13 +27,13 @@ class Command<T: Mappable>: Mappable {
         self.parameters = parameters
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.uid = -1
         self.command = ""
         self.parameters = nil
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         uid <- map["uid"]
         command <- map["command"]
         parameters <- map["parameters"]

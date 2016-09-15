@@ -21,13 +21,13 @@ class IpfsManager {
     
     func get(_ hash: String, completionHandler: @escaping ((Data?) -> Void)) {
         print("IPFS GET FILE WITH HASH \(hash) ...")
-        Alamofire.request(.GET, "http://ipfs.io/ipfs/\(hash)").responseString { response in
+        Alamofire.request("http://ipfs.io/ipfs/\(hash)").responseString { response in
             print("IPFS GET SUCCEEDED...")
         	completionHandler(response.data)
         }
     }
     
-    func add(_ filePath: URL, completionHandler: (Data?, URLResponse?, NSError?) -> Void) {
+    func add(_ filePath: URL, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) {
         let CRLF = "\r\n"
         let boundary = self.generateBoundaryString()
         
@@ -35,7 +35,7 @@ class IpfsManager {
         let fileName = filePath.lastPathComponent
         
         let url = URL(string: "http://\(host):\(port)/api/v0/add?stream-cannels=true")
-        let request = NSMutableURLRequest(url: url!)
+        var request = URLRequest(url: url!)
         
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -57,8 +57,8 @@ class IpfsManager {
         request.httpBody = body as Data
         
         let session = URLSession.shared
-        let task = session.dataTask(with: request, completionHandler: completionHandler)
-        
+        let task = session.dataTask(with: request, completionHandler: completionHandler as! (Data?, URLResponse?, Error?) -> Void)
+
         task.resume()
     }
     

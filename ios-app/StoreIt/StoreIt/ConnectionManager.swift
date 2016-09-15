@@ -7,11 +7,11 @@
 //
 
 import Foundation
-import p2_OAuth2
+//import p2_OAuth2
 
 class ConnectionManager {
     
-    let oauth2: OAuth2?
+   /* let oauth2: OAuth2?
     
     init(connectionType: ConnectionType) {
         print("[ConnexionManager] Initializing a connexion of type \(connectionType)")
@@ -44,5 +44,5 @@ class ConnectionManager {
     func authorize(_ context: AnyObject) {
         self.oauth2?.authorize(context)
     }
-    
+    */
 }

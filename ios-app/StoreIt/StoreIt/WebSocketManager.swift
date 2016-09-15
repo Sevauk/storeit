@@ -111,11 +111,11 @@ class WebSocketManager {
         for file in files {
             if (file.IPFSHash != "") {
                 let updateElement = UpdateElement(property: Property.ipfsHash, file: file)
-                self.navigationManager.updateTree(updateElement)
+                _ = self.navigationManager.updateTree(updateElement)
             }
             if (file.metadata != "") {
                 let updateElement = UpdateElement(property: Property.metadata, file: file)
-                self.navigationManager.updateTree(updateElement)
+                _ = self.navigationManager.updateTree(updateElement)
             }
         }
     }
@@ -136,11 +136,11 @@ class WebSocketManager {
 
             let cmdInfos = CommandInfos()
             
-            if let command: ResponseResolver = Mapper<ResponseResolver>().map(request) {
+            if let command: ResponseResolver = Mapper<ResponseResolver>().map(JSONString: request) {
                 if (command.command == cmdInfos.RESP) {
                     
                     // SEREVR HAS RESPONDED
-                    if let response: Response = Mapper<Response>().map(request) {
+                    if let response: Response = Mapper<Response>().map(JSONString: request) {
                         
                         // JOIN RESPONSE
                         if (response.text == cmdInfos.JOIN_RESPONSE_TEXT) {
@@ -198,7 +198,7 @@ class WebSocketManager {
                     
                     // FDEL
                     if (command.command == cmdInfos.FDEL) {
-                        let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(request)
+                        let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(JSONString: request)
                         
                         if let cmd = fdelCmd {
                             if let paths = cmd.parameters?.files {
@@ -209,7 +209,7 @@ class WebSocketManager {
                     
                     // FMOV
                     else if (command.command == cmdInfos.FMOV) {
-                        let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(request)
+                        let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(JSONString: request)
 
                         if let cmd = fmovCmd {
                             if let parameters = cmd.parameters {
@@ -231,7 +231,7 @@ class WebSocketManager {
                     
                     // FADD / FUPT
                     else {
-                        let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(request)
+                        let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(JSONString: request)
                         
                         if let files = defaultCmd?.parameters?.files {
                             if (command.command == cmdInfos.FADD) {
@@ -278,7 +278,7 @@ class WebSocketManager {
     func sendRequest(_ request: String, completion: (() -> ())?) {
         if (self.ws.isConnected) {
             print("[WSManager] request is sending... : \(request)")
-            self.ws.writeString(request, completion: completion)
+            self.ws.write(string: request, completion: completion)
         } else {
             print("[Client.WebSocketManager] Client can't send request \(request) to \(url), WS is disconnected")
         }

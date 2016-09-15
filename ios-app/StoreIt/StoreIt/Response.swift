@@ -33,7 +33,7 @@ class Response : Mappable {
         self.parameters = parameters
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.code = -1
         self.text = ""
         self.command = ""
@@ -41,7 +41,7 @@ class Response : Mappable {
         self.parameters = nil
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         code <- map["code"]
         text <- map["text"]
         commandUid <- map["commandUid"]

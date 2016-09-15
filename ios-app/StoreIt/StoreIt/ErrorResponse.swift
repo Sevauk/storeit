@@ -17,11 +17,11 @@ class ErrorResponse : Response {
         super.init(code: code, text: text, commandUid: commandUid, command: cmdInfos.RESP, parameters: nil)
     }
     
-    required init?(_ map: Map) {
-        super.init(map)
+    required init?(map: Map) {
+        super.init(map: map)
     }
     
-    override func mapping(_ map: Map) {
-        super.mapping(map)
+    override func mapping(map: Map) {
+        super.mapping(map: map)
     }
 }

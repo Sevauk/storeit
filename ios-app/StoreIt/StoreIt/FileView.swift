@@ -30,7 +30,7 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
     
     func previewControllerWillDismiss(_ controller: QLPreviewController) {
         self.clearTmpDir()
-        self.navigationController?.popViewController(animated: false)
+        _ = self.navigationController?.popViewController(animated: false)
     }
     
     func presentQlPreviewController() {
@@ -87,7 +87,7 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
         if let doc = self.createTmpFile() {
             return doc as QLPreviewItem
         }
-    	return URL()
+        return URL(string: "") as! QLPreviewItem // fix that later because it will crash, thx swift 3
     }
     
 }

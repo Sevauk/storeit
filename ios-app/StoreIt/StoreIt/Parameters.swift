@@ -24,12 +24,12 @@ class JoinParameters: Mappable {
         self.accessToken = accessToken
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.authType = ""
         self.accessToken = ""
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         authType <- map["authType"]
         accessToken <- map["accessToken"]
     }
@@ -51,12 +51,12 @@ class FmovParameters: Mappable {
         self.dest = dest
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.src = ""
         self.dest = ""
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         src <- map["src"]
         dest <- map["dest"]
     }
@@ -74,11 +74,11 @@ class FdelParameters: Mappable {
         self.files = files
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.files = []
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         files <- map["files"]
     }
 }
@@ -95,11 +95,11 @@ class DefaultParameters: Mappable {
         self.files = files
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.files = []
     }
     
-    func mapping(_ map: Map) {
+    func mapping(map: Map) {
         files <- map["files"]
     }
 }
