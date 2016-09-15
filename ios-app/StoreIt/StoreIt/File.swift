@@ -41,7 +41,7 @@ class File: Mappable {
     	self.files = [:]
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
     	path <- map["path"]
         metadata <- map["metadata"]
         IPFSHash <- map["IPFSHash"]

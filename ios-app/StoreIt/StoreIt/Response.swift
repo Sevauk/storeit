@@ -41,7 +41,7 @@ class Response : Mappable {
         self.parameters = nil
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         code <- map["code"]
         text <- map["text"]
         commandUid <- map["commandUid"]

@@ -33,7 +33,7 @@ class Command<T: Mappable>: Mappable {
         self.parameters = nil
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         uid <- map["uid"]
         command <- map["command"]
         parameters <- map["parameters"]

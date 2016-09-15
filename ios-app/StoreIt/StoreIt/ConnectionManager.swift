@@ -37,11 +37,11 @@ class ConnectionManager {
         self.oauth2?.forgetTokens()
     }
     
-    func handleRedirectUrl(url: NSURL) {
+    func handleRedirectUrl(_ url: URL) {
         self.oauth2?.handleRedirectUrl(url)
     }
     
-    func authorize(context: AnyObject) {
+    func authorize(_ context: AnyObject) {
         self.oauth2?.authorize(context)
     }
     

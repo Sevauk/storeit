@@ -29,7 +29,7 @@ class JoinParameters: Mappable {
         self.accessToken = ""
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         authType <- map["authType"]
         accessToken <- map["accessToken"]
     }
@@ -56,7 +56,7 @@ class FmovParameters: Mappable {
         self.dest = ""
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         src <- map["src"]
         dest <- map["dest"]
     }
@@ -78,7 +78,7 @@ class FdelParameters: Mappable {
         self.files = []
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         files <- map["files"]
     }
 }
@@ -99,7 +99,7 @@ class DefaultParameters: Mappable {
         self.files = []
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         files <- map["files"]
     }
 }

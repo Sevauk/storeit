@@ -11,27 +11,27 @@ import ObjectMapper
 import CryptoSwift
 
 enum FileType: Int {
-    case Unknown = -1
-	case Directory
-	case RegularFile
-    case Link
+    case unknown = -1
+	case directory
+	case regularFile
+    case link
 }
 
 class FileManager {
     
-    private let fileManager = NSFileManager.defaultManager()
+    fileprivate let fileManager = Foundation.FileManager.default
     
     let rootDirPath: String // storeit base directory
     let absoluteRootDirPath: String // storeit directory full path
 
     init(path: String) {
-        let url: NSURL = NSURL(fileURLWithPath: path)
-        self.rootDirPath = url.lastPathComponent!
-        self.absoluteRootDirPath = url.path!
+        let url: URL = URL(fileURLWithPath: path)
+        self.rootDirPath = url.lastPathComponent
+        self.absoluteRootDirPath = url.path
         
     }
     
-     func getFilePathsInFileObject(file: File, paths: [String]) -> [String] {
+     func getFilePathsInFileObject(_ file: File, paths: [String]) -> [String] {
         var newPaths = paths
 
         // Simple file or empty dir
@@ -42,7 +42,7 @@ class FileManager {
         else {
             for (_, file) in file.files {
                 if file.isDir {
-                    newPaths.appendContentsOf(getFilePathsInFileObject(file, paths: newPaths))
+                    newPaths.append(contentsOf: getFilePathsInFileObject(file, paths: newPaths))
                 } else {
                     newPaths.append(file.path)
                 }
@@ -56,7 +56,7 @@ class FileManager {
         return self.buildTree(self.rootDirPath)
     }
     
-    func createDir(path: String, metadata: String, IPFSHash: String, files: [String:File]? = nil) -> File {
+    func createDir(_ path: String, metadata: String, IPFSHash: String, files: [String:File]? = nil) -> File {
         let dir = File(path: path,
                        metadata: metadata,
                        IPFSHash: IPFSHash,
@@ -65,7 +65,7 @@ class FileManager {
         return dir
     }
     
-    func createFile(path: String, metadata: String, IPFSHash: String) -> File {
+    func createFile(_ path: String, metadata: String, IPFSHash: String) -> File {
         let file = File(path: path,
                        metadata: metadata,
                        IPFSHash: IPFSHash,
@@ -75,7 +75,7 @@ class FileManager {
     }
     
     // Build recursively the tree of the root directory into a dictionnary
-    private func buildTree(path: String) -> [String: File] {
+    fileprivate func buildTree(_ path: String) -> [String: File] {
         let files: [String] = getDirectoryContent(path)
         var nestedFiles: [String: File] = [String:File]()
         
@@ -84,13 +84,13 @@ class FileManager {
             let type = fileType(filePath)
 
             switch type {
-                case .RegularFile :
+                case .regularFile :
                     nestedFiles[file] = File(path: filePath,
                                              metadata: "",
                                              IPFSHash: "",
                                              isDir: false,
                                              files: [String:File]())
-                case .Directory :
+                case .directory :
                     nestedFiles[file] = File(path: filePath,
                                              metadata: "",
                                              IPFSHash: "",
@@ -103,26 +103,26 @@ class FileManager {
         return nestedFiles
     }
     
-    private func fileType(path: String) -> FileType {
+    fileprivate func fileType(_ path: String) -> FileType {
         var isDir : ObjCBool = false
         
-        if (fileManager.fileExistsAtPath(getFullPath(path), isDirectory: &isDir)) {
-            if isDir {
-                return FileType.Directory
+        if (fileManager.fileExists(atPath: getFullPath(path), isDirectory: &isDir)) {
+            if isDir.boolValue {
+                return FileType.directory
             } else {
-                return FileType.RegularFile
+                return FileType.regularFile
             }
         }
         else {
-            return FileType.Unknown
+            return FileType.unknown
         }
     }
     
-    private func getDirectoryContent(path: String) -> [String] {
+    fileprivate func getDirectoryContent(_ path: String) -> [String] {
         let fullPath: String = getFullPath(path)
         
         do {
-        	let dirContent = try fileManager.contentsOfDirectoryAtPath(fullPath)
+        	let dirContent = try fileManager.contentsOfDirectory(atPath: fullPath)
             return dirContent
         } catch {
             print("[FileManager] Error while getting file of \(fullPath) directory")
@@ -130,8 +130,8 @@ class FileManager {
         }
     }
     
-    private func getDirectoryNestedContent() -> [String] {
-    	let dirContent = fileManager.enumeratorAtPath(absoluteRootDirPath);
+    fileprivate func getDirectoryNestedContent() -> [String] {
+    	let dirContent = fileManager.enumerator(atPath: absoluteRootDirPath);
         var dirContentArray = [String]()
         
         for file in dirContent!.allObjects {
@@ -142,15 +142,15 @@ class FileManager {
     }
     
     // Concatenate absolute path and file path to get full path (ex: /path/to/dir/storeit + storeit/dir/file = /path/to/dir/storeit/dir/file)
-    private func getFullPath(path: String) -> String {
-        let parentURL: NSURL = NSURL(fileURLWithPath: absoluteRootDirPath).URLByDeletingLastPathComponent!
-        let parent: String = parentURL.path!
+    fileprivate func getFullPath(_ path: String) -> String {
+        let parentURL: URL = NSURL(fileURLWithPath: absoluteRootDirPath).deletingLastPathComponent!
+        let parent: String = parentURL.path
         return "\(parent)/\(path)"
     }
     
-    private func sha256(path: String) -> String {
-        let url: NSURL = NSURL(fileURLWithPath: getFullPath(path))
-        let data: NSData = NSData(contentsOfURL: url)!
+    fileprivate func sha256(_ path: String) -> String {
+        let url: URL = URL(fileURLWithPath: getFullPath(path))
+        let data: Data = try! Data(contentsOf: url)
         
         return data.sha256()!.toHexString()
     }

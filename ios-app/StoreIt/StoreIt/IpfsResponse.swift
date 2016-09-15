@@ -29,7 +29,7 @@ class IpfsAddResponse: Mappable {
         self.hash = ""
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         name <- map["Name"]
         hash <- map["Hash"]
     }

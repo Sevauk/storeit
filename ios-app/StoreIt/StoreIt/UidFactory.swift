@@ -17,22 +17,22 @@ class UidFactory {
     var waintingForResponse: [Uid:Command] = [:]
     var objectsForUid: [Uid:AnyObject] = [:]
     
-    func addNewWaitingCommand(command: Command, objects: AnyObject) {
+    func addNewWaitingCommand(_ command: Command, objects: AnyObject) {
         waintingForResponse[uid] = command
         objectsForUid[uid] = objects
         uid += 1
     }
     
-    func isWaitingForReponse(uid: Uid) -> Bool {
+    func isWaitingForReponse(_ uid: Uid) -> Bool {
         return waintingForResponse.keys.contains(uid)
     }
     
     // No checks needed, called after "isWaitingForReponse"
-    func getCommandNameForUid(uid: Uid) -> Command {
+    func getCommandNameForUid(_ uid: Uid) -> Command {
         return waintingForResponse[uid]!
     }
     
-    func getObjectForUid(uid: Uid) -> AnyObject {
+    func getObjectForUid(_ uid: Uid) -> AnyObject {
         return objectsForUid[uid]!
     }
 }

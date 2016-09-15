@@ -11,16 +11,16 @@ import Plist
 
 class PListManager {
     
-    private var plist: Plist?
-    private let path: String
+    fileprivate var plist: Plist?
+    fileprivate let path: String
     
     init() {
 		
-        let rootPath = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.DocumentDirectory, .UserDomainMask, true)[0]
-        let plistPathInDocument = rootPath.stringByAppendingString("/storeit_data.plist")
-        let fileManager = NSFileManager.defaultManager()
+        let rootPath = NSSearchPathForDirectoriesInDomains(Foundation.FileManager.SearchPathDirectory.documentDirectory, .userDomainMask, true)[0]
+        let plistPathInDocument = rootPath + "/storeit_data.plist"
+        let fileManager = Foundation.FileManager.default
         
-        if (!fileManager.fileExistsAtPath(plistPathInDocument)){
+        if (!fileManager.fileExists(atPath: plistPathInDocument)){
             plist = nil
             
         } else {
@@ -30,7 +30,7 @@ class PListManager {
         self.path = plistPathInDocument
     }
     
-    func addValueForKey(key: String, value: String) {
+    func addValueForKey(_ key: String, value: String) {
         let data: NSMutableDictionary
         
         if (plist != nil) {
@@ -39,12 +39,12 @@ class PListManager {
             data = NSMutableDictionary()
         }
         
-        data.setObject(value, forKey: key)
-        data.writeToFile(path, atomically: true)
+        data.setObject(value, forKey: key as NSCopying)
+        data.write(toFile: path, atomically: true)
         self.plist = Plist(path: path)
 	}
     
-    func getValueWithKey(key: String) -> String {
+    func getValueWithKey(_ key: String) -> String {
         return self.plist?[key].string ?? "None"
     }
 }

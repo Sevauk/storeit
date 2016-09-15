@@ -33,7 +33,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         self.configureFacebook()
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewDidLoad()
         
         self.configureFacebook()
@@ -43,7 +43,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         
         if (lastConnectionType == ConnectionType.GOOGLE.rawValue) {
             self.initGoogle()
-        } else if (lastConnectionType == ConnectionType.FACEBOOK.rawValue && FBSDKAccessToken.currentAccessToken() != nil) {
+        } else if (lastConnectionType == ConnectionType.FACEBOOK.rawValue && FBSDKAccessToken.current() != nil) {
             // TODO: check expiration of Facebook token
             self.initFacebook()
         }
@@ -54,8 +54,8 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         // Dispose of any resources that can be recreated.
     }
 
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        let tabBarController = segue.destinationViewController as! UITabBarController
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let tabBarController = segue.destination as! UITabBarController
         let navigationController = tabBarController.viewControllers![0] as! UINavigationController
         let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
         
@@ -70,8 +70,8 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     }
     
     func moveToTabBarController() {
-        let tabBarController = self.storyboard?.instantiateViewControllerWithIdentifier("tabBarController") as! UITabBarController
-        self.presentViewController(tabBarController, animated: true, completion: nil)
+        let tabBarController = self.storyboard?.instantiateViewController(withIdentifier: "tabBarController") as! UITabBarController
+        self.present(tabBarController, animated: true, completion: nil)
     }
     
     func logout() {
@@ -96,7 +96,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     }
     
     func logoutToLoginView() {
-        self.navigationController?.popToRootViewControllerAnimated(true)
+        self.navigationController?.popToRootViewController(animated: true)
         self.logout()
     }
     
@@ -107,18 +107,18 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
             if (type == ConnectionType.GOOGLE.rawValue) {
                 return (self.connectionManager?.oauth2?.accessToken())!
             } else {
-                return FBSDKAccessToken.currentAccessToken().tokenString
+                return FBSDKAccessToken.current().tokenString
             }
         }
         
         self.networkManager?.join(connectionType!, accessToken: accessToken!, completion: nil)
     }
     
-    @IBAction func logoutSegue(segue: UIStoryboardSegue) {
+    @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
 		self.logout()
     }
     
-    func initConnection(host: String, port: Int, path: String, allItems: [String:File]) {
+    func initConnection(_ host: String, port: Int, path: String, allItems: [String:File]) {
         if (self.fileManager == nil) {
             self.fileManager = FileManager(path: path) // Path to local synch dir
         }
@@ -150,10 +150,10 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         self.plistManager?.addValueForKey("connectionType", value: ConnectionType.FACEBOOK.rawValue)
         
         self.initConnection(self.host, port: self.port, path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
-        self.performSegueWithIdentifier("StoreItSynchDirSegue", sender: nil)
+        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
     }
     
-    func loginButton(loginButton: FBSDKLoginButton!, didCompleteWithResult result: FBSDKLoginManagerLoginResult!, error: NSError!) {
+    func loginButton(_ loginButton: FBSDKLoginButton!, didCompleteWith result: FBSDKLoginManagerLoginResult!, error: NSError!) {
         if ((error) != nil) {
             self.logout()
         }
@@ -167,12 +167,12 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         }
     }
     
-    func loginButtonWillLogin(loginButton: FBSDKLoginButton!) -> Bool {
+    func loginButtonWillLogin(_ loginButton: FBSDKLoginButton!) -> Bool {
         self.connectionType = ConnectionType.FACEBOOK
         return true
     }
     
-    func loginButtonDidLogOut(loginButton: FBSDKLoginButton!) {
+    func loginButtonDidLogOut(_ loginButton: FBSDKLoginButton!) {
         self.logout()
     }
     
@@ -188,9 +188,12 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
         self.connectionManager?.authorize(self)
     }
     
-    @IBAction func login(sender: AnyObject) {
+    @IBAction func login(_ sender: AnyObject) {
     	self.initGoogle()
     }
 
 }
+
+
+
 

@@ -11,7 +11,7 @@ import p2_OAuth2
 
 class OAuth2Google : OAuth2 {
     
-    private let oauth2: OAuth2CodeGrant
+    fileprivate let oauth2: OAuth2CodeGrant
     
     // TODO: do not stock ids like this !
     init() {
@@ -25,11 +25,11 @@ class OAuth2Google : OAuth2 {
         onFailureOrAuthorizeAddEvents()
     }
     
-    func authorize(context: AnyObject) {
+    func authorize(_ context: AnyObject) {
   		self.oauth2.authorizeEmbeddedFrom(context)
     }
     
-    func handleRedirectUrl(url: NSURL) {
+    func handleRedirectUrl(_ url: URL) {
         self.oauth2.handleRedirectURL(url)
     }
     
@@ -42,14 +42,14 @@ class OAuth2Google : OAuth2 {
     }
     
     func onFailureOrAuthorizeAddEvents() {
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let navigationController = appDelegate.window?.rootViewController as! UINavigationController
         let loginView = navigationController.viewControllers[0] as! LoginView
 
         oauth2.onAuthorize = { parameters in
             print("[ConnexionManager] Did authorize with parameters: \(parameters)")
             loginView.initConnection(loginView.host, port: loginView.port, path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
-            loginView.performSegueWithIdentifier("StoreItSynchDirSegue", sender: nil)
+            loginView.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
 
         }
         oauth2.onFailure = { error in

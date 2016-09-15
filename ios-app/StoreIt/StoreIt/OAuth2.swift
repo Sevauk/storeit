@@ -9,8 +9,8 @@
 import Foundation
 
 protocol OAuth2 {
-    func authorize(context: AnyObject)
-    func handleRedirectUrl(url: NSURL)
+    func authorize(_ context: AnyObject)
+    func handleRedirectUrl(_ url: URL)
     func forgetTokens()
     func onFailureOrAuthorizeAddEvents()
     func accessToken() -> String?

@@ -19,7 +19,7 @@ class ResponseResolver : Mappable {
         self.uid = -1
     }
     
-    func mapping(map: Map) {
+    func mapping(_ map: Map) {
         command <- map["command"]
         uid <- map["uid"]
     }
