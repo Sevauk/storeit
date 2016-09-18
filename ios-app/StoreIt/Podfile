@@ -7,11 +7,10 @@ target 'StoreIt' do
     pod 'ObjectMapper'
     pod 'CryptoSwift'
     pod 'Starscream'
-#    pod 'p2.OAuth2', :git => 'https://github.com/p2/OAuth2.git'
- #   pod 'SwiftKeychain'
     pod 'Plist'
     pod 'FBSDKLoginKit'
     pod 'FBSDKCoreKit'
+    pod 'Google/SignIn'
     pod 'Alamofire'
 end
 

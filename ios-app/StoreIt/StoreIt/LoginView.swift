@@ -9,8 +9,9 @@
 import UIKit
 import ObjectMapper
 import FBSDKLoginKit
+import GoogleSignIn
 
-class LoginView: UIViewController, FBSDKLoginButtonDelegate {
+class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
     
     var connectionType: ConnectionType? = nil
     var networkManager: NetworkManager? = nil
@@ -26,26 +27,29 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     let host: String = "localhost"
     
     @IBOutlet weak var FBLoginButton: FBSDKLoginButton!
+    @IBOutlet weak var signInButton: GIDSignInButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.configureFacebook()
+        self.configureGoogle()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewDidLoad()
         
         self.configureFacebook()
+        self.configureGoogle()
         
         let lastConnectionType = self.plistManager?.getValueWithKey("connectionType")
         print("[LoginView] Last connexion type : \(lastConnectionType). Trying to auto log if possible...")
         
         if (lastConnectionType == ConnectionType.GOOGLE.rawValue) {
-            //self.initGoogle()
+            GIDSignIn.sharedInstance().signInSilently()
+            self.initGoogle() // get token refresh it
         } else if (lastConnectionType == ConnectionType.FACEBOOK.rawValue && FBSDKAccessToken.current() != nil) {
-            // TODO: check expiration of Facebook token
-            self.initFacebook()
+            self.initFacebook() // check if fb does a refresh
         }
     }
     
@@ -81,7 +85,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
             let loginManager = FBSDKLoginManager()
             loginManager.logOut()
         } else if (self.connectionType != nil && self.connectionType! == ConnectionType.GOOGLE) {
-            //self.connectionManager?.forgetTokens()
+            GIDSignIn.sharedInstance().disconnect()
         }
         
 		self.networkManager?.close()
@@ -101,17 +105,30 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     }
     
     func loginFunction() {
-        let connectionType = self.connectionType?.rawValue
-        
-        let accessToken: String? = connectionType.map { type in
-            if (type == ConnectionType.GOOGLE.rawValue) {
-                return ""//return (self.connectionManager?.oauth2?.accessToken())!
+        if let connectionType = self.connectionType?.rawValue {
+            
+            print("#####")
+            GIDAuthentication().refreshTokens{toto in print(toto)}
+            print("#####")
+
+            print("FKFKFKFJKJKLF \(GIDSignIn.sharedInstance().currentUser)")
+
+            
+            if connectionType == ConnectionType.GOOGLE.rawValue {
+
+                GIDAuthentication().getTokensWithHandler { (token, error) in
+                    print("\(token)        \(error)")
+                    if let token = token?.accessToken {
+                        print("LALALALALALALALAL")
+                        self.networkManager?.join(connectionType, accessToken: token, completion: nil)
+                    }
+                }
             } else {
-                return FBSDKAccessToken.current().tokenString
+                if let token = FBSDKAccessToken.current().tokenString {
+                    self.networkManager?.join(connectionType, accessToken: token, completion: nil)
+                }
             }
         }
-        
-        self.networkManager?.join(connectionType!, accessToken: accessToken!, completion: nil)
     }
     
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
@@ -180,20 +197,45 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate {
     
     // MARK: Login with Google
     
-    /*func initGoogle() {
-        if (self.connectionManager == nil) {
-            self.connectionType = ConnectionType.GOOGLE
-            self.connectionManager = ConnectionManager(connectionType: ConnectionType.GOOGLE)
-            self.plistManager?.addValueForKey("connectionType", value: ConnectionType.GOOGLE.rawValue)
-        }
-
-        self.connectionManager?.authorize(self)
-    }*/
+    func configureGoogle() {
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+    }
     
-    @IBAction func login(_ sender: AnyObject) {
-    	//self.initGoogle()
+    func sign(_ signIn: GIDSignIn!,
+              present viewController: UIViewController!) {
+        self.connectionType = ConnectionType.GOOGLE
+        self.present(viewController, animated: true, completion: nil)
     }
 
+    func sign(_ signIn: GIDSignIn!,
+              dismiss viewController: UIViewController!) {
+        self.dismiss(animated: true, completion: nil)
+    }
+    
+    func sign(inWillDispatch signIn: GIDSignIn!, error: Error!) {
+    }
+    
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+        initGoogle()
+        print(user.authentication.accessToken)
+        print("LLKDKDLKJDKLJLJKDKJLDJKLDJKLD   \(GIDAuthentication().accessToken)")
+        
+        print("AAAAAAA \(GIDSignIn.sharedInstance().currentUser)")
+
+    }
+    
+    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+        self.logout()
+    }
+    
+    func initGoogle() {
+        self.connectionType = ConnectionType.GOOGLE
+        self.plistManager?.addValueForKey("connectionType", value: ConnectionType.GOOGLE.rawValue)
+        
+        self.initConnection(self.host, port: self.port, path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
+        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+    }
 }
 
 

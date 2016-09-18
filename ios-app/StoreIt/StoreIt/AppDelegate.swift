@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import GoogleSignIn
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -32,6 +33,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         loginView.ipfsManager = self.ipfsManager
         loginView.plistManager = self.plistManager
         
+        
+        var configureError: NSError?
+        GGLContext.sharedInstance().configureWithError(&configureError)
+        assert(configureError == nil, "Error configuring Google services: \(configureError)")
+        
+        return true
+
         return FBSDKApplicationDelegate.sharedInstance().application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
@@ -41,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         if (loginView.connectionType != nil
             && loginView.connectionType! == ConnectionType.GOOGLE) {
-            //loginView.connectionManager?.handleRedirectUrl(url)
+            return GIDSignIn.sharedInstance().handle(url, sourceApplication: sourceApplication, annotation: annotation)
         }
         else if (loginView.connectionType != nil
             && loginView.connectionType! == ConnectionType.FACEBOOK) {

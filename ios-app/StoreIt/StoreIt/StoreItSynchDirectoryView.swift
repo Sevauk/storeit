@@ -58,9 +58,7 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
             self.navigationManager?.goPreviousDir()
         }
     }
-    
-    
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     	self.moveToolBar.isHidden = !(self.navigationManager?.movingOptions.isMoving)!
@@ -83,9 +81,6 @@ class StoreItSynchDirectoryView:  UIViewController, UITableViewDelegate, UITable
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-        //let target: File? = sender as? File
-
         if let target: File = sender as? File {
             if (segue.identifier == "nextDirSegue") {
                 
