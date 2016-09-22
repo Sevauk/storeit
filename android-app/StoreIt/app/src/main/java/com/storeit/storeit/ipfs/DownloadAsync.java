@@ -62,9 +62,9 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
         mNotifyManager.notify(id, mBuilder.build());
     }
 
-    long getFileSize(String hash) {
+    private long getFileSize(String hash) {
 
-        String nodeUrl = "http://192.168.1.24";
+        String nodeUrl = "http://127.0.0.1";
 
         URL url = null;
         HttpURLConnection urlConnection = null;
@@ -73,6 +73,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
         try {
             url = new URL(nodeUrl + ":5001/api/v0/object/stat?arg=" + hash);
             urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setConnectTimeout(20000);
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
 
             String result = IOUtils.toString(in);
@@ -142,7 +143,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
             connection = (HttpURLConnection) url.openConnection();
 
             connection.setRequestMethod("GET"); // Create the get request
-
+            connection.setReadTimeout(5000);
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK)
                 return false;
@@ -174,7 +175,17 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
             outputStream.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                e.printStackTrace();
+                outputStream.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            } finally {
+                if (!file.delete()) {
+                    Log.v("DownloadAsync", "Error while deleting file");
+                }
+            }
+            return false;
         }
         return true;
     }

@@ -126,7 +126,7 @@ public class UploadAsync extends AsyncTask<String, Integer, String> {
         String boundary;
         URL url;
 
-        String m_nodeUrl = "http://192.168.1.24";
+        String m_nodeUrl = "http://127.0.0.1";
 
         try {
             url = new URL(m_nodeUrl + ":5001/api/v0/add?stream-cannels=true");
