@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
@@ -22,6 +23,7 @@ import com.storeit.storeit.protocol.command.CommandManager;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
+import com.storeit.storeit.protocol.command.FileStoreCommand;
 import com.storeit.storeit.protocol.command.JoinCommand;
 import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.protocol.command.Response;
@@ -51,7 +53,6 @@ public class SocketService extends Service {
     private FileCommandHandler mFileCommandHandler;
     private int uid = 0;
     private String lastCmd;
-
 
 
     private class SocketManager implements Runnable {
@@ -120,6 +121,13 @@ public class SocketService extends Service {
                                                 Gson gson = new Gson();
                                                 FileMoveCommand fileMoveCommand = gson.fromJson(message, FileMoveCommand.class);
                                                 mFileCommandHandler.handleFMOV(fileMoveCommand);
+                                            }
+                                            break;
+                                        case CommandManager.FSTR:
+                                            if (mFileCommandHandler != null) {
+                                                Gson gson = new Gson();
+                                                FileStoreCommand fileStoreCommand = gson.fromJson(message, FileStoreCommand.class);
+                                                mFileCommandHandler.handleFSTR(fileStoreCommand);
                                             }
                                             break;
                                         default:
@@ -253,6 +261,7 @@ public class SocketService extends Service {
 
         Thread t = new Thread(new SocketManager());
         t.start();
+
     }
 
     @Override

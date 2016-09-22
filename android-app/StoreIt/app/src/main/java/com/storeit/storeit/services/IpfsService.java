@@ -105,6 +105,8 @@ public class IpfsService extends Service {
         try {
             Process process = pb.start();
 
+
+
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
             int read;
@@ -129,7 +131,7 @@ public class IpfsService extends Service {
                 launchCommand(Arrays.asList(IPFS_BINARY, "get", hash));
                 Log.v(LOGTAG, "Downloaded : " + hash);
                 Log.v(LOGTAG, "Adding : " + hash);
-                launchCommand(Arrays.asList(IPFS_BINARY, "app", hash));
+                launchCommand(Arrays.asList(IPFS_BINARY, "add", hash));
                 Log.v(LOGTAG, "Added : " + hash);
             }
         }).run();
