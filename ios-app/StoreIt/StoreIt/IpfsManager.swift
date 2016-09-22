@@ -11,23 +11,17 @@ import Alamofire
 
 class IpfsManager {
     
-    fileprivate let host: String
-    fileprivate let port: Int
+    static let host: String = "127.0.0.1"
+    static let port: Int = 5001
     
-    init?(host: String, port: Int) {
-        self.host = host
-        self.port = port
-    }
-    
-    func get(_ hash: String, completionHandler: @escaping ((Data?) -> Void)) {
-        print("IPFS GET FILE WITH HASH \(hash) ...")
+    static func get(hash: String, completionHandler: @escaping ((Data?) -> Void)) {
         Alamofire.request("http://ipfs.io/ipfs/\(hash)").responseString { response in
-            print("IPFS GET SUCCEEDED...")
         	completionHandler(response.data)
         }
     }
-    
-    func add(_ filePath: URL, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) {
+
+    // TODO: multipart request with Alamofire
+    static func add(filePath: URL, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) {
         let CRLF = "\r\n"
         let boundary = self.generateBoundaryString()
         
@@ -62,7 +56,7 @@ class IpfsManager {
         task.resume()
     }
     
-    fileprivate func generateBoundaryString() -> String
+    private static func generateBoundaryString() -> String
     {
         return "Boundary-\(UUID().uuidString)"
     }

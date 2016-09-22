@@ -14,17 +14,8 @@ import GoogleSignIn
 class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
     
     var connectionType: ConnectionType? = nil
-    var networkManager: NetworkManager? = nil
-    var connectionManager: ConnectionManager? = nil
-    var fileManager: FileManager? = nil
-    var navigationManager: NavigationManager? = nil
-    var ipfsManager: IpfsManager? = nil
-    var plistManager: PListManager? = nil
-
-    let port: Int = 7641//8001
-    //let host: String = "iglu.mobi"
-    //let host: String = "158.69.196.83"
-    let host: String = "localhost"
+    
+    let networkManager = NetworkManager.sharedInstance
     
     @IBOutlet weak var FBLoginButton: FBSDKLoginButton!
     @IBOutlet weak var signInButton: GIDSignInButton!
@@ -42,7 +33,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
         self.configureFacebook()
         self.configureGoogle()
         
-        let lastConnectionType = self.plistManager?.getValueWithKey("connectionType")
+        let lastConnectionType = PListManager.get(with: "connectionType")
         print("[LoginView] Last connexion type : \(lastConnectionType). Trying to auto log if possible...")
         
         if (lastConnectionType == ConnectionType.GOOGLE.rawValue) {
@@ -61,16 +52,8 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let tabBarController = segue.destination as! UITabBarController
         let navigationController = tabBarController.viewControllers![0] as! UINavigationController
-        let listView = navigationController.viewControllers[0] as! StoreItSynchDirectoryView
-        
-        listView.navigationItem.title = self.navigationManager?.rootDirTitle
+        let _ = navigationController.viewControllers[0] as! SynchDirView
 
-        listView.connectionType = self.connectionType
-        listView.networkManager = self.networkManager
-        listView.connectionManager = self.connectionManager
-        listView.fileManager = self.fileManager
-        listView.navigationManager = self.navigationManager
-        listView.ipfsManager = self.ipfsManager
     }
     
     func moveToTabBarController() {
@@ -88,15 +71,10 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
             GIDSignIn.sharedInstance().disconnect()
         }
         
-		self.networkManager?.close()
+		self.networkManager.close()
         self.connectionType = nil
-        self.networkManager = nil
-        self.connectionManager = nil
-        self.fileManager = nil
-        self.navigationManager = nil
-        self.ipfsManager = nil
         
-        self.plistManager?.addValueForKey("connectionType", value: ConnectionType.NONE.rawValue)
+        PListManager.add(for: "connectionType", value: ConnectionType.NONE.rawValue)
     }
     
     func logoutToLoginView() {
@@ -120,12 +98,12 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
                     print("\(token)        \(error)")
                     if let token = token?.accessToken {
                         print("LALALALALALALALAL")
-                        self.networkManager?.join(connectionType, accessToken: token, completion: nil)
+                        self.networkManager.join(connectionType, accessToken: token, completion: nil)
                     }
                 }
             } else {
                 if let token = FBSDKAccessToken.current().tokenString {
-                    self.networkManager?.join(connectionType, accessToken: token, completion: nil)
+                    self.networkManager.join(connectionType, accessToken: token, completion: nil)
                 }
             }
         }
@@ -135,24 +113,8 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
 		self.logout()
     }
     
-    func initConnection(_ host: String, port: Int, path: String, allItems: [String:File]) {
-        if (self.fileManager == nil) {
-            self.fileManager = FileManager(path: path) // Path to local synch dir
-        }
-        
-        if (self.navigationManager == nil) {
-            self.navigationManager = NavigationManager(rootDirTitle: "StoreIt", allItems: [:])
-        }
-        
-        if (self.networkManager == nil) {
-            self.networkManager = NetworkManager(host: host, port: port, navigationManager: self.navigationManager!)
-        }
-        
-        if (self.ipfsManager == nil) {
-            self.ipfsManager = IpfsManager(host: "127.0.0.1", port: 5001)
-        }
-    	
-        self.networkManager?.initConnection(self.loginFunction, logoutFunction: self.logoutToLoginView)
+    func initConnection(path: String, allItems: [String:File]) {
+        self.networkManager.initConnection(self.loginFunction, logoutFunction: self.logoutToLoginView)
     }
     
     // MARK: Login with Facebook
@@ -164,9 +126,9 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     
     func initFacebook() {
         self.connectionType = ConnectionType.FACEBOOK
-        self.plistManager?.addValueForKey("connectionType", value: ConnectionType.FACEBOOK.rawValue)
+        PListManager.add(for: "connectionType", value: ConnectionType.FACEBOOK.rawValue)
         
-        self.initConnection(self.host, port: self.port, path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
+        self.initConnection(path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
         self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
     }
     
@@ -231,9 +193,9 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     
     func initGoogle() {
         self.connectionType = ConnectionType.GOOGLE
-        self.plistManager?.addValueForKey("connectionType", value: ConnectionType.GOOGLE.rawValue)
+        PListManager.add(for: "connectionType", value: ConnectionType.GOOGLE.rawValue)
         
-        self.initConnection(self.host, port: self.port, path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
+        self.initConnection(path: "/Users/gjura_r/Desktop/demo/", allItems: [:])
         self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
     }
 }

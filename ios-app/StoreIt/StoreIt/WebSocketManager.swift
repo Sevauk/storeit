@@ -12,24 +12,28 @@ import ObjectMapper
 
 class WebSocketManager {
     
-    let url: URL
-    let ws: WebSocket
-    let navigationManager: NavigationManager
-    
-    var uidFactory: UidFactory
-    
-    init(host: String, port: Int, uidFactory: UidFactory, navigationManager: NavigationManager) {
+    private let url: URL
+    private let ws: WebSocket
+    private let navigationManager = NavigationManager.sharedInstance
+
+    init(host: String, port: Int) {
         self.url = URL(string: "ws://\(host):\(port)/")!
         self.ws = WebSocket(url: url)
-        self.navigationManager = navigationManager
-        self.uidFactory = uidFactory
     }
     
-    fileprivate func closeMoveToolbar() {
+    func disconnect() {
+        ws.disconnect()
+    }
+    
+    func isConnected() -> Bool {
+        return ws.isConnected
+    }
+    
+    private func closeMoveToolbar() {
         self.navigationManager.moveToolBar?.isHidden = true
     }
     
-    fileprivate func updateList() {
+    private func updateList() {
         if let list = self.navigationManager.list {
             DispatchQueue.main.async {
                 list.reloadData()
@@ -37,7 +41,7 @@ class WebSocketManager {
         }
     }
     
-    fileprivate func removeRowAtIndex(_ index: Int) {
+    private func removeRowAtIndex(_ index: Int) {
         if let list = self.navigationManager.list {
             let indexPath = IndexPath(row: index, section: 0)
             list.deleteRows(at: [indexPath], with: UITableViewRowAnimation.automatic)
@@ -45,7 +49,7 @@ class WebSocketManager {
         }
     }
     
-    fileprivate func deletePaths(_ paths: [String]) {
+    private func deletePaths(_ paths: [String]) {
         for path in paths {
             let updateElement = UpdateElement(path: path)
                         
@@ -57,7 +61,7 @@ class WebSocketManager {
         }
     }
     
-    fileprivate func isRenaming(_ src: String, dest: String) -> Bool {
+    private func isRenaming(_ src: String, dest: String) -> Bool {
         // Drop file name to compare path (if the path is the same, it's only a rename)
         let srcComponents = src.components(separatedBy: "/").dropLast()
         let destComponents = dest.components(separatedBy: "/").dropLast()
@@ -69,7 +73,7 @@ class WebSocketManager {
         return false
     }
     
-    fileprivate func renameFile(_ src: String, dest: String) {
+    private func renameFile(_ src: String, dest: String) {
         let updateElementForRename = UpdateElement(src: src, dest: dest)
 
         let index = self.navigationManager.updateTree(updateElementForRename)
@@ -79,7 +83,7 @@ class WebSocketManager {
         }
     }
     
-    fileprivate func moveFile(_ src: String, file: File) {
+    private func moveFile(_ src: String, file: File) {
         let updateElementForDeletion = UpdateElement(path: src)
         let updateElementForAddition = UpdateElement(file: file, isMoving: true)
         
@@ -95,7 +99,7 @@ class WebSocketManager {
         }
     }
 
-    fileprivate func addFiles(_ files: [File]) {
+    private func addFiles(_ files: [File]) {
         for file in files {
             let updateElement = UpdateElement(file: file, isMoving: false)
 
@@ -107,7 +111,7 @@ class WebSocketManager {
         }
     }
     
-    fileprivate func updateFiles(_ files: [File]) {
+    private func updateFiles(_ files: [File]) {
         for file in files {
             if (file.IPFSHash != "") {
                 let updateElement = UpdateElement(property: Property.ipfsHash, file: file)
@@ -158,26 +162,26 @@ class WebSocketManager {
                         else if (response.text == cmdInfos.SUCCESS_TEXT) {
                             let uid = response.commandUid
 
-                            if (self.uidFactory.isWaitingForReponse(uid)) {
+                            if (UidFactory.isWaitingForReponse(uid)) {
                                 
-                                let commandType = self.uidFactory.getCommandNameForUid(uid)
+                                let commandType = UidFactory.getCommandNameForUid(uid)
 
                                 // FADD
                                 if (commandType == cmdInfos.FADD) {
-                                    let files = self.uidFactory.getObjectForUid(uid) as! [File]
+                                    let files = UidFactory.getObjectForUid(uid) as! [File]
                                     
                                 	self.addFiles(files)
                                 }
                                 // FDEL
                                 else if (commandType == cmdInfos.FDEL) {
-                                	let paths = self.uidFactory.getObjectForUid(uid) as! [String]
+                                	let paths = UidFactory.getObjectForUid(uid) as! [String]
                                     
                                 	self.deletePaths(paths)
                                 }
                                 
                                 // FMOVE
                                 else if (commandType == cmdInfos.FMOV) {
-                                	let movingOptions = self.uidFactory.getObjectForUid(uid) as! MovingOptions
+                                	let movingOptions = UidFactory.getObjectForUid(uid) as! MovingOptions
 
                                     if (movingOptions.isMoving) {
                                         self.moveFile(movingOptions.src!, file: movingOptions.file!)

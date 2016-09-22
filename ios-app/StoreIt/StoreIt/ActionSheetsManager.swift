@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum ActionSheets {
+enum ActionSheet {
     case upload
     case dirOpt
     case fileOpt
@@ -17,33 +17,38 @@ enum ActionSheets {
 
 class ActionSheetsManager {
     
-    var actionsSheets: [ActionSheets:UIAlertController]
+    private static var actionSheets: [ActionSheet:UIAlertController] = [:]
     
-    init() {
-        self.actionsSheets = [:]
+    static func isInitialized() -> Bool {
+        return !ActionSheetsManager.actionSheets.isEmpty
     }
     
-    func addNewActionSheet(_ actionSheetType: ActionSheets, title: String?, message: String?) {
-        self.actionsSheets[actionSheetType] = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+    static func add(newActionSheetType: ActionSheet, title: String?, message: String?) {
+        ActionSheetsManager.actionSheets[newActionSheetType] = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
     }
     
-    func addActionToActionSheet(_ actionSheetType: ActionSheets, title: String?, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) {
-        let newAction: UIAlertAction = UIAlertAction(title: title, style: style, handler: handler)
-        self.actionsSheets[actionSheetType]?.addAction(newAction)
+    static func add(newAction: UIAlertAction, to actionSheetType: ActionSheet) {
+        ActionSheetsManager.actionSheets[actionSheetType]?.addAction(newAction)
     }
     
-    func addActionsToActionSheet(_ actionSheetType: ActionSheets, actions: [String:((UIAlertAction) -> Void)?], cancelHandler: ((UIAlertAction) -> Void)?) {
-        for action in actions {
-            self.addActionToActionSheet(actionSheetType, title: action.0, style: .default, handler: action.1)
-        }
-        self.addActionToActionSheet(actionSheetType, title: "Annuler", style: .cancel, handler: cancelHandler)
+    static func buildAction(title: String, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) -> UIAlertAction {
+        return UIAlertAction(title: title, style: style, handler: handler)
     }
     
-    func getActionSheet(_ actionSheetType: ActionSheets) -> UIAlertController? {
-        return self.actionsSheets[actionSheetType]
+    static func buildDefaultAction(title: String, handler: ((UIAlertAction) -> Void)?) -> UIAlertAction {
+        return ActionSheetsManager.buildAction(title: title, style: .default, handler: handler)
     }
     
-    func containsActionSheet(_ actionSheetType: ActionSheets) -> Bool {
-        return actionsSheets.keys.contains(actionSheetType)
+    static func buildCancelAction(handler: ((UIAlertAction) -> Void)?) -> UIAlertAction {
+        return ActionSheetsManager.buildAction(title: "Annuler", style: .cancel, handler: handler)
+    }
+    
+    static func getActionSheet(actionSheetType: ActionSheet) -> UIAlertController? {
+        return ActionSheetsManager.actionSheets[actionSheetType]
+    }
+    
+    static func containsActionSheet(actionSheetType: ActionSheet) -> Bool {
+        return ActionSheetsManager.actionSheets.keys.contains(actionSheetType)
     }
 }
+

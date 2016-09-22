@@ -23,7 +23,7 @@ enum Property {
     case ipfsHash
 }
 
-class MovingOptions {
+struct MovingOptions {
     var isMoving: Bool = false
     var src: String?
     var dest: String?
@@ -67,25 +67,30 @@ struct UpdateElement {
 
 class NavigationManager {
     
-    let rootDirTitle: String
+    static let sharedInstance = NavigationManager()
     
-    fileprivate var storeItSynchDir: [String: File]
-    fileprivate var indexes: [String]
+    private let _rootDirTitle = "StoreIt"
     
-    fileprivate var items: [String]
-    fileprivate var currentDirectory: [String: File]
+    var rootDirTitle: String {
+    	return _rootDirTitle
+    }
+    
+    private var storeItSynchDir: [String: File]
+    private var indexes: [String]
+    
+    private var items: [String]
+    private var currentDirectory: [String: File]
     
     var list: UITableView?
     var moveToolBar: UIToolbar?
     
 	var movingOptions = MovingOptions()
     
-    init(rootDirTitle: String, allItems: [String: File]) {
-        self.rootDirTitle = rootDirTitle
-        self.storeItSynchDir = allItems
-        self.indexes = []
-        self.currentDirectory = allItems
-        self.items = Array(allItems.keys)
+    private init() {
+        storeItSynchDir = [:]
+        indexes = []
+        currentDirectory = [:]
+        items = []
     }
     
     func setItems(_ allItems: [String: File]) {
@@ -310,17 +315,41 @@ class NavigationManager {
         return index
     }
     
-    func getSelectedFileAtRow(_ indexPath: IndexPath) -> File {
-        let sortedItems = self.getSortedItems()
-        let selectedRow: String = sortedItems[(indexPath as NSIndexPath).row]
-        let selectedFile: File = self.currentDirectory[selectedRow]!
-        
-        return selectedFile
+    func createDir(_ path: String, metadata: String, IPFSHash: String, files: [String:File]? = nil) -> File {
+        let dir = File(path: path,
+                       metadata: metadata,
+                       IPFSHash: IPFSHash,
+                       isDir: true,
+                       files: (files == nil ? [:] : files!))
+        return dir
     }
     
-    func isSelectedFileAtRowADir(_ indexPath: IndexPath) -> Bool {
-        let selectedFile: File = self.getSelectedFileAtRow(indexPath)
-        return selectedFile.isDir
+    func createFile(_ path: String, metadata: String, IPFSHash: String) -> File {
+        let file = File(path: path,
+                        metadata: metadata,
+                        IPFSHash: IPFSHash,
+                        isDir: false,
+                        files: [:])
+        return file
+    }
+    
+    func getSelectedFileAtRow(indexPath: IndexPath) -> File? {
+        let sortedItems = self.getSortedItems()
+        let selectedRow: String = sortedItems[(indexPath as NSIndexPath).row]
+        
+        if let selectedFile = self.currentDirectory[selectedRow] {
+            return selectedFile
+        }
+        
+        return nil
+    }
+    
+    func isSelectedFileAtRowADir(indexPath: IndexPath) -> Bool {
+        if let selectedFile: File = self.getSelectedFileAtRow(indexPath: indexPath) {
+        	return selectedFile.isDir
+        }
+        
+        return false
     }
     
     func getTargetName(_ target: File) -> String {

@@ -11,27 +11,33 @@ import ObjectMapper
 
 class NetworkManager {
     
-    let host: String
-    let port: Int
+    static let sharedInstance = NetworkManager()
+
+    private let WSManager: WebSocketManager
+    private let _host = "localhost" // "158.69.196.83"
+    private let _port = 7641
     
-    let cmdInfos = CommandInfos()
-    var uidFactory: UidFactory
-    
-    fileprivate let WSManager: WebSocketManager
-    
-    init(host: String, port: Int, navigationManager: NavigationManager) {
-        self.host = host
-        self.port = port
-        self.uidFactory = UidFactory()
-        self.WSManager = WebSocketManager(host: host, port: port, uidFactory: uidFactory, navigationManager: navigationManager)
+    var host: String {
+    	return _host
     }
     
+    var port: Int {
+        return _port
+    }
+    
+    let cmdInfos = CommandInfos()
+    
+    
+    private init() {
+        self.WSManager = WebSocketManager(host: _host, port: _port)
+    }
+
     func close() {
-        self.WSManager.ws.disconnect()
+        self.WSManager.disconnect()
     }
     
     func isConnected() -> Bool {
-        return WSManager.ws.isConnected
+        return WSManager.isConnected()
     }
     
     func initConnection(_ loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
@@ -41,50 +47,50 @@ class NetworkManager {
     func join(_ authType: String, accessToken: String, completion: (() -> ())?) {
         //let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: accessToken)
         let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: "developer")
-        let joinCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.JOIN, parameters: parameters)
+        let joinCommand = Command(uid: UidFactory.uid, command: cmdInfos.JOIN, parameters: parameters)
         let jsonJoinCommand = Mapper().toJSONString(joinCommand)
         
-        self.uidFactory.uid += 1
+        UidFactory.uid += 1
 
         self.WSManager.sendRequest(jsonJoinCommand!, completion: completion)
     }
     
     func fadd(_ files: [File], completion: (() -> ())?) {
         let parameters = DefaultParameters(files: files)
-        let faddCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.FADD, parameters: parameters)
+        let faddCommand = Command(uid: UidFactory.uid, command: cmdInfos.FADD, parameters: parameters)
         let jsonFaddCommand = Mapper().toJSONString(faddCommand)
 
-        self.uidFactory.addNewWaitingCommand(cmdInfos.FADD, objects: files as AnyObject)
+        UidFactory.addNewWaitingCommand(cmdInfos.FADD, objects: files as AnyObject)
 
         self.WSManager.sendRequest(jsonFaddCommand!, completion: completion)
     }
 
     func fdel(_ files: [String], completion: (() -> ())?) {
       	let parameters = FdelParameters(files: files)
-        let fdelCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.FDEL, parameters: parameters)
+        let fdelCommand = Command(uid: UidFactory.uid, command: cmdInfos.FDEL, parameters: parameters)
         let jsonFdelCommand = Mapper().toJSONString(fdelCommand)
         
-        self.uidFactory.addNewWaitingCommand(cmdInfos.FDEL, objects: files as AnyObject)
+        UidFactory.addNewWaitingCommand(cmdInfos.FDEL, objects: files as AnyObject)
         
         self.WSManager.sendRequest(jsonFdelCommand!, completion: completion)
     }
     
     func fupt(_ files: [File], completion: (() -> ())?) {
    		let parameters = DefaultParameters(files: files)
-        let fuptCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.FDEL, parameters: parameters)
+        let fuptCommand = Command(uid: UidFactory.uid, command: cmdInfos.FDEL, parameters: parameters)
         let jsonFuptCommand = Mapper().toJSONString(fuptCommand)
         
-        self.uidFactory.addNewWaitingCommand(cmdInfos.FUPT, objects: files as AnyObject)
+        UidFactory.addNewWaitingCommand(cmdInfos.FUPT, objects: files as AnyObject)
         
         self.WSManager.sendRequest(jsonFuptCommand!, completion: completion)
     }
     
     func fmove(_ movingOptions: MovingOptions, completion: (() -> ())?) {
         let parameters = FmovParameters(src: movingOptions.src!, dest: movingOptions.dest!)
-        let fmovCommand = Command(uid: self.uidFactory.uid, command: cmdInfos.FMOV, parameters: parameters)
+        let fmovCommand = Command(uid: UidFactory.uid, command: cmdInfos.FMOV, parameters: parameters)
         let jsonFmovCommand = Mapper().toJSONString(fmovCommand)
         
-        self.uidFactory.addNewWaitingCommand(cmdInfos.FMOV, objects: movingOptions)
+        UidFactory.addNewWaitingCommand(cmdInfos.FMOV, objects: movingOptions as AnyObject)
         
         self.WSManager.sendRequest(jsonFmovCommand!, completion: completion)
     }

@@ -15,9 +15,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     var connectionType: ConnectionType? = nil
-    var networkManager: NetworkManager? = nil
-    var connectionManager: ConnectionManager? = nil
-    var fileManager: FileManager? = nil
     var navigationManager: NavigationManager? = nil
     var ipfsManager: IpfsManager? = nil
     let plistManager: PListManager = PListManager()
@@ -27,12 +24,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let loginView = navigationController.viewControllers[0] as! LoginView
 
 		loginView.connectionType = self.connectionType
-        loginView.networkManager = self.networkManager
-        loginView.connectionManager = self.connectionManager
-        loginView.fileManager = self.fileManager
-        loginView.ipfsManager = self.ipfsManager
-        loginView.plistManager = self.plistManager
-        
         
         var configureError: NSError?
         GGLContext.sharedInstance().configureWithError(&configureError)

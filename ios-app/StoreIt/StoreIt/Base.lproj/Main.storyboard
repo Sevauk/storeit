@@ -164,7 +164,7 @@
         <!--StoreIt-->
         <scene sceneID="EEj-j6-03W">
             <objects>
-                <viewController title="StoreIt" automaticallyAdjustsScrollViewInsets="NO" id="8WT-j1-5R7" customClass="StoreItSynchDirectoryView" customModule="StoreIt" sceneMemberID="viewController">
+                <viewController title="StoreIt" automaticallyAdjustsScrollViewInsets="NO" id="8WT-j1-5R7" customClass="SynchDirView" customModule="StoreIt" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="8og-Uk-HRO"/>
                         <viewControllerLayoutGuide type="bottom" id="tg8-Or-8oJ"/>
@@ -173,19 +173,16 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <stackView opaque="NO" contentMode="scaleToFill" fixedFrame="YES" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="ZLr-c3-k83">
-                                <frame key="frameInset" minY="64" width="375" height="559"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="ZLr-c3-k83">
                                 <subviews>
-                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" ambiguous="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="43" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="2DC-Ug-Ua6">
-                                        <frame key="frameInset" width="375" height="559"/>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="43" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="2DC-Ug-Ua6">
                                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <prototypes>
                                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="directoryCell" rowHeight="43" id="qjq-Rz-ZS9" userLabel="DirectoryCell" customClass="DirectoryCell" customModule="StoreIt" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="28" width="375" height="43"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="qjq-Rz-ZS9" id="od4-5O-pHa">
-                                                    <frame key="frameInset" width="375" height="42"/>
+                                                    <frame key="frameInset" width="375" height="43"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Eet-Vy-MsS">
@@ -211,6 +208,7 @@
                                                         <constraint firstItem="vld-hp-yXn" firstAttribute="centerY" secondItem="Eet-Vy-MsS" secondAttribute="centerY" id="QWS-3D-soA"/>
                                                         <constraint firstItem="kyf-nD-gqu" firstAttribute="bottom" secondItem="od4-5O-pHa" secondAttribute="bottomMargin" id="UQW-tb-nTy"/>
                                                         <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerX" secondItem="od4-5O-pHa" secondAttribute="centerX" id="aDe-oM-ab7"/>
+                                                        <constraint firstItem="vld-hp-yXn" firstAttribute="bottom" secondItem="kyf-nD-gqu" secondAttribute="bottom" id="mee-P7-atD"/>
                                                         <constraint firstItem="kyf-nD-gqu" firstAttribute="centerY" secondItem="Eet-Vy-MsS" secondAttribute="centerY" id="oFb-z0-RI6"/>
                                                     </constraints>
                                                 </tableViewCellContentView>
@@ -224,7 +222,7 @@
                                                 <rect key="frame" x="0.0" y="71" width="375" height="43"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="htM-Vz-f7B" id="Mst-rY-CTU">
-                                                    <frame key="frameInset" width="375" height="42"/>
+                                                    <frame key="frameInset" width="375" height="43"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
@@ -257,8 +255,7 @@
                                     </tableView>
                                 </subviews>
                             </stackView>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="lSG-A4-8Rg">
-                                <frame key="frameInset" minY="623" width="375" height="44"/>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lSG-A4-8Rg">
                                 <items>
                                     <barButtonItem title="Déplacer ici" id="TbE-Lg-VuX">
                                         <connections>
@@ -278,7 +275,13 @@
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="tg8-Or-8oJ" firstAttribute="top" secondItem="lSG-A4-8Rg" secondAttribute="bottom" id="aA2-0E-1fi"/>
+                            <constraint firstItem="ZLr-c3-k83" firstAttribute="trailing" secondItem="lSG-A4-8Rg" secondAttribute="trailing" id="1JH-19-rG3"/>
+                            <constraint firstItem="ZLr-c3-k83" firstAttribute="top" secondItem="8og-Uk-HRO" secondAttribute="bottom" id="ABQ-bq-AY4"/>
+                            <constraint firstAttribute="trailing" secondItem="ZLr-c3-k83" secondAttribute="trailing" id="D5Q-g8-IiS"/>
+                            <constraint firstItem="ZLr-c3-k83" firstAttribute="leading" secondItem="lSG-A4-8Rg" secondAttribute="leading" id="bvp-Fv-KwY"/>
+                            <constraint firstItem="ZLr-c3-k83" firstAttribute="leading" secondItem="CcL-LK-0if" secondAttribute="leading" id="mlV-kw-sQp"/>
+                            <constraint firstItem="lSG-A4-8Rg" firstAttribute="bottom" secondItem="tg8-Or-8oJ" secondAttribute="top" id="sIr-Vw-AUZ"/>
+                            <constraint firstItem="tg8-Or-8oJ" firstAttribute="top" secondItem="ZLr-c3-k83" secondAttribute="bottom" constant="43" id="t53-fl-eAe"/>
                         </constraints>
                     </view>
                     <tabBarItem key="tabBarItem" title="Item" id="LZY-Ty-zno"/>
@@ -294,7 +297,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="J0l-OA-TyR" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="52" y="-428"/>
+            <point key="canvasLocation" x="52" y="-428.63568215892059"/>
         </scene>
         <!--Item-->
         <scene sceneID="5Ar-8L-6OL">
