@@ -2,6 +2,7 @@ package com.storeit.storeit.ipfs;
 
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
@@ -41,6 +42,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
                 .setContentText("Download in progress")
                 .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
         mBuilder.setProgress(100, 0, false);
+
         mNotifyManager.notify(id, mBuilder.build());
     }
 
@@ -137,13 +139,13 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
         HttpURLConnection connection;
         URL url;
 
-        String m_nodeUrl = "https://ipfs.io/ipfs/";
+        String m_nodeUrl = "http://127.0.0.1:8080/ipfs/";
         try {
             url = new URL(m_nodeUrl + hash);
             connection = (HttpURLConnection) url.openConnection();
 
             connection.setRequestMethod("GET"); // Create the get request
-            connection.setReadTimeout(5000);
+            connection.setReadTimeout(50000);
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK)
                 return false;
