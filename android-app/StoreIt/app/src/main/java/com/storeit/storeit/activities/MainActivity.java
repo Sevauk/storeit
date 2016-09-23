@@ -1,10 +1,12 @@
 package com.storeit.storeit.activities;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
@@ -30,6 +32,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
@@ -77,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     ActionBar mActionBar;
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
-    
+
     public FloatingActionButton getFloatingButton() {
         return fbtn;
     }
@@ -104,6 +107,34 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceDisconnected(ComponentName name) {
             mSocketService = null;
             mSocketServiceBound = false;
+        }
+    };
+
+    private BroadcastReceiver ipfsBroadCast = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.v("MainActivity", "Message received");
+
+            String type = intent.getStringExtra("type");
+            String result = intent.getStringExtra("result");
+
+            String action = intent.getAction();
+            Log.v("MainActivity", "Intent.getAction() : " + action);
+
+            if (type == null || result == null) {
+                Log.v("MainActivity", "IpfsBroadcast : null");
+                return;
+            }
+
+            if (type.equals("download")) {
+                if (result.equals("success")) {
+                    Log.v("MainActivity", "Download finished");
+                } else if (result.equals("error")) {
+                    Log.v("MainActivity", "Download finished with error");
+                }
+            } else if (type.equals("upload")) {
+
+            }
         }
     };
 
@@ -140,6 +171,8 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
+
+        registerReceiver(ipfsBroadCast, new IntentFilter("ipfsManip"));
 
         mRecyclerView = (RecyclerView) findViewById(R.id.RecyclerView);
 

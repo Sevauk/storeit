@@ -1,6 +1,7 @@
 package com.storeit.storeit.ipfs;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -36,11 +37,18 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     protected void onPreExecute() {
         super.onPreExecute();
 
+        Intent intent = new Intent("ipfsManip");
+        intent.putExtra("result", "cancel");
+        intent.putExtra("type", "download");
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
+
         mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext)
                 .setContentTitle("StoreIt")
                 .setContentText("Download in progress")
-                .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
+                .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp)
+                .addAction(R.drawable.ic_insert_drive_file_black_24dp, "Cancel", pendingIntent)
+                .setDeleteIntent(pendingIntent);
         mBuilder.setProgress(100, 0, false);
 
         mNotifyManager.notify(id, mBuilder.build());
@@ -48,19 +56,43 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean response) {
+        Intent intent = new Intent("ipfsManip");
+
         if (!response) {
+            intent.putExtra("result", "error");
+            intent.putExtra("type", "download");
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
+
             mBuilder.setContentText("Error while downloading...")
-                    .setProgress(0, 0, false);
+                    .setProgress(0, 0, false)
+                    .setContentIntent(pendingIntent)
+                    .setDeleteIntent(pendingIntent);
+
+
         } else {
+            intent.putExtra("result", "success");
+            intent.putExtra("type", "download");
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
+
             mBuilder.setContentText("Download finished")
-                    .setProgress(0, 0, false);
+                    .setProgress(0, 0, false)
+                    .setContentIntent(pendingIntent)
+                    .setDeleteIntent(pendingIntent);
         }
+
+
+
         mNotifyManager.notify(id, mBuilder.build());
     }
 
     @Override
     protected void onProgressUpdate(Integer... progress) {
-        mBuilder.setProgress(100, progress[0], false);
+        Intent intent = new Intent("ipfsManip");
+        intent.putExtra("result", "cancel");
+        intent.putExtra("type", "download");
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
+
+        mBuilder.setProgress(100, progress[0], false).setContentIntent(pendingIntent);
         mNotifyManager.notify(id, mBuilder.build());
     }
 
@@ -138,6 +170,8 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
         HttpURLConnection connection;
         URL url;
+
+
 
         String m_nodeUrl = "http://127.0.0.1:8080/ipfs/";
         try {
