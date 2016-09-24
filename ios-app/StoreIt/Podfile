@@ -12,6 +12,7 @@ target 'StoreIt' do
     pod 'FBSDKCoreKit'
     pod 'Google/SignIn'
     pod 'Alamofire'
+    pod 'SwiftKeychainWrapper', :git => 'https://github.com/jrendel/SwiftKeychainWrapper.git', :branch => 'develop'
 end
 
 target 'StoreItTests' do

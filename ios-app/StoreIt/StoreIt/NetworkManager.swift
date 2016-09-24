@@ -40,7 +40,7 @@ class NetworkManager {
         return WSManager.isConnected()
     }
     
-    func initConnection(_ loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
+    func initConnection(loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
         self.WSManager.eventsInitializer(loginFunction, logoutFunction: logoutFunction)
     }
     

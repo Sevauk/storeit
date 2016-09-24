@@ -14,38 +14,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     
-    var connectionType: ConnectionType? = nil
-    var navigationManager: NavigationManager? = nil
-    var ipfsManager: IpfsManager? = nil
-    let plistManager: PListManager = PListManager()
-    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        let navigationController = self.window?.rootViewController as! UINavigationController
-        let loginView = navigationController.viewControllers[0] as! LoginView
-
-		loginView.connectionType = self.connectionType
+        /*let navigationController = self.window?.rootViewController as! UINavigationController
+        let loginView = navigationController.viewControllers[0] as! LoginView*/
         
         var configureError: NSError?
         GGLContext.sharedInstance().configureWithError(&configureError)
-        assert(configureError == nil, "Error configuring Google services: \(configureError)")
-        
-        return true
+        assert(configureError == nil, "[AppDelegate] Error configuring Google services: \(configureError)")
 
         return FBSDKApplicationDelegate.sharedInstance().application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
     func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
-        let navigationController = self.window?.rootViewController as! UINavigationController
-        let loginView = navigationController.viewControllers[0] as! LoginView
-
-        if (loginView.connectionType != nil
-            && loginView.connectionType! == ConnectionType.GOOGLE) {
-            return GIDSignIn.sharedInstance().handle(url, sourceApplication: sourceApplication, annotation: annotation)
+        if let connectionType = SessionManager.getConnectionType() {
+            if connectionType == ConnectionType.google {
+               return GIDSignIn.sharedInstance().handle(url, sourceApplication: sourceApplication, annotation: annotation)
+            } else if connectionType == ConnectionType.facebook {
+                return FBSDKApplicationDelegate.sharedInstance().application(application, open: url, sourceApplication: sourceApplication, annotation: annotation)
+            }
         }
-        else if (loginView.connectionType != nil
-            && loginView.connectionType! == ConnectionType.FACEBOOK) {
-            return FBSDKApplicationDelegate.sharedInstance().application(application, open: url, sourceApplication: sourceApplication, annotation: annotation)
-        }
+        
         return true
     }
     
