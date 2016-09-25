@@ -3,6 +3,7 @@ import ipfs from 'ipfs-api'
 import logger from '../../lib/log'
 import userFile from './user-file.js'
 
+// the filePath parameters should be relative to the synchronized directory's root
 const MAX_RECO_TIME = 4
 let singleton
 
@@ -45,8 +46,16 @@ class IPFSNode {
       .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
   }
 
+  // TODO: this should be optimized. add is overkill
   getFileHash(filePath) {
-    return this.add(filePath).then(res => res[0].Hash)
+
+    const opt = {}
+    opt['only-hash'] = true
+    opt['recursive'] = false
+    return this.add(filePath, opt).then(res => {
+      logger.debug(JSON.stringify(res, null, 2))
+      return res[0].Hash
+    })
   }
 
   hashMatch(filePath, ipfsHash) {
@@ -54,11 +63,11 @@ class IPFSNode {
       .then(hash => hash[0].Hash === ipfsHash)
   }
 
-  add(filePath) {
+  add(filePath, opt) {
     return this.ready()
-      .then(() => this.node.add(userFile.absolutePath(filePath)))
-      .catch(() => this.reconnect().then(() => {
-        logger.error(`[SYNC:fail] file: ${filePath}. Retrying`)
+      .then(() => this.node.add(userFile.absolutePath(filePath), opt))
+      .catch((e) => this.reconnect().then(() => {
+        logger.error(`[SYNC:fail] file: ${filePath} (${e}). Retrying`)
         return this.add(filePath)
       }))
   }

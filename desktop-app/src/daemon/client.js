@@ -2,7 +2,10 @@ import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
+
 import fs from 'fs'
+Promise.promisifyAll(fs)
+
 import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
@@ -155,24 +158,19 @@ export default class Client {
     if (!dir || !dir.files || !dir.isDir)
       return Promise.resolve()
 
-    return new Promise(resolve => {
-      fs.readdir(userFile.absolutePath(dir.path), (err, files) => {
-        if (err)
-          return resolve()
-
-        for (const f of files) {
-          if (!(f in dir.files)) {
-            this.sendFADD(dir.path + f)
-          }
+    return fs.readdirAsync(userFile.absolutePath(dir.path))
+      .map(fileName => {
+        if (!(fileName in dir.files)) {
+          this.sendFADD(dir.path + fileName)
         }
       })
-
-      for (const f of Object.keys(dir.files)) {
-        if (f.isDir)
-          this.addFilesUnknownByServ(f)
-      }
-      resolve()
-    })
+      .then(() => {
+        for (const f of Object.keys(dir.files)) {
+          if (f.isDir)
+            this.addFilesUnknownByServ(f)
+        }
+      })
+      .catch((e) => logger.warn(e))
   }
 
   recvFADD(req, print=true) {

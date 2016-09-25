@@ -68,7 +68,10 @@ const generateTree = (filePath) => {
           .then(files => new FileObj(filePath, null, files))
       }
       return getFileHash(filePath)
-        .then(hash => new FileObj(filePath, hash))
+        .then(hash => {
+          console.log(hash)
+          return new FileObj(filePath, hash)
+        })
     })
 }
 
