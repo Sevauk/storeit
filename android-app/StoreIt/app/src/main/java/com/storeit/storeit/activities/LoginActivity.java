@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -55,7 +56,7 @@ public class LoginActivity extends Activity {
 
     private boolean destroySocketService = true;
     private boolean destroyIpfsService = true;
-    
+
     private SocketService mSocketService = null;
     private IpfsService mIpfsService = null;
     private String mEmail;
@@ -68,7 +69,7 @@ public class LoginActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-//                    if (joinResponse.getCode() == 0) {
+                    if (joinResponse.getCode() == 0) {
 
                         Log.v("LoginActivity", "ici");
 
@@ -86,8 +87,18 @@ public class LoginActivity extends Activity {
                         intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
+                    } else {
+                        SharedPreferences sharedPrefs = getSharedPreferences(
+                                getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+                        SharedPreferences.Editor editor = sharedPrefs.edit();
+                        editor.putString("oauth_token", "");
+                        editor.putString("oauth_method", "");
+                        editor.apply();
+
+                        Toast.makeText(LoginActivity.this, "Please login", Toast.LENGTH_SHORT);
                     }
-        //        }
+                }
             });
         }
 
@@ -124,6 +135,15 @@ public class LoginActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
+                SharedPreferences sharedPrefs = getSharedPreferences(
+                        getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putString("oauth_token", token);
+                editor.putString("oauth_method", "gg");
+                editor.apply();
+
                 mSocketService.sendJOIN("gg", token);
             }
         });
@@ -168,7 +188,7 @@ public class LoginActivity extends Activity {
     private ServiceConnection mIpfsServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
-            mIpfsService = ((IpfsService.LocalBinder)service).getService();
+            mIpfsService = ((IpfsService.LocalBinder) service).getService();
             mIpfsServiceBound = true;
         }
 
@@ -233,12 +253,16 @@ public class LoginActivity extends Activity {
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
 
+        SharedPreferences sharedPrefs = getSharedPreferences(
+                getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+        final SharedPreferences.Editor editor = sharedPrefs.edit();
+
         SignInButton button = (SignInButton) findViewById(R.id.google_login);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mSocketService.isConnected())
-                {
+                if (!mSocketService.isConnected()) {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -247,15 +271,17 @@ public class LoginActivity extends Activity {
             }
         });
 
-        Button developerButton = (Button)findViewById(R.id.developer_login);
+        Button developerButton = (Button) findViewById(R.id.developer_login);
         developerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!mSocketService.isConnected())
-                {
+                if (!mSocketService.isConnected()) {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                editor.putString("oauth_token", "developper");
+                editor.putString("oauth_method", "gg");
+                editor.apply();
 
                 mSocketService.sendJOIN("gg", "developer");
             }
@@ -271,6 +297,11 @@ public class LoginActivity extends Activity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 Log.d("LoginActivity", loginResult.getAccessToken().getToken());
+
+                editor.putString("oauth_token", loginResult.getAccessToken().getToken());
+                editor.putString("oauth_method", "fb");
+                editor.apply();
+
                 mSocketService.sendJOIN("fb", loginResult.getAccessToken().getToken());
             }
 
@@ -299,7 +330,7 @@ public class LoginActivity extends Activity {
             }
         }
 
-        ImageButton settingsBtn = (ImageButton)findViewById(R.id.app_settings_btn);
+        ImageButton settingsBtn = (ImageButton) findViewById(R.id.app_settings_btn);
         settingsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -307,6 +338,15 @@ public class LoginActivity extends Activity {
                 startActivity(i);
             }
         });
+
+
+
+        String token = sharedPrefs.getString("oauth_token", "");
+        String method = sharedPrefs.getString("oauth_method", "");
+
+        if (!token.isEmpty() && !method.isEmpty()) {
+                mSocketService.sendJOIN(method, token);
+        }
     }
 
     @Override

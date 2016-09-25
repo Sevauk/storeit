@@ -11,6 +11,7 @@ import android.util.Log;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.storeit.storeit.R;
+import com.storeit.storeit.activities.MainActivity;
 
 import org.apache.commons.io.IOUtils;
 
@@ -29,6 +30,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     private android.support.v4.app.NotificationCompat.Builder mBuilder;
     private int id = 1;
     private Context mContext;
+    private Intent resultIntent;
 
     public DownloadAsync(Context context) {
         mContext = context;
