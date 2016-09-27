@@ -12,40 +12,44 @@ import ObjectMapper
 
 class WebSocketManager {
     
-    let url: NSURL
-    let ws: WebSocket
-    let navigationManager: NavigationManager
-    
-    var uidFactory: UidFactory
-    
-    init(host: String, port: Int, uidFactory: UidFactory, navigationManager: NavigationManager) {
-        self.url = NSURL(string: "ws://\(host):\(port)/")!
+    private let url: URL
+    private let ws: WebSocket
+    private let navigationManager = NavigationManager.sharedInstance
+
+    init(host: String, port: Int) {
+        self.url = URL(string: "ws://\(host):\(port)/")!
         self.ws = WebSocket(url: url)
-        self.navigationManager = navigationManager
-        self.uidFactory = uidFactory
+    }
+    
+    func disconnect() {
+        ws.disconnect()
+    }
+    
+    func isConnected() -> Bool {
+        return ws.isConnected
     }
     
     private func closeMoveToolbar() {
-        self.navigationManager.moveToolBar?.hidden = true
+        self.navigationManager.moveToolBar?.isHidden = true
     }
     
     private func updateList() {
         if let list = self.navigationManager.list {
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 list.reloadData()
             }
         }
     }
     
-    private func removeRowAtIndex(index: Int) {
+    private func removeRowAtIndex(_ index: Int) {
         if let list = self.navigationManager.list {
-            let indexPath = NSIndexPath(forRow: index, inSection: 0)
-            list.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+            let indexPath = IndexPath(row: index, section: 0)
+            list.deleteRows(at: [indexPath], with: UITableViewRowAnimation.automatic)
 			list.reloadData()
         }
     }
     
-    private func deletePaths(paths: [String]) {
+    private func deletePaths(_ paths: [String]) {
         for path in paths {
             let updateElement = UpdateElement(path: path)
                         
@@ -57,10 +61,10 @@ class WebSocketManager {
         }
     }
     
-    private func isRenaming(src: String, dest: String) -> Bool {
+    private func isRenaming(_ src: String, dest: String) -> Bool {
         // Drop file name to compare path (if the path is the same, it's only a rename)
-        let srcComponents = src.componentsSeparatedByString("/").dropLast()
-        let destComponents = dest.componentsSeparatedByString("/").dropLast()
+        let srcComponents = src.components(separatedBy: "/").dropLast()
+        let destComponents = dest.components(separatedBy: "/").dropLast()
 
         if (srcComponents == destComponents) {
             return true
@@ -69,7 +73,7 @@ class WebSocketManager {
         return false
     }
     
-    private func renameFile(src: String, dest: String) {
+    private func renameFile(_ src: String, dest: String) {
         let updateElementForRename = UpdateElement(src: src, dest: dest)
 
         let index = self.navigationManager.updateTree(updateElementForRename)
@@ -79,9 +83,9 @@ class WebSocketManager {
         }
     }
     
-    private func moveFile(src: String, file: File) {
+    private func moveFile(_ src: String, file: File) {
         let updateElementForDeletion = UpdateElement(path: src)
-        let updateElementForAddition = UpdateElement(file: file)
+        let updateElementForAddition = UpdateElement(file: file, isMoving: true)
         
         let index = self.navigationManager.updateTree(updateElementForDeletion)
         let index_2 = self.navigationManager.updateTree(updateElementForAddition)
@@ -95,9 +99,9 @@ class WebSocketManager {
         }
     }
 
-    private func addFiles(files: [File]) {
+    private func addFiles(_ files: [File]) {
         for file in files {
-            let updateElement = UpdateElement(file: file)
+            let updateElement = UpdateElement(file: file, isMoving: false)
 
             let index = self.navigationManager.updateTree(updateElement)
             
@@ -107,20 +111,20 @@ class WebSocketManager {
         }
     }
     
-    private func updateFiles(files: [File]) {
+    private func updateFiles(_ files: [File]) {
         for file in files {
             if (file.IPFSHash != "") {
-                let updateElement = UpdateElement(property: Property.IPFSHash, file: file)
-                self.navigationManager.updateTree(updateElement)
+                let updateElement = UpdateElement(property: Property.ipfsHash, file: file)
+                _ = self.navigationManager.updateTree(updateElement)
             }
             if (file.metadata != "") {
-                let updateElement = UpdateElement(property: Property.Metadata, file: file)
-                self.navigationManager.updateTree(updateElement)
+                let updateElement = UpdateElement(property: Property.metadata, file: file)
+                _ = self.navigationManager.updateTree(updateElement)
             }
         }
     }
     
-    func eventsInitializer(loginFunction: () -> Void, logoutFunction: () -> Void) {
+    func eventsInitializer(_ loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
         self.ws.onConnect = {
         	print("[Client.WebSocketManager] WebSocket is connected to \(self.url)")
             loginFunction()
@@ -136,11 +140,11 @@ class WebSocketManager {
 
             let cmdInfos = CommandInfos()
             
-            if let command: ResponseResolver = Mapper<ResponseResolver>().map(request) {
+            if let command: ResponseResolver = Mapper<ResponseResolver>().map(JSONString: request) {
                 if (command.command == cmdInfos.RESP) {
                     
                     // SEREVR HAS RESPONDED
-                    if let response: Response = Mapper<Response>().map(request) {
+                    if let response: Response = Mapper<Response>().map(JSONString: request) {
                         
                         // JOIN RESPONSE
                         if (response.text == cmdInfos.JOIN_RESPONSE_TEXT) {
@@ -158,26 +162,26 @@ class WebSocketManager {
                         else if (response.text == cmdInfos.SUCCESS_TEXT) {
                             let uid = response.commandUid
 
-                            if (self.uidFactory.isWaitingForReponse(uid)) {
+                            if (UidFactory.isWaitingForReponse(uid)) {
                                 
-                                let commandType = self.uidFactory.getCommandNameForUid(uid)
+                                let commandType = UidFactory.getCommandNameForUid(uid)
 
                                 // FADD
                                 if (commandType == cmdInfos.FADD) {
-                                    let files = self.uidFactory.getObjectForUid(uid) as! [File]
+                                    let files = UidFactory.getObjectForUid(uid) as! [File]
                                     
                                 	self.addFiles(files)
                                 }
                                 // FDEL
                                 else if (commandType == cmdInfos.FDEL) {
-                                	let paths = self.uidFactory.getObjectForUid(uid) as! [String]
+                                	let paths = UidFactory.getObjectForUid(uid) as! [String]
                                     
                                 	self.deletePaths(paths)
                                 }
                                 
                                 // FMOVE
                                 else if (commandType == cmdInfos.FMOV) {
-                                	let movingOptions = self.uidFactory.getObjectForUid(uid) as! MovingOptions
+                                	let movingOptions = UidFactory.getObjectForUid(uid) as! MovingOptions
 
                                     if (movingOptions.isMoving) {
                                         self.moveFile(movingOptions.src!, file: movingOptions.file!)
@@ -198,7 +202,7 @@ class WebSocketManager {
                     
                     // FDEL
                     if (command.command == cmdInfos.FDEL) {
-                        let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(request)
+                        let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(JSONString: request)
                         
                         if let cmd = fdelCmd {
                             if let paths = cmd.parameters?.files {
@@ -209,7 +213,7 @@ class WebSocketManager {
                     
                     // FMOV
                     else if (command.command == cmdInfos.FMOV) {
-                        let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(request)
+                        let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(JSONString: request)
 
                         if let cmd = fmovCmd {
                             if let parameters = cmd.parameters {
@@ -231,7 +235,7 @@ class WebSocketManager {
                     
                     // FADD / FUPT
                     else {
-                        let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(request)
+                        let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(JSONString: request)
                         
                         if let files = defaultCmd?.parameters?.files {
                             if (command.command == cmdInfos.FADD) {
@@ -268,17 +272,17 @@ class WebSocketManager {
             
         }
         
-        self.ws.onData = { (data: NSData) in
-            print("[Client.WebSocketManager] Client recieved some data: \(data.length)")
+        self.ws.onData = { (data: Data) in
+            print("[Client.WebSocketManager] Client recieved some data: \(data.count)")
         }
         
         self.ws.connect()
     }
     
-    func sendRequest(request: String, completion: (() -> ())?) {
+    func sendRequest(_ request: String, completion: (() -> ())?) {
         if (self.ws.isConnected) {
             print("[WSManager] request is sending... : \(request)")
-            self.ws.writeString(request, completion: completion)
+            self.ws.write(string: request, completion: completion)
         } else {
             print("[Client.WebSocketManager] Client can't send request \(request) to \(url), WS is disconnected")
         }

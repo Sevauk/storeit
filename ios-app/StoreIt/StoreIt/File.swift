@@ -33,7 +33,7 @@ class File: Mappable {
         self.files = files
     }
     
-   required init?(_ map: Map) {
+   required init?(map: Map) {
         self.path = ""
     	self.metadata = ""
     	self.IPFSHash = ""

@@ -16,11 +16,11 @@ class SuccessResponse : Response {
         super.init(code: cmdInfos.SUCCESS_CODE, text: cmdInfos.SUCCESS_TEXT, commandUid: commandUid, command: cmdInfos.RESP, parameters: nil)
     }
     
-    required init?(_ map: Map) {
-		super.init(map)
+    required init?(map: Map) {
+        super.init(map: map)
     }
     
     override func mapping(map: Map) {
-        super.mapping(map)
+        super.mapping(map: map)
     }
 }

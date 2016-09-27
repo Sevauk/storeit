@@ -12,18 +12,18 @@ typealias src = String
 typealias dest = String
 
 enum UpdateType {
-    case ADD
-    case DELETE
-    case RENAME
-    case UPDATE
+    case add
+    case delete
+    case rename
+    case update
 }
 
 enum Property {
-    case Metadata
-    case IPFSHash
+    case metadata
+    case ipfsHash
 }
 
-class MovingOptions {
+struct MovingOptions {
     var isMoving: Bool = false
     var src: String?
     var dest: String?
@@ -34,30 +34,32 @@ class MovingOptions {
 struct UpdateElement {
     
     let updateType: UpdateType
+    var isMoving = false
     
     var fileToAdd: File? = nil
     var pathToDelete: String? = nil
     var pathToRenameWith: (src, dest)? = nil
     var propertyToUpdate: (Property, File)? = nil
     
-    init(file: File) {
-        updateType = UpdateType.ADD
+    init(file: File, isMoving: Bool) {
+        updateType = UpdateType.add
         fileToAdd = file
+        self.isMoving = isMoving
     }
     
     init(path: String) {
-     	updateType = UpdateType.DELETE
+     	updateType = UpdateType.delete
         pathToDelete = path
         
     }
     
     init(src: String, dest: String) {
-        updateType = UpdateType.RENAME
+        updateType = UpdateType.rename
         pathToRenameWith = (src, dest)
     }
     
     init(property: Property, file: File) {
-        updateType = UpdateType.UPDATE
+        updateType = UpdateType.update
         propertyToUpdate = (property, file)
     }
 }
@@ -65,7 +67,13 @@ struct UpdateElement {
 
 class NavigationManager {
     
-    let rootDirTitle: String
+    static let sharedInstance = NavigationManager()
+    
+    private let _rootDirTitle = "StoreIt"
+    
+    var rootDirTitle: String {
+    	return _rootDirTitle
+    }
     
     private var storeItSynchDir: [String: File]
     private var indexes: [String]
@@ -78,88 +86,87 @@ class NavigationManager {
     
 	var movingOptions = MovingOptions()
     
-    init(rootDirTitle: String, allItems: [String: File]) {
-        self.rootDirTitle = rootDirTitle
-        self.storeItSynchDir = allItems
-        self.indexes = []
-        self.currentDirectory = allItems
-        self.items = Array(allItems.keys)
+    private init() {
+        storeItSynchDir = [:]
+        indexes = []
+        currentDirectory = [:]
+        items = []
     }
     
-    func setItems(allItems: [String: File]) {
+    func setItems(_ allItems: [String: File]) {
         self.storeItSynchDir = allItems
         self.currentDirectory = allItems
         self.items = Array(allItems.keys)
     }
     
     func getSortedItems() -> [String] {
-        return self.items.sort()
+        return self.items.sorted()
     }
     
     // If the update is on the current directory (the focused one on the list view), we need to refresh
-    private func updateCurrentItems(fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
+    fileprivate func updateCurrentItems(_ fileName: String, updateElement: UpdateElement, indexes: [String]) -> Int {
         var index: Int = -1
 
         if (indexes == self.indexes) {
             switch updateElement.updateType {
-                case .ADD:
+                case .add:
                     if (!self.items.contains(fileName)) {
                         self.items.append(fileName)
                         self.currentDirectory[fileName] = updateElement.fileToAdd!
                         index = self.items.count - 1
                 	}
                 
-                case .DELETE:
+                case .delete:
                     let orderedItems = self.getSortedItems()
-                    let orderedIndex = orderedItems.indexOf(fileName)
+                    let orderedIndex = orderedItems.index(of: fileName)
                     
                     if let unwrapOrderedIndex = orderedIndex {
                         index = unwrapOrderedIndex
                     }
                     
-                    let tmpIndex = self.items.indexOf(fileName)
+                    let tmpIndex = self.items.index(of: fileName)
                     
                     if let unwrapTmpIndex = tmpIndex {
-                        self.items.removeAtIndex(unwrapTmpIndex)
-                        self.currentDirectory.removeValueForKey(fileName)
+                        self.items.remove(at: unwrapTmpIndex)
+                        self.currentDirectory.removeValue(forKey: fileName)
                 	}
 
-            	case .RENAME:
-                    let tmpIndex = items.indexOf(fileName)
+            	case .rename:
+                    let tmpIndex = items.index(of: fileName)
 
                     if (tmpIndex != nil) {
-                        if let newFileName = updateElement.pathToRenameWith?.1.componentsSeparatedByString("/").last {
+                        if let newFileName = updateElement.pathToRenameWith?.1.components(separatedBy: "/").last {
                             index = tmpIndex!
                             
                             // Remove old item
-                            self.items.removeAtIndex(index)
-                            let file = self.currentDirectory.removeValueForKey(fileName)
+                            self.items.remove(at: index)
+                            let file = self.currentDirectory.removeValue(forKey: fileName)
                             
                             // Add new item
-                            self.items.insert(newFileName, atIndex: index)
+                            self.items.insert(newFileName, at: index)
                             self.currentDirectory[newFileName] = file
                             self.currentDirectory[newFileName]?.path = (updateElement.pathToRenameWith?.1)!
                         }
                 }
                 
-            	case .UPDATE: break // TODO
+            	case .update: break // TODO
             }
         }
         return index
     }
     
     func buildCurrentDirectoryPath() -> String {
-        return "/\(self.indexes.joinWithSeparator("/"))"
+        return "/\(self.indexes.joined(separator: "/"))"
     }
 
-    func buildPath(fileName: String) -> String {
+    func buildPath(_ fileName: String) -> String {
         var path = "/"
         
         if (indexes.isEmpty) {
             return path + fileName
         }
         
-        path += "\(self.indexes.joinWithSeparator("/"))/\(fileName)"
+        path += "\(self.indexes.joined(separator: "/"))/\(fileName)"
         return path
     }
     
@@ -177,13 +184,13 @@ class NavigationManager {
         return self.storeItSynchDir
     }
     
-    func getFileObjInCurrentDir(path: String) -> File? {
-        let fileName = path.componentsSeparatedByString("/").last!
+    func getFileObjInCurrentDir(_ path: String) -> File? {
+        let fileName = path.components(separatedBy: "/").last!
         return currentDirectory[fileName]
     }
     
-    func getFileObjByPath(path: String) -> File? {
-        var components = path.componentsSeparatedByString("/").dropFirst()
+    func getFileObjByPath(_ path: String) -> File? {
+        var components = path.components(separatedBy: "/").dropFirst()
         var cpyStoreItSynchDir: [String: File] = self.storeItSynchDir
 
         while (components.count != 1) {
@@ -195,7 +202,7 @@ class NavigationManager {
         return cpyStoreItSynchDir[components.first!]
     }
     
-    private func rebuildTree(newFile: File, currDir: [String:File], path: [String]) -> [String:File] {
+    fileprivate func rebuildTree(_ newFile: File, currDir: [String:File], path: [String]) -> [String:File] {
         var newTree: [String:File] = [:]
         let keys: [String] = Array(currDir.keys)
         
@@ -217,11 +224,11 @@ class NavigationManager {
         return newTree
     }
     
-    private func updateFilePathsAfterRename(inout storeit: [String:File], newPath: String) {
+    fileprivate func updateFilePathsAfterRename(_ storeit: inout [String:File], newPath: String) {
 		let keys: [String] = Array(storeit.keys)
         
         for key in keys {
-            if let fileName = storeit[key]?.path.componentsSeparatedByString("/").last {
+            if let fileName = storeit[key]?.path.components(separatedBy: "/").last {
                 storeit[key]!.path = "\(newPath)/\(fileName)"
                 
                 if (storeit[key]!.isDir) {
@@ -231,7 +238,7 @@ class NavigationManager {
         }
     }
     
-    private func insertUpdateInTree(inout storeit: [String:File], updateElement: UpdateElement, path: [String]) {
+    fileprivate func insertUpdateInTree(_ storeit: inout [String:File], updateElement: UpdateElement, path: [String]) {
         let keys: [String] = Array(storeit.keys)
         
         for key in keys {
@@ -246,15 +253,21 @@ class NavigationManager {
             let fileName = path.first!
             
             switch updateElement.updateType {
-                case .ADD:
+                case .add:
                     storeit[fileName] = updateElement.fileToAdd!
-                case .DELETE:
-                    storeit.removeValueForKey(fileName)
-                case .RENAME:
-                    let file = storeit.removeValueForKey(fileName)
+                    if let file = storeit[fileName] {
+                        // We need to change the path of the subdir
+                        if (file.isDir && updateElement.isMoving) {
+                            self.updateFilePathsAfterRename(&storeit[fileName]!.files, newPath: file.path)
+                        }
+                    }
+                case .delete:
+                    storeit.removeValue(forKey: fileName)
+                case .rename:
+                    let file = storeit.removeValue(forKey: fileName)
                     
                     if let newPath = updateElement.pathToRenameWith?.1 {
-                        if let newName = newPath.componentsSeparatedByString("/").last {
+                        if let newName = newPath.components(separatedBy: "/").last {
                             storeit[newName] = file
                             storeit[newName]!.path = newPath
                             
@@ -264,11 +277,11 @@ class NavigationManager {
                             }
                         }
                     }
-            	case .UPDATE:
+            	case .update:
                     if let propertyToUpdate = updateElement.propertyToUpdate {
-                        if (propertyToUpdate.0 == Property.IPFSHash) {
+                        if (propertyToUpdate.0 == Property.ipfsHash) {
                             storeit[fileName]?.IPFSHash = propertyToUpdate.1.IPFSHash
-                        } else if (propertyToUpdate.0 == Property.Metadata) {
+                        } else if (propertyToUpdate.0 == Property.metadata) {
                             storeit[fileName]?.metadata = propertyToUpdate.1.metadata
                         }
                     }
@@ -276,24 +289,24 @@ class NavigationManager {
         }
     }
     
-    func updateTree(updateElement: UpdateElement) -> Int {
+    func updateTree(_ updateElement: UpdateElement) -> Int {
         let path: String?
         
         switch updateElement.updateType {
-            case .ADD:
+            case .add:
             	path = updateElement.fileToAdd?.path
-            case .DELETE:
+            case .delete:
             	path = updateElement.pathToDelete
-            case .RENAME:
+            case .rename:
             	path = updateElement.pathToRenameWith?.0
-        	case .UPDATE:
+        	case .update:
             	path = updateElement.propertyToUpdate?.1.path
         }
         
         var index = -1
         
         if let unwrapPath = path {
-            let splitPath = Array(unwrapPath.componentsSeparatedByString("/").dropFirst())
+            let splitPath = Array(unwrapPath.components(separatedBy: "/").dropFirst())
             
             self.insertUpdateInTree(&self.storeItSynchDir, updateElement: updateElement, path: splitPath)
             index = self.updateCurrentItems(splitPath.last!, updateElement: updateElement, indexes: Array(splitPath.dropLast()))
@@ -302,25 +315,49 @@ class NavigationManager {
         return index
     }
     
-    func getSelectedFileAtRow(indexPath: NSIndexPath) -> File {
+    func createDir(_ path: String, metadata: String, IPFSHash: String, files: [String:File]? = nil) -> File {
+        let dir = File(path: path,
+                       metadata: metadata,
+                       IPFSHash: IPFSHash,
+                       isDir: true,
+                       files: (files == nil ? [:] : files!))
+        return dir
+    }
+    
+    func createFile(_ path: String, metadata: String, IPFSHash: String) -> File {
+        let file = File(path: path,
+                        metadata: metadata,
+                        IPFSHash: IPFSHash,
+                        isDir: false,
+                        files: [:])
+        return file
+    }
+    
+    func getSelectedFileAtRow(indexPath: IndexPath) -> File? {
         let sortedItems = self.getSortedItems()
-        let selectedRow: String = sortedItems[indexPath.row]
-        let selectedFile: File = self.currentDirectory[selectedRow]!
+        let selectedRow: String = sortedItems[(indexPath as NSIndexPath).row]
         
-        return selectedFile
+        if let selectedFile = self.currentDirectory[selectedRow] {
+            return selectedFile
+        }
+        
+        return nil
     }
     
-    func isSelectedFileAtRowADir(indexPath: NSIndexPath) -> Bool {
-        let selectedFile: File = self.getSelectedFileAtRow(indexPath)
-        return selectedFile.isDir
+    func isSelectedFileAtRowADir(indexPath: IndexPath) -> Bool {
+        if let selectedFile: File = self.getSelectedFileAtRow(indexPath: indexPath) {
+        	return selectedFile.isDir
+        }
+        
+        return false
     }
     
-    func getTargetName(target: File) -> String {
-        let url: NSURL = NSURL(fileURLWithPath: target.path)
-        return url.lastPathComponent!
+    func getTargetName(_ target: File) -> String {
+        let url: URL = URL(fileURLWithPath: target.path)
+        return url.lastPathComponent
     }
     
-    func goToNextDir(target: File) -> String {
+    func goToNextDir(_ target: File) -> String {
         let targetName = self.getTargetName(target)
         
         self.indexes.append(targetName)
@@ -331,7 +368,7 @@ class NavigationManager {
     }
     
     func goPreviousDir() {
-        self.indexes.popLast()
+        _ = self.indexes.popLast()
         self.currentDirectory = self.getFileObjectsAtIndex()
         self.items = Array(self.currentDirectory.keys)
     }

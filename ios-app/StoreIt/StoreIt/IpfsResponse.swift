@@ -24,7 +24,7 @@ class IpfsAddResponse: Mappable {
         self.hash = hash
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.name = ""
         self.hash = ""
     }

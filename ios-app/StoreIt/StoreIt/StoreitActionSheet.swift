@@ -13,10 +13,10 @@ class StoreitActionSheet {
     let storeitActionSheet: UIAlertController
     
     init(title: String, message: String?) {
-        self.storeitActionSheet = UIAlertController(title: title, message: message, preferredStyle: .ActionSheet)
+        self.storeitActionSheet = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
     }
     
-    func addActionToUploadActionSheet(title: String, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) {
+    func addActionToUploadActionSheet(_ title: String, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) {
         let newAction: UIAlertAction = UIAlertAction(title: title, style: style, handler: handler)
         self.storeitActionSheet.addAction(newAction)
     }

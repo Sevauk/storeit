@@ -14,7 +14,7 @@ class ResponseResolver : Mappable {
     var command: String
     var uid: Int
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.command = ""
         self.uid = -1
     }

@@ -7,75 +7,57 @@
 //
 
 import Foundation
-import SwiftIpfsApi
-import SwiftMultihash
+import Alamofire
 
 class IpfsManager {
     
-    private let ipfs: IpfsApi?
-    private let host: String
-    private let port: Int
+    static let host: String = "127.0.0.1"
+    static let port: Int = 5001
     
-    init?(host: String, port: Int) {
-        do {
-            self.host = host
-            self.port = port
-			self.ipfs = try IpfsApi(host: host, port: port)
-        } catch let err as NSError {
-            print("[IPFS] Error when initializing IFPS... (error: \(err))")
-            return nil
+    static func get(hash: String, completionHandler: @escaping ((Data?) -> Void)) {
+        Alamofire.request("http://ipfs.io/ipfs/\(hash)").responseString { response in
+        	completionHandler(response.data)
         }
     }
-    
-    func get(hash: String, completionHandler: ([UInt8] -> Void)) {
-        do {
-        	let multihash = try fromB58String(hash)
-        	try self.ipfs!.get(multihash, completionHandler: completionHandler)
-        }
-        catch let err as NSError { print("[IPFS.GET] error: \(err)") }
-    }
-    
-    func add(filePath: NSURL, completionHandler: (NSData?, NSURLResponse?, NSError?) -> Void) {
+
+    // TODO: multipart request with Alamofire
+    static func add(filePath: URL, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) {
         let CRLF = "\r\n"
         let boundary = self.generateBoundaryString()
         
-        let data = NSData(contentsOfURL: filePath)
-        let fileName = filePath.lastPathComponent!
+        let data = try? Data(contentsOf: filePath)
+        let fileName = filePath.lastPathComponent
         
-        let url = NSURL(string: "http://\(host):\(port)/api/v0/add?stream-cannels=true")
-        let request = NSMutableURLRequest(URL: url!)
+        let url = URL(string: "http://\(host):\(port)/api/v0/add?stream-cannels=true")
+        var request = URLRequest(url: url!)
         
-        request.HTTPMethod = "POST"
+        request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
         let body = NSMutableData()
         
-        body.appendData("--\(boundary)\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
-        body.appendData("Content-Disposition : file; name=\"file\"; filename=\"\(fileName)\"\r\n".dataUsingEncoding(NSUTF8StringEncoding)!)
-        body.appendData("Content-Transfer-Encoding: binary\r\n".dataUsingEncoding(NSUTF8StringEncoding)!)
-        body.appendData("Content-Type: application/octet-stream\(CRLF)\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
-        body.appendData(data!)
-        body.appendData("\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
-        body.appendData("--\(boundary)--\(CRLF)".dataUsingEncoding(NSUTF8StringEncoding)!)
+        body.append("--\(boundary)\(CRLF)".data(using: String.Encoding.utf8)!)
+        body.append("Content-Disposition : file; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: String.Encoding.utf8)!)
+        body.append("Content-Transfer-Encoding: binary\r\n".data(using: String.Encoding.utf8)!)
+        body.append("Content-Type: application/octet-stream\(CRLF)\(CRLF)".data(using: String.Encoding.utf8)!)
         
-        request.HTTPBody = body
+        if let unwrappedData = data {
+            body.append(unwrappedData)
+        }
         
-        let session = NSURLSession.sharedSession()
-        let task = session.dataTaskWithRequest(request, completionHandler: completionHandler)
+        body.append("\(CRLF)".data(using: String.Encoding.utf8)!)
+        body.append("--\(boundary)--\(CRLF)".data(using: String.Encoding.utf8)!)
         
+        request.httpBody = body as Data
+        
+        let session = URLSession.shared
+        let task = session.dataTask(with: request, completionHandler: completionHandler as! (Data?, URLResponse?, Error?) -> Void)
+
         task.resume()
     }
     
-    // add method from SwiftIpfsApi, does not seem to work...
-    func add2(filePath:String, completionHandler: ([MerkleNode] -> ())) {
-        do {
-            try self.ipfs!.add(filePath, completionHandler: completionHandler)
-        }
-        catch let err as NSError { print("[IPFS.ADD] error: \(err)") }
-    }
-    
-    private func generateBoundaryString() -> String
+    private static func generateBoundaryString() -> String
     {
-        return "Boundary-\(NSUUID().UUIDString)"
+        return "Boundary-\(UUID().uuidString)"
     }
 }

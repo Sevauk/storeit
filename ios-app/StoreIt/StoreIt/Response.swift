@@ -33,7 +33,7 @@ class Response : Mappable {
         self.parameters = parameters
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.code = -1
         self.text = ""
         self.command = ""

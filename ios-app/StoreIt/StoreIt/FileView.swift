@@ -11,15 +11,15 @@ import QuickLook
 
 class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
 
-    var bytes: [UInt8]? = nil
+    var data: Data? = nil
     
-    let fileManager = NSFileManager.defaultManager()
-    var tmpDirUrl: NSURL
+    let fileManager = Foundation.FileManager.default
+    var tmpDirUrl: URL
     
     required init?(coder aDecoder: NSCoder) {
         // Creation of tmp dir
-        let identifier = NSProcessInfo.processInfo().globallyUniqueString
-        self.tmpDirUrl = NSURL(fileURLWithPath: NSTemporaryDirectory()).URLByAppendingPathComponent(identifier, isDirectory: true)
+        let identifier = ProcessInfo.processInfo.globallyUniqueString
+        self.tmpDirUrl = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(identifier, isDirectory: true)
         
         super.init(coder: aDecoder)
     }
@@ -28,9 +28,9 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
         super.viewDidLoad()
     }
     
-    func previewControllerWillDismiss(controller: QLPreviewController) {
+    func previewControllerWillDismiss(_ controller: QLPreviewController) {
         self.clearTmpDir()
-        self.navigationController?.popViewControllerAnimated(false)
+        _ = self.navigationController?.popViewController(animated: false)
     }
     
     func presentQlPreviewController() {
@@ -38,16 +38,16 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
         QL.dataSource = self
         QL.delegate = self
         
-        self.navigationController?.presentViewController(QL, animated: false, completion: nil)
+        self.navigationController?.present(QL, animated: false, completion: nil)
     }
     
     func showActivityIndicatory() {
         let actInd: UIActivityIndicatorView = UIActivityIndicatorView()
         
-        actInd.frame = CGRectMake(0.0, 0.0, 40.0, 40.0)
+        actInd.frame = CGRect(x: 0.0, y: 0.0, width: 40.0, height: 40.0)
         actInd.center = self.view.center
         actInd.hidesWhenStopped = true
-        actInd.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.Gray
+        actInd.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
 
         self.view.addSubview(actInd)
         
@@ -56,38 +56,38 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
     
     // TODO: Try / Catch
     func clearTmpDir() {
-        try! fileManager.removeItemAtURL(self.tmpDirUrl)
+        try! fileManager.removeItem(at: self.tmpDirUrl)
     }
     
     // TODO: Try / Catch
-    func createTmpFile() -> NSURL? {
-        if let unwrapBytes = self.bytes {
-            
+    func createTmpFile() -> URL? {
+
+        if let unwrapData = self.data {
+
             // Creation of tmp file
             let fileName = self.navigationItem.title!
-            try! self.fileManager.createDirectoryAtURL(self.tmpDirUrl, withIntermediateDirectories: true, attributes: nil)
+            try! self.fileManager.createDirectory(at: self.tmpDirUrl, withIntermediateDirectories: true, attributes: nil)
             
-            let fileURL = self.tmpDirUrl.URLByAppendingPathComponent(fileName)
-            let data = NSData(bytes: unwrapBytes)
+            let fileURL = self.tmpDirUrl.appendingPathComponent(fileName)
             
             // Write data to file
-            try! data.writeToURL(fileURL, options: .AtomicWrite)
+            try! unwrapData.write(to: fileURL, options: .atomicWrite)
             
             return fileURL
         }
         return nil
     }
     
-    func numberOfPreviewItemsInPreviewController(controller: QLPreviewController)  -> Int{
+    func numberOfPreviewItems(in controller: QLPreviewController)  -> Int{
         return 1
     }
     
-    func previewController(controller: QLPreviewController,
-                             previewItemAtIndex index: Int) -> QLPreviewItem {
+    func previewController(_ controller: QLPreviewController,
+                             previewItemAt index: Int) -> QLPreviewItem {
         if let doc = self.createTmpFile() {
-            return doc
+            return doc as QLPreviewItem
         }
-    	return NSURL()
+        return URL(string: "") as! QLPreviewItem // fix that later because it will crash, thx swift 3
     }
     
 }

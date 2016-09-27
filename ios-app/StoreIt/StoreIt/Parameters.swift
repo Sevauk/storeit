@@ -24,7 +24,7 @@ class JoinParameters: Mappable {
         self.accessToken = accessToken
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.authType = ""
         self.accessToken = ""
     }
@@ -51,7 +51,7 @@ class FmovParameters: Mappable {
         self.dest = dest
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.src = ""
         self.dest = ""
     }
@@ -74,7 +74,7 @@ class FdelParameters: Mappable {
         self.files = files
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.files = []
     }
     
@@ -95,7 +95,7 @@ class DefaultParameters: Mappable {
         self.files = files
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.files = []
     }
     

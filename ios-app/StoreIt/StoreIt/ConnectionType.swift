@@ -9,7 +9,6 @@
 import Foundation
 
 enum ConnectionType: String {
-    case GOOGLE = "gg"
-    case FACEBOOK = "fb"
-    case NONE = "None"
+    case google = "gg"
+    case facebook = "fb"
 }

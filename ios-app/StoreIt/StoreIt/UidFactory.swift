@@ -13,26 +13,27 @@ class UidFactory {
     typealias Command = String
     typealias Uid = Int
     
-    var uid: Uid = 0
-    var waintingForResponse: [Uid:Command] = [:]
-    var objectsForUid: [Uid:AnyObject] = [:]
+    static var uid: Uid = 0
     
-    func addNewWaitingCommand(command: Command, objects: AnyObject) {
+    private static var waintingForResponse: [Uid:Command] = [:]
+    private static var objectsForUid: [Uid:AnyObject] = [:]
+    
+    static func addNewWaitingCommand(_ command: Command, objects: AnyObject) {
         waintingForResponse[uid] = command
         objectsForUid[uid] = objects
         uid += 1
     }
     
-    func isWaitingForReponse(uid: Uid) -> Bool {
+    static func isWaitingForReponse(_ uid: Uid) -> Bool {
         return waintingForResponse.keys.contains(uid)
     }
     
     // No checks needed, called after "isWaitingForReponse"
-    func getCommandNameForUid(uid: Uid) -> Command {
+    static func getCommandNameForUid(_ uid: Uid) -> Command {
         return waintingForResponse[uid]!
     }
     
-    func getObjectForUid(uid: Uid) -> AnyObject {
+    static func getObjectForUid(_ uid: Uid) -> AnyObject {
         return objectsForUid[uid]!
     }
 }

@@ -27,7 +27,7 @@ class Command<T: Mappable>: Mappable {
         self.parameters = parameters
     }
     
-    required init?(_ map: Map) {
+    required init?(map: Map) {
         self.uid = -1
         self.command = ""
         self.parameters = nil

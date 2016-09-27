@@ -11,40 +11,42 @@ import Plist
 
 class PListManager {
     
-    private var plist: Plist?
-    private let path: String
+    private static var plist: Plist?
+    private static var path: String?
     
     init() {
-		
-        let rootPath = NSSearchPathForDirectoriesInDomains(NSSearchPathDirectory.DocumentDirectory, .UserDomainMask, true)[0]
-        let plistPathInDocument = rootPath.stringByAppendingString("/storeit_data.plist")
-        let fileManager = NSFileManager.defaultManager()
+        let rootPath = NSSearchPathForDirectoriesInDomains(Foundation.FileManager.SearchPathDirectory.documentDirectory, .userDomainMask, true)[0]
+        let plistPathInDocument = rootPath + "/storeit_data.plist"
+        let fileManager = Foundation.FileManager.default
         
-        if (!fileManager.fileExistsAtPath(plistPathInDocument)){
-            plist = nil
+        if (!fileManager.fileExists(atPath: plistPathInDocument)){
+            PListManager.plist = nil
+            PListManager.path = nil
             
         } else {
-            plist = Plist(path: plistPathInDocument)
+            PListManager.plist = Plist(path: plistPathInDocument)
+            PListManager.path = plistPathInDocument
         }
-        
-        self.path = plistPathInDocument
     }
     
-    func addValueForKey(key: String, value: String) {
+    static func add(for key: String, value: String) {
         let data: NSMutableDictionary
         
-        if (plist != nil) {
-        	data = NSMutableDictionary(contentsOfFile: self.path)!
-        } else {
-            data = NSMutableDictionary()
+        if let path = PListManager.path {
+            if (plist != nil) {
+                data = NSMutableDictionary(contentsOfFile: path)!
+            } else {
+                data = NSMutableDictionary()
+            }
+            
+            data.setObject(value, forKey: key as NSCopying)
+            data.write(toFile: path, atomically: true)
+            
+            self.plist = Plist(path: path)
         }
-        
-        data.setObject(value, forKey: key)
-        data.writeToFile(path, atomically: true)
-        self.plist = Plist(path: path)
 	}
-    
-    func getValueWithKey(key: String) -> String {
-        return self.plist?[key].string ?? "None"
+
+    static func get(with key: String) -> String? {
+        return self.plist?[key].string
     }
 }
