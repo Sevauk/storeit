@@ -65,7 +65,7 @@ export default class Client {
     this.sock = Promise.promisifyAll(this.sock)
     logger.info('[SOCK] attempting connection')
 
-    this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
+    this.sock.on('error', (e) => logger.error(`[SOCK] socket error occured (${e})`))
     this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
 
     return new Promise(resolve => {
@@ -164,12 +164,11 @@ export default class Client {
           this.sendFADD(dir.path + fileName)
         }
       })
-      .then(() => {
-        for (const f of Object.keys(dir.files)) {
-          if (f.isDir)
-            this.addFilesUnknownByServ(f)
-        }
-      })
+      .then(() =>
+        Promise.map(Object.keys(dir.files), (file) => {
+          if (file)
+            this.addFilesUnknownByServ(file)
+        }))
       .catch((e) => logger.warn(e))
   }
 

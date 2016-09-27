@@ -80,16 +80,12 @@ class IPFSNode {
       }))
   }
 
-  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
-  get(filePath, hash, progressCb) {
-    let data = []
+  checkForAlreadyDownloading(hash, filePath) {
 
     if (!hash) {
       logger.error('empty hash given :o ')
       return Promise.reject()
     }
-
-    logger.debug('[IPFS] GET ' + hash)
 
     if (filePath in this.downloading) {
 
@@ -103,6 +99,18 @@ class IPFSNode {
     }
 
     this.downloading[filePath] = hash // store the hash and when the download starts store the stream object (see a few lines below)
+
+  }
+
+  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+  get(filePath, hash, progressCb) {
+
+    logger.debug('[IPFS] GET ' + hash)
+
+    if (this.checkForAlreadyDownloading(hash, filePath))
+      return Promise.reject()
+
+    let data = []
 
     return this.ready()
       .then(() => this.node.cat(hash))
@@ -137,12 +145,12 @@ class IPFSNode {
         res.on('error', () => doneReject())
 
         const tickProgress = () => {
-          setTimeout(() => {
+          Promise.delay(500).then(() => {
             let progressPercentage = totalSize ? downloadedSize * 100 / totalSize : 0
             progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
             if (!done)
               tickProgress()
-          }, 500)
+          })
         }
 
         if (progressCb)
@@ -156,8 +164,7 @@ class IPFSNode {
   }
 
   rm(hash) {
-    if (ipfs.rm != null) return ipfs.rm(hash)
-    return Promise.resolve()
+    return ipfs.rm ? ipfs.rm(hash)  : Promise.resolve()
   }
 
   downloadChunk(hash) {
