@@ -37,11 +37,13 @@ class IPFSNode {
     return this.node.id()
   }
 
-  download(filePath, ipfsHash, isChunk=false) {
+
+  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+  download(filePath, ipfsHash, isChunk=false, progressCb) {
     let log = isChunk ? logger.debug : logger.info
     log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
 
-    return this.get(filePath, ipfsHash)
+    return this.get(filePath, ipfsHash, progressCb)
       .then(buf => userFile.create(filePath, buf))
       .delay(500)  // QUCIK FIX, FIXME
       .then(() => {
