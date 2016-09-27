@@ -78,12 +78,8 @@ class IPFSNode {
       }))
   }
 
-  downloadProgress(filePath, hash, totalSize, downloaded) {
-    const advance = totalSize ? downloaded * 100 / totalSize : `${downloaded} bytes`
-    logger.debug(`[${filePath}] downloaded ${Math.round(advance)}% (${downloaded})`)
-  }
-
-  get(filePath, hash) {
+  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+  get(filePath, hash, progressCb) {
     let data = []
 
     if (!hash) {
@@ -140,13 +136,15 @@ class IPFSNode {
 
         const tickProgress = () => {
           setTimeout(() => {
-            this.downloadProgress(filePath, hash, totalSize, downloadedSize)
+            let progressPercentage = totalSize ? downloadedSize * 100 / totalSize : 0
+            progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
             if (!done)
               tickProgress()
           }, 500)
         }
 
-        tickProgress()
+        if (progressCb)
+          tickProgress()
 
       }))
       .catch((e) => this.reconnect().then(() => {
