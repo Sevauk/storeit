@@ -58,7 +58,8 @@ export default class Client {
     throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
   }
 
-  connect() {
+  connect(type, devid, opener) {
+
     const {SERVER_ADDR, SERVER_PORT} = process.env
     this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
 
@@ -69,16 +70,18 @@ export default class Client {
     this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
 
     return new Promise(resolve => {
-      this.sock.on('open', resolve)
-      this.sock.on('close', () => resolve(this.reconnect()))
+      this.sock.on('open', () => {
+        resolve(this.auth(type, devid, opener)
+          .catch(() => logger.error('Bad authentication')))
+      })
+      this.sock.on('close', () => resolve(this.reconnect(type, devid, opener)))
     })
       .then(() => this.recoTime = 1)
-      .tap(() => logger.info('[SOCK] connection established'))
   }
 
-  reconnect() {
+  reconnect(type, devid, opener) {
     logger.error(`[SOCK] attempting to reconnect in ${this.recoTime} seconds`)
-    let done = Promise.delay(this.recoTime * 1000).then(() => this.connect())
+    let done = Promise.delay(this.recoTime * 1000).then(() => this.connect(type, devid, opener))
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
     return done
   }
