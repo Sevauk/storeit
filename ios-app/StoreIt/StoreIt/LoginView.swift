@@ -13,13 +13,20 @@ import GoogleSignIn
 
 class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     
+    let CORNER_RADIUS: CGFloat = 7
+    
     let networkManager = NetworkManager.sharedInstance
     
+    @IBOutlet weak var developerButton: UIButton!
     @IBOutlet weak var signInButton: GIDSignInButton!
+    @IBOutlet weak var fbButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        fbButton.layer.cornerRadius = CORNER_RADIUS
+        developerButton.layer.cornerRadius = CORNER_RADIUS
+        
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
         
@@ -28,8 +35,14 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
                 GIDSignIn.sharedInstance().signInSilently()
             } else if connectionType == ConnectionType.facebook {
                 processFacebookLogin()
+            } else if connectionType == ConnectionType.developer {
+                processDeveloperLogin()
             }
         }
+    }
+    
+    @IBAction func developerLogin(_ sender: AnyObject) {
+        processDeveloperLogin()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -42,13 +55,11 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     // MARK: FACEBOOK
-    
 
-    
-    // do something for fb token refresh
     func processFacebookLogin() {
-        _ = SessionManager.set(token: FBSDKAccessToken.current().tokenString)
-        print(FBSDKAccessToken.current().tokenString)
+        
+    	// refresh token here
+        
         networkManager.initConnection(loginFunction: loginFunction, logoutFunction: logoutToLoginView)
         
         self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
@@ -73,6 +84,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
                 
             else {
                 if result.grantedPermissions.contains("email"){
+                    _ = SessionManager.set(token: result.token.tokenString)
                     self.processFacebookLogin()
                 }
             }
@@ -115,8 +127,20 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
 
     // MARK: Utils
     
+    func processDeveloperLogin() {
+        networkManager.initConnection(loginFunction: loginDeveloperFunction, logoutFunction: logoutToLoginView)
+        SessionManager.set(connectionType: ConnectionType.developer)
+        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+    }
+    
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
         logout()
+    }
+    
+    func loginDeveloperFunction() {
+        networkManager.joinDeveloper { _ in
+            print("[LoginView] JOIN as developer succeeded")
+        }
     }
     
     func loginFunction() {

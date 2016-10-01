@@ -75,18 +75,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="WY1-m7-u1r">
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="368" id="ot0-79-b3c"/>
-                                </constraints>
-                            </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="I0r-6n-5gp">
                                 <color key="backgroundColor" red="0.23137254901960785" green="0.34901960784313724" blue="0.59607843137254901" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="45" id="KpR-th-7wG"/>
                                 </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                <state key="normal" title="Se connecter avec Facebook"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <inset key="imageEdgeInsets" minX="-15" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                <state key="normal" title="Se connecter avec Facebook" image="FB-f-Logo__white_29.png"/>
                                 <connections>
                                     <action selector="fbLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="evh-Hv-Qjp"/>
                                 </connections>
@@ -104,27 +100,37 @@
                                 <frame key="frameInset" minX="71" minY="452" width="250" height="45"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                <state key="normal" title="developper login">
+                                <state key="normal" title="Developer login">
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 </state>
+                                <connections>
+                                    <action selector="developerLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eW0-0e-AbY"/>
+                                </connections>
                             </button>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="WY1-m7-u1r">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="368" id="ot0-79-b3c"/>
+                                </constraints>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="tjA-Sy-iXK" secondAttribute="bottom" constant="38" id="14w-Z2-t1L"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="WY1-m7-u1r" secondAttribute="trailing" constant="-13" id="F1h-ts-RJc"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="WY1-m7-u1r" secondAttribute="trailing" constant="-16" id="F1h-ts-RJc"/>
                             <constraint firstItem="I0r-6n-5gp" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="55" id="FkN-WU-Fac"/>
                             <constraint firstItem="tjA-Sy-iXK" firstAttribute="top" secondItem="I0r-6n-5gp" secondAttribute="bottom" constant="20" id="G2S-FL-9CA"/>
-                            <constraint firstItem="WY1-m7-u1r" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-19" id="NSe-sh-ffX"/>
-                            <constraint firstItem="WY1-m7-u1r" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="8" symbolic="YES" id="gSV-gC-P5C"/>
+                            <constraint firstItem="WY1-m7-u1r" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-16" id="NSe-sh-ffX"/>
+                            <constraint firstItem="WY1-m7-u1r" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="25" id="gSV-gC-P5C"/>
                             <constraint firstItem="I0r-6n-5gp" firstAttribute="trailing" secondItem="tjA-Sy-iXK" secondAttribute="trailing" id="o5A-x9-ko0"/>
-                            <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="WY1-m7-u1r" secondAttribute="bottom" constant="123" id="pzE-w5-1yH"/>
+                            <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="WY1-m7-u1r" secondAttribute="bottom" constant="106" id="pzE-w5-1yH"/>
                             <constraint firstItem="I0r-6n-5gp" firstAttribute="leading" secondItem="tjA-Sy-iXK" secondAttribute="leading" id="wC8-me-zBX"/>
                             <constraint firstAttribute="trailingMargin" secondItem="I0r-6n-5gp" secondAttribute="trailing" constant="38" id="yAD-4T-2WV"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="y7k-Zm-JRx"/>
                     <connections>
+                        <outlet property="developerButton" destination="Bkf-2q-his" id="mbF-YT-fdM"/>
+                        <outlet property="fbButton" destination="I0r-6n-5gp" id="NGc-VV-OSY"/>
                         <outlet property="signInButton" destination="tjA-Sy-iXK" id="aYJ-KU-2Ig"/>
                         <segue destination="grJ-Ff-90b" kind="show" identifier="StoreItSynchDirSegue" animates="NO" id="KWc-09-4h1"/>
                     </connections>
@@ -361,6 +367,7 @@
     </scenes>
     <resources>
         <image name="2017_logo_storeit" width="520" height="965"/>
+        <image name="FB-f-Logo__white_29.png" width="29" height="29"/>
         <image name="ic_folder.png" width="24" height="24"/>
         <image name="ic_folder_open.png" width="24" height="24"/>
         <image name="ic_more_vert" width="24" height="24"/>
