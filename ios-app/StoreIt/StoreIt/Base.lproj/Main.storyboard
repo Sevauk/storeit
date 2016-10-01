@@ -17,7 +17,7 @@
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="color" keyPath="selectedImageTintColor">
-                                <color key="value" red="0.38431372549019605" green="0.76078431372549016" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="value" red="0.86274509803921573" green="0.40392156862745099" blue="0.41176470588235292" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </userDefinedRuntimeAttribute>
                         </userDefinedRuntimeAttributes>
                     </tabBar>
@@ -87,18 +87,7 @@
                                     <action selector="fbLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="evh-Hv-Qjp"/>
                                 </connections>
                             </button>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="tjA-Sy-iXK" customClass="GIDSignInButton">
-                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="250" id="0jA-Tw-ncL"/>
-                                    <constraint firstAttribute="width" constant="250" id="FcF-Ye-gfD"/>
-                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="45" id="iWS-YN-gVs"/>
-                                    <constraint firstAttribute="height" constant="45" id="sa6-HV-Phl"/>
-                                </constraints>
-                            </view>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Bkf-2q-his">
-                                <frame key="frameInset" minX="71" minY="452" width="250" height="45"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Bkf-2q-his">
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                 <state key="normal" title="Developer login">
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -112,18 +101,34 @@
                                     <constraint firstAttribute="height" constant="368" id="ot0-79-b3c"/>
                                 </constraints>
                             </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Myp-Wn-9Of">
+                                <color key="backgroundColor" red="0.25882352941176467" green="0.52156862745098043" blue="0.95686274509803915" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="45" id="SEu-A8-99u"/>
+                                    <constraint firstAttribute="width" constant="250" id="dW0-mi-vyX"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <inset key="titleEdgeInsets" minX="-16" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                <inset key="imageEdgeInsets" minX="-24" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                <state key="normal" title="Se connecter avec Google" image="btn_google_dark_normal_ios.png"/>
+                                <connections>
+                                    <action selector="googleLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="YJl-fR-OVB"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="tjA-Sy-iXK" secondAttribute="bottom" constant="38" id="14w-Z2-t1L"/>
+                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="leading" secondItem="Bkf-2q-his" secondAttribute="leading" id="0fC-yW-lJd"/>
                             <constraint firstAttribute="trailingMargin" secondItem="WY1-m7-u1r" secondAttribute="trailing" constant="-16" id="F1h-ts-RJc"/>
                             <constraint firstItem="I0r-6n-5gp" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="55" id="FkN-WU-Fac"/>
-                            <constraint firstItem="tjA-Sy-iXK" firstAttribute="top" secondItem="I0r-6n-5gp" secondAttribute="bottom" constant="20" id="G2S-FL-9CA"/>
                             <constraint firstItem="WY1-m7-u1r" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="-16" id="NSe-sh-ffX"/>
+                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="trailing" secondItem="Bkf-2q-his" secondAttribute="trailing" id="PBo-Tr-qjC"/>
+                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="leading" secondItem="I0r-6n-5gp" secondAttribute="leading" id="WuV-wk-yQb"/>
+                            <constraint firstItem="Bkf-2q-his" firstAttribute="top" secondItem="WY1-m7-u1r" secondAttribute="bottom" constant="39" id="aS4-AY-EhX"/>
                             <constraint firstItem="WY1-m7-u1r" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="25" id="gSV-gC-P5C"/>
-                            <constraint firstItem="I0r-6n-5gp" firstAttribute="trailing" secondItem="tjA-Sy-iXK" secondAttribute="trailing" id="o5A-x9-ko0"/>
                             <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="WY1-m7-u1r" secondAttribute="bottom" constant="106" id="pzE-w5-1yH"/>
-                            <constraint firstItem="I0r-6n-5gp" firstAttribute="leading" secondItem="tjA-Sy-iXK" secondAttribute="leading" id="wC8-me-zBX"/>
+                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="top" secondItem="I0r-6n-5gp" secondAttribute="bottom" constant="23" id="xIr-BK-C7W"/>
+                            <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="Bkf-2q-his" secondAttribute="bottom" constant="22" id="xkZ-gA-mki"/>
                             <constraint firstAttribute="trailingMargin" secondItem="I0r-6n-5gp" secondAttribute="trailing" constant="38" id="yAD-4T-2WV"/>
                         </constraints>
                     </view>
@@ -131,7 +136,7 @@
                     <connections>
                         <outlet property="developerButton" destination="Bkf-2q-his" id="mbF-YT-fdM"/>
                         <outlet property="fbButton" destination="I0r-6n-5gp" id="NGc-VV-OSY"/>
-                        <outlet property="signInButton" destination="tjA-Sy-iXK" id="aYJ-KU-2Ig"/>
+                        <outlet property="googleButton" destination="Myp-Wn-9Of" id="TW9-Qo-E8w"/>
                         <segue destination="grJ-Ff-90b" kind="show" identifier="StoreItSynchDirSegue" animates="NO" id="KWc-09-4h1"/>
                     </connections>
                 </viewController>
@@ -167,7 +172,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <color key="barTintColor" red="0.38431372549999998" green="0.76078431369999999" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="barTintColor" red="0.86274509803921573" green="0.40392156862745099" blue="0.41176470588235292" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         </textAttributes>
@@ -293,7 +298,7 @@
                                     </barButtonItem>
                                 </items>
                                 <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <color key="barTintColor" red="0.38431372549999998" green="0.76078431369999999" blue="0.80000000000000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="barTintColor" red="0.86274509803921573" green="0.40392156862745099" blue="0.41176470588235292" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </toolbar>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -368,6 +373,7 @@
     <resources>
         <image name="2017_logo_storeit" width="520" height="965"/>
         <image name="FB-f-Logo__white_29.png" width="29" height="29"/>
+        <image name="btn_google_dark_normal_ios.png" width="48" height="48"/>
         <image name="ic_folder.png" width="24" height="24"/>
         <image name="ic_folder_open.png" width="24" height="24"/>
         <image name="ic_more_vert" width="24" height="24"/>

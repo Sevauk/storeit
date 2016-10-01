@@ -17,6 +17,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     
     let networkManager = NetworkManager.sharedInstance
     
+    @IBOutlet weak var googleButton: UIButton!
     @IBOutlet weak var developerButton: UIButton!
     @IBOutlet weak var signInButton: GIDSignInButton!
     @IBOutlet weak var fbButton: UIButton!
@@ -26,6 +27,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
 
         fbButton.layer.cornerRadius = CORNER_RADIUS
         developerButton.layer.cornerRadius = CORNER_RADIUS
+        googleButton.layer.cornerRadius = CORNER_RADIUS
         
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
@@ -92,6 +94,10 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     // MARK: GOOGLE
+    
+    @IBAction func googleLogin(_ sender: AnyObject) {
+    	GIDSignIn.sharedInstance().signIn()
+    }
     
     func sign(_ signIn: GIDSignIn!,
               present viewController: UIViewController!) {

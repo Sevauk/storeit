@@ -281,7 +281,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     func addActions() {
         
-        let cancelAction = ActionSheetsManager.buildCancelAction(handler: nil)
+        var cancelAction = ActionSheetsManager.buildCancelAction(handler: nil)
         
         // UPLOAD
         ActionSheetsManager.add(newActionSheetType: ActionSheet.upload, title: "Ajout d'un nouvel élément", message: nil)
@@ -296,6 +296,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         ActionSheetsManager.add(newAction: cancelAction, to: ActionSheet.upload)
         
         // DIR ACTIONS
+        cancelAction = ActionSheetsManager.buildCancelAction(handler: nil)
+        
         ActionSheetsManager.add(newActionSheetType: ActionSheet.dirOpt, title: "Dossier", message: nil)
         
         let rename = ActionSheetsManager.buildDefaultAction(title: "Renommer", handler: renameFile)
@@ -321,6 +323,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     func uploadOptions() {
         if let actionSheet = ActionSheetsManager.getActionSheet(actionSheetType: ActionSheet.upload) {
+            actionSheet.view.tintColor = STOREIT_RED
             self.present(actionSheet, animated: true, completion: nil)
         }
     }
@@ -333,6 +336,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             let actionSheetType: ActionSheet = isDir ? ActionSheet.dirOpt : ActionSheet.fileOpt
             
             if let actionSheet = ActionSheetsManager.getActionSheet(actionSheetType: actionSheetType) {
+                actionSheet.view.tintColor = STOREIT_RED
                 self.present(actionSheet, animated: true, completion: nil)
             }
         }
