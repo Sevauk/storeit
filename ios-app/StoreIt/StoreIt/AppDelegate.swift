@@ -27,6 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
         if let connectionType = SessionManager.getConnectionType() {
+            print(connectionType)
             if connectionType == ConnectionType.google {
                return GIDSignIn.sharedInstance().handle(url, sourceApplication: sourceApplication, annotation: annotation)
             } else if connectionType == ConnectionType.facebook {

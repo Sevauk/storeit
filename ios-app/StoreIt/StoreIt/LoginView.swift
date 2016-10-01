@@ -11,11 +11,10 @@ import ObjectMapper
 import FBSDKLoginKit
 import GoogleSignIn
 
-class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
+class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     
     let networkManager = NetworkManager.sharedInstance
     
-    @IBOutlet weak var FBLoginButton: FBSDKLoginButton!
     @IBOutlet weak var signInButton: GIDSignInButton!
     
     override func viewDidLoad() {
@@ -23,9 +22,6 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
 
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
-        
-        FBLoginButton.readPermissions = ["public_profile", "email"]
-        FBLoginButton.delegate = self
         
         if let connectionType = SessionManager.getConnectionType() {
             if connectionType == ConnectionType.google {
@@ -47,38 +43,40 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     
     // MARK: FACEBOOK
     
-    func loginButton(_ loginButton: FBSDKLoginButton!, didCompleteWith result: FBSDKLoginManagerLoginResult!, error: Error!) {
-        if ((error) != nil) {
-            print(error)
-            self.logout()
-        }
-        else if result.isCancelled {
-            print(result)
-            self.logout()
-        }
-        else {
-            if result.grantedPermissions.contains("email"){
-				processFacebookLogin()
-            }
-        }
-    }
+
     
     // do something for fb token refresh
     func processFacebookLogin() {
         _ = SessionManager.set(token: FBSDKAccessToken.current().tokenString)
-        
+        print(FBSDKAccessToken.current().tokenString)
         networkManager.initConnection(loginFunction: loginFunction, logoutFunction: logoutToLoginView)
         
         self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
     }
     
-    func loginButtonWillLogin(_ loginButton: FBSDKLoginButton!) -> Bool {
+    @IBAction func fbLogin(_ sender: AnyObject) {
+        let login: FBSDKLoginManager = FBSDKLoginManager()
+        
         SessionManager.set(connectionType: ConnectionType.facebook)
-        return true
-    }
-    
-    func loginButtonDidLogOut(_ loginButton: FBSDKLoginButton!) {
-        self.logout()
+        
+        login.logIn(withReadPermissions: ["public_profile", "email"], from: self) { (result, error) in
+            guard let result = result else {
+                print(error)
+                self.logout()
+                return
+            }
+            
+            if result.isCancelled {
+                print(result)
+                self.logout()
+            }
+                
+            else {
+                if result.grantedPermissions.contains("email"){
+                    self.processFacebookLogin()
+                }
+            }
+        }
     }
     
     // MARK: GOOGLE
@@ -112,19 +110,19 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     }
     
     func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
-        self.logout()
+        logout()
     }
 
     // MARK: Utils
     
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
-        self.logout()
+        logout()
     }
     
     func loginFunction() {
         if let token = SessionManager.getToken() {
             if let connectionType = SessionManager.getConnectionType() {
-                self.networkManager.join(connectionType.rawValue, accessToken: token) { _ in
+                	networkManager.join(connectionType.rawValue, accessToken: token) { _ in
                     print("[LoginView] JOIN succeeded")
                 }
             }
@@ -148,7 +146,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     
     func logoutToLoginView() {
         _ = self.navigationController?.popToRootViewController(animated: true)
-        self.logout()
+        logout()
     }
 
 }

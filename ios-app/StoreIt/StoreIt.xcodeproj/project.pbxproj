@@ -42,6 +42,7 @@
 		858B096E1D23D9D400CB1190 /* IpfsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 858B096D1D23D9D400CB1190 /* IpfsResponse.swift */; };
 		85A553861D96A19F009AFC1B /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A553851D96A19F009AFC1B /* SessionManager.swift */; };
 		85B154121D140D18003B62FE /* PListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B154111D140D18003B62FE /* PListManager.swift */; };
+		85B196891D9A9333008B620B /* 2017_logo_storeit.png in Resources */ = {isa = PBXBuildFile; fileRef = 85B196881D9A9333008B620B /* 2017_logo_storeit.png */; };
 		85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B5A8F21D2C09AE00529533 /* UidFactory.swift */; };
 		85BA025B1CEDBD7200A8FC6F /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */; };
 		85D0E6101D1D985E00C564C3 /* IpfsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D0E60F1D1D985E00C564C3 /* IpfsManager.swift */; };
@@ -113,6 +114,7 @@
 		858B096D1D23D9D400CB1190 /* IpfsResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IpfsResponse.swift; sourceTree = "<group>"; };
 		85A553851D96A19F009AFC1B /* SessionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		85B154111D140D18003B62FE /* PListManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PListManager.swift; sourceTree = "<group>"; };
+		85B196881D9A9333008B620B /* 2017_logo_storeit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2017_logo_storeit.png; sourceTree = "<group>"; };
 		85B5A8F21D2C09AE00529533 /* UidFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UidFactory.swift; sourceTree = "<group>"; };
 		85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
 		85CC6CC01D8B1F8100931AD9 /* StoreIt.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StoreIt.entitlements; sourceTree = "<group>"; };
@@ -298,6 +300,7 @@
 		857439571D252A70005A591B /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				85B196881D9A9333008B620B /* 2017_logo_storeit.png */,
 				855C03A71D70469B00F53398 /* ic_person.imageset */,
 				855C03A51D70469200F53398 /* ic_settings_white.imageset */,
 				855C03A31D70468700F53398 /* ic_settings.imageset */,
@@ -450,6 +453,7 @@
 				855C039E1D70460A00F53398 /* ic_folder.imageset in Resources */,
 				855C03A41D70468700F53398 /* ic_settings.imageset in Resources */,
 				855C03A61D70469200F53398 /* ic_settings_white.imageset in Resources */,
+				85B196891D9A9333008B620B /* 2017_logo_storeit.png in Resources */,
 				855C03A21D70467A00F53398 /* ic_more_vert.imageset in Resources */,
 				8500F6E81C970F1C00C69875 /* LaunchScreen.storyboard in Resources */,
 				85EB56A81D8D4AD500CE8E3D /* GoogleService-Info.plist in Resources */,
