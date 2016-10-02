@@ -4,12 +4,14 @@ import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
@@ -62,6 +64,12 @@ public class LoginActivity extends Activity {
     private String mEmail;
     String SCOPE = "oauth2:https://www.googleapis.com/auth/userinfo.email";
 
+    private boolean autologin = false;
+    private ProgressDialog progessDialog = null;
+
+    private String m_token = "";
+    private String m_method = "";
+
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
         public void handleJoin(final JoinResponse joinResponse) {
@@ -86,8 +94,15 @@ public class LoginActivity extends Activity {
                         intent.putExtra("home", homeJson);
                         intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                        if (progessDialog != null)
+                            progessDialog.dismiss();
+
                         startActivity(intent);
                     } else {
+                        if (progessDialog != null)
+                            progessDialog.dismiss();
+
                         SharedPreferences sharedPrefs = getSharedPreferences(
                                 getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
 
@@ -96,7 +111,31 @@ public class LoginActivity extends Activity {
                         editor.putString("oauth_method", "");
                         editor.apply();
 
-                        Toast.makeText(LoginActivity.this, "Please login", Toast.LENGTH_SHORT);
+                        Toast.makeText(LoginActivity.this, "Please login", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void handleConnection() {
+            Log.v("LoginActivity", "handleConnection called()");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (autologin)
+                    {
+                        progessDialog = new ProgressDialog(LoginActivity.this);
+                        progessDialog.setMessage("Connecting...");
+                        progessDialog.setIndeterminate(true);
+                        progessDialog.setCancelable(false);
+                        progessDialog.show();
+                        Log.v("LoginActivity", "handleConnection!");
+                        if (!mSocketService.sendJOIN(m_method, m_token))
+                        {
+                            progessDialog.dismiss();
+                            Toast.makeText(LoginActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
             });
@@ -279,7 +318,7 @@ public class LoginActivity extends Activity {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                editor.putString("oauth_token", "developper");
+                editor.putString("oauth_token", "developer");
                 editor.putString("oauth_method", "gg");
                 editor.apply();
 
@@ -339,14 +378,13 @@ public class LoginActivity extends Activity {
             }
         });
 
+        m_token = sharedPrefs.getString("oauth_token", "");
+        m_method = sharedPrefs.getString("oauth_method", "");
 
-
-        String token = sharedPrefs.getString("oauth_token", "");
-        String method = sharedPrefs.getString("oauth_method", "");
-
-        if (!token.isEmpty() && !method.isEmpty()) {
-                mSocketService.sendJOIN(method, token);
+        if (!m_token.isEmpty() && !m_method.isEmpty()) {
+            autologin = true;
         }
+
     }
 
     @Override
