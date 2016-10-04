@@ -50,7 +50,7 @@ const OS_GENERATED = [
   /.Spotlight-V100$/,
   /.Trashes$/,
   /ehthumbs.db$/,
-  /Thumbs.d$/,
+  /Thumbs.db$/,
 ]
 
 export default class Watcher {

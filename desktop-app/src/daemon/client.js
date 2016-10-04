@@ -202,7 +202,7 @@ export default class Client {
 
   getFsEvent(ev) {
     let handler = this[`send${ev.type}`]
-    if (handler != null) return false
+    // if (handler != null) return false
 
     handler.call(this, ev.path).catch(logger.error)
     return true
