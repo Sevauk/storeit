@@ -119,18 +119,12 @@ public class LoginActivity extends Activity {
 
         @Override
         public void handleConnection() {
-            Log.v("LoginActivity", "handleConnection called()");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.v("MainActivity", "handleConnection");
                     if (autologin)
                     {
-                        progessDialog = new ProgressDialog(LoginActivity.this);
-                        progessDialog.setMessage("Connecting...");
-                        progessDialog.setIndeterminate(true);
-                        progessDialog.setCancelable(false);
-                        progessDialog.show();
-                        Log.v("LoginActivity", "handleConnection!");
                         if (!mSocketService.sendJOIN(m_method, m_token))
                         {
                             progessDialog.dismiss();
@@ -383,6 +377,13 @@ public class LoginActivity extends Activity {
 
         if (!m_token.isEmpty() && !m_method.isEmpty()) {
             autologin = true;
+
+            progessDialog = new ProgressDialog(LoginActivity.this);
+            progessDialog.setMessage("Connecting...");
+            progessDialog.setIndeterminate(true);
+            progessDialog.setCancelable(false);
+            progessDialog.show();
+
         }
 
     }

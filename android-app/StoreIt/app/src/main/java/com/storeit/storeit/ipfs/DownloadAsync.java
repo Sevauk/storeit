@@ -1,5 +1,6 @@
 package com.storeit.storeit.ipfs;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -7,14 +8,10 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.storeit.storeit.R;
-import com.storeit.storeit.activities.MainActivity;
-
 import org.apache.commons.io.IOUtils;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,7 +19,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
@@ -30,7 +26,6 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     private android.support.v4.app.NotificationCompat.Builder mBuilder;
     private int id = 1;
     private Context mContext;
-    private Intent resultIntent;
 
     public DownloadAsync(Context context) {
         mContext = context;
@@ -53,7 +48,10 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
                 .setDeleteIntent(pendingIntent);
         mBuilder.setProgress(100, 0, false);
 
-        mNotifyManager.notify(id, mBuilder.build());
+        Notification n = mBuilder.build();
+        n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        mNotifyManager.notify(id, n);
     }
 
     @Override
@@ -67,8 +65,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
             mBuilder.setContentText("Error while downloading...")
                     .setProgress(0, 0, false)
-                    .setContentIntent(pendingIntent)
-                    .setDeleteIntent(pendingIntent);
+                    .setContentIntent(pendingIntent);
 
 
         } else {
@@ -78,13 +75,13 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
             mBuilder.setContentText("Download finished")
                     .setProgress(0, 0, false)
-                    .setContentIntent(pendingIntent)
-                    .setDeleteIntent(pendingIntent);
+                    .setContentIntent(pendingIntent);
         }
 
-
-
-        mNotifyManager.notify(id, mBuilder.build());
+        Notification n = mBuilder.build();
+        n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        mNotifyManager.notify(id, n);
     }
 
     @Override
@@ -95,7 +92,12 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
 
         mBuilder.setProgress(100, progress[0], false).setContentIntent(pendingIntent);
-        mNotifyManager.notify(id, mBuilder.build());
+
+
+        Notification n = mBuilder.build();
+        n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        mNotifyManager.notify(id, n);
     }
 
     private long getFileSize(String hash) {

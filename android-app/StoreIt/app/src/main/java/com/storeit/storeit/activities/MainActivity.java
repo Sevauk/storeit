@@ -127,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            Log.v("MainActivity", type + " " + result);
+
             if (type.equals("download")) {
                 if (result.equals("success")) {
                     Log.v("MainActivity", "Download finished");
