@@ -6,12 +6,17 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.storeit.storeit.R;
+import com.storeit.storeit.activities.MainActivity;
+
 import org.apache.commons.io.IOUtils;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,10 +27,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
-    private NotificationManager mNotifyManager;
-    private android.support.v4.app.NotificationCompat.Builder mBuilder;
     private int id = 1;
     private Context mContext;
+
+    private NotificationCompat.Builder mBuilder;
+    private NotificationManager mNotifyManager;
+
+    private Intent intent;
+    private PendingIntent pendingIntent;
 
     public DownloadAsync(Context context) {
         mContext = context;
@@ -34,70 +43,42 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     protected void onPreExecute() {
         super.onPreExecute();
 
-        Intent intent = new Intent("ipfsManip");
-        intent.putExtra("result", "cancel");
-        intent.putExtra("type", "download");
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
 
         mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext)
+                .setContentText("Downloading")
                 .setContentTitle("StoreIt")
-                .setContentText("Download in progress")
-                .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp)
-                .addAction(R.drawable.ic_insert_drive_file_black_24dp, "Cancel", pendingIntent)
-                .setDeleteIntent(pendingIntent);
-        mBuilder.setProgress(100, 0, false);
+                .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
 
-        Notification n = mBuilder.build();
-        n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        mNotifyManager.notify(id, n);
+        intent = new Intent(mContext, MainActivity.class);
+        pendingIntent = PendingIntent.getActivity(mContext.getApplicationContext(),
+                0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mBuilder.setContentIntent(pendingIntent);
+        mNotifyManager.notify(id, mBuilder.build());
     }
 
     @Override
     protected void onPostExecute(Boolean response) {
-        Intent intent = new Intent("ipfsManip");
-
         if (!response) {
-            intent.putExtra("result", "error");
-            intent.putExtra("type", "download");
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
 
+            mBuilder.setProgress(0, 0, false);
             mBuilder.setContentText("Error while downloading...")
-                    .setProgress(0, 0, false)
                     .setContentIntent(pendingIntent);
-
-
         } else {
-            intent.putExtra("result", "success");
-            intent.putExtra("type", "download");
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
 
             mBuilder.setContentText("Download finished")
-                    .setProgress(0, 0, false)
                     .setContentIntent(pendingIntent);
+            mBuilder.setProgress(0, 0, false);
         }
-
-        Notification n = mBuilder.build();
-        n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        mNotifyManager.notify(id, n);
+        mNotifyManager.notify(id, mBuilder.build());
     }
 
     @Override
     protected void onProgressUpdate(Integer... progress) {
-        Intent intent = new Intent("ipfsManip");
-        intent.putExtra("result", "cancel");
-        intent.putExtra("type", "download");
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
 
-        mBuilder.setProgress(100, progress[0], false).setContentIntent(pendingIntent);
-
-
-        Notification n = mBuilder.build();
-        n.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        mNotifyManager.notify(id, n);
+        mBuilder.setProgress(100, progress[0], false);
+        mNotifyManager.notify(id, mBuilder.build());
     }
 
     private long getFileSize(String hash) {
@@ -174,7 +155,6 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
         HttpURLConnection connection;
         URL url;
-
 
 
         String m_nodeUrl = "http://127.0.0.1:8080/ipfs/";
