@@ -55,6 +55,7 @@ public class IpfsService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                Log.v(LOGTAG, "Launching ipfs daemon");
                 launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
             }
         }).start();
