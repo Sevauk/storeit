@@ -1,10 +1,19 @@
 package com.storeit.storeit.services;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import com.storeit.storeit.R;
+import com.storeit.storeit.activities.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,6 +34,7 @@ public class IpfsService extends Service {
     static final String LOGTAG = "IpfsService";
     static final String IPFS_BINARY = "/data/data/com.storeit.storeit/ipfs";
 
+    private NotificationManager notificationManager;
 
     private final IBinder myBinder = new LocalBinder();
 
@@ -35,13 +45,13 @@ public class IpfsService extends Service {
     }
 
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
 
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        makeNotification(getApplicationContext());
         Log.v(LOGTAG, "onCreate!");
-
         copyIpfs();
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -66,7 +76,7 @@ public class IpfsService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        notificationManager.cancel(99);
         Log.v(LOGTAG, "On destroy :o");
     }
 
@@ -104,7 +114,6 @@ public class IpfsService extends Service {
 
         try {
             Process process = pb.start();
-
 
 
             BufferedReader reader = new BufferedReader(
@@ -145,5 +154,24 @@ public class IpfsService extends Service {
                 launchCommand(Arrays.asList(IPFS_BINARY, "pin", "rm", hash));
             }
         }).run();
+    }
+
+    private void makeNotification(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context,
+                99, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification.Builder builder = new Notification.Builder(context)
+                .setContentTitle("StoreIt")
+                .setContentText("You are an active ipfs node :)")
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ipfs_logo);
+        Notification n;
+
+
+        n = builder.build();
+        n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+        notificationManager.notify(99, n);
     }
 }
