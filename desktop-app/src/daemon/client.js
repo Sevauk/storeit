@@ -20,9 +20,10 @@ export default class Client {
     this.recoTime = 1
     this.responseHandlers = {}
     this.ipfs = ipfs.createNode()
-    this.fsWatcher = new Watcher(settings.getStoreDir(), [/\.storeit*/],
+    const ignored = userFile.storePath(settings.getHostDir())
+    this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
-    this.fsWatcher.watch()
+    this.fsWatcher.start()
   }
 
   auth(type, devId, opener) {

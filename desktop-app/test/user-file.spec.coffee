@@ -1,7 +1,8 @@
 require './lib/init'
 userFile = importDfl 'user-file'
 ipfs = (require '../build/daemon/ipfs')
-store = userFile.absolutePath()
+settings = importDfl 'settings'
+store = settings.getStoreDir()
 
 path = require('path')
 spawn = require('child_process').spawn

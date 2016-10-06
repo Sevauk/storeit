@@ -1,53 +1,105 @@
 require './lib/init'
 settings = importDfl 'settings'
-store = settings.getStoreDir()
-host = settings.getHostDir()
 Watcher = importDfl 'watcher'
 userFile = importDfl 'user-file'
 
-manageFsEvent = null
-ignores = [/\.storeit*/] # TODO proper ignore
-watcher = new Watcher store, ignores, (args...) ->
-  # console.log('event!')
-  manageFsEvent args...
+ignores = userFile.storePath settings.getHostDir()
+store = settings.getStoreDir()
+notifier = ->
+watcher = new Watcher store, ignores, (ev) -> notifier(ev)
 
-describe.only 'Watcher', ->
+describe 'Watcher', ->
 
   beforeEach ->
+    watcher.stop()
     rm '-rf', store
     mkdir store
-    manageFsEvent = ->
+    notifier = -> null
 
-  describe '#watch()', ->
-    before -> watcher.watch()
+  describe '#start()', ->
+    it 'should startup watcher', (done) ->
+      notifier = -> done()
+      watcher.start()
+        .then -> console.log('started')
+        .then -> touch "#{store}/foo"
+      return
 
-    it 'should trigger watch events with correct path', (done) ->
+  describe '#stop()', ->
+    it 'should prevent watcher from emitting events', ->
+      watcher.start()
+        .then ->
+          watcher.stop()
+          notifier = should.fail
+          userFile.create('bar')
+        .then -> Promise.delay 50
+
+  describe '#dispatch()', ->
+    it 'should emit watch events with correct path', (done) ->
       p = 'bar'
-      manageFsEvent = (ev) ->
-        # console.log('done 1')
+      notifier = (ev) ->
         ev.path.should.equal "/#{p}"
         done() if p is 'bar'
-      touch "#{store}/#{p}"
+      watcher.start().then -> userFile.create p
 
-    # FIXME
-    # it 'should trigger FADD events on file creation', (done) ->
-    #   manageFsEvent = (ev) ->
-    #     ev.type.should.equal 'FADD'
-    #     done()
-    #   touch "#{store}/test"
+    it 'should not emit events on host dir', ->
+      notifier = should.fail
+      watcher.start()
+        .then -> userFile.create userFile.chunkPath('foo')
+        .then -> Promise.delay 50
 
-    # TODO
-    # it 'should trigger FADD events on directory creation', (done) ->
-    # it 'should trigger FDEL events on file deletion', (done) ->
-    # it 'should trigger FDEL events on directory deletion', (done) ->
-    # it 'should trigger FUPT events on file update', (done) ->
+    it 'should emit FADD events on file creation', (done) ->
+      notifier = (ev) ->
+        ev.type.should.equal 'FADD'
+        done()
+      watcher.start().then -> userFile.create 'foo'
 
+    it 'should emit FADD events on directory creation', (done) ->
+      notifier = (ev) ->
+        ev.type.should.equal 'FADD'
+        done()
+      watcher.start().then -> userFile.dirCreate 'foo'
 
-  describe '#unwatch()', ->
-    before ->
-      watcher.watch()
-      watcher.unwatch()
-    it 'should prevent watcher to emit events', ->
-      manageFsEvent = -> throw new Error 'watcher emited event'
-      touch "#{store}/bar"
-      Promise.delay(50)
+    it 'should emit FDEL events on file deletion', (done) ->
+      notifier = (ev) ->
+        ev.type.should.equal 'FDEL'
+        done()
+      userFile.create 'foo'
+        .then -> watcher.start()
+        .then -> userFile.del 'foo'
+
+    it 'should emit FDEL events on directory deletion', (done) ->
+      notifier = (ev) ->
+        ev.type.should.equal 'FDEL'
+        done()
+      userFile.dirCreate 'foo'
+        .then -> watcher.start()
+        .then -> userFile.del 'foo'
+
+    it 'should emit FUPT events on file update', (done) ->
+      notifier = (ev) ->
+        ev.type.should.equal 'FUPT'
+        done()
+      userFile.create 'foo'
+        .then -> watcher.start()
+        .then -> touch userFile.absolutePath 'foo'
+
+  describe '#ignore()', ->
+    it 'should make a file path ignored by the watcher', ->
+      notifier = should.fail
+      watcher.start()
+        .then -> userFile.create 'foo'
+
+  describe '#unignore()', ->
+    it 'should make a file path unignored by the watcher', (done) ->
+      watcher.ignore '/foo'
+      watcher.unignore '/foo'
+      notifier = -> done()
+      watcher.start()
+        .then -> userFile.create 'foo'
+
+  describe '#isIgnored()', ->
+    it 'should tell wether some file is ignored by the watcher', ->
+      watcher.ignore '/foo'
+      watcher.unignore '/bar'
+      watcher.isIgnored('/foo').should.be.true
+      watcher.isIgnored('/bar').should.be.false
