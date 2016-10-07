@@ -10,7 +10,6 @@ export default class IPFSNode {
     this.connecting = false
     this.recoTime = 1
     this.recoUnit = opts.recoUnit || 1000
-    this.connect()
   }
 
   connect() {
@@ -30,6 +29,10 @@ export default class IPFSNode {
       .then(() => this.connect())
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
     return done
+  }
+
+  close() {
+    this.node = null
   }
 
   ready() {
