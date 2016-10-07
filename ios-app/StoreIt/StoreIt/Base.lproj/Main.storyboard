@@ -42,10 +42,16 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="WY1-m7-u1r">
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="320" id="ot0-79-b3c"/>
+                                </constraints>
+                            </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="I0r-6n-5gp">
                                 <color key="backgroundColor" red="0.23137254901960785" green="0.34901960784313724" blue="0.59607843137254901" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="45" id="KpR-th-7wG"/>
+                                    <constraint firstAttribute="height" constant="45" id="0hc-7U-1OX"/>
+                                    <constraint firstAttribute="width" constant="250" id="nYM-MW-W8D"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <inset key="imageEdgeInsets" minX="-25" minY="0.0" maxX="0.0" maxY="0.0"/>
@@ -56,6 +62,10 @@
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Bkf-2q-his">
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="250" id="4gk-Vc-d7z"/>
+                                    <constraint firstAttribute="height" constant="45" id="8vS-jX-ef5"/>
+                                </constraints>
                                 <state key="normal" title="Developer login">
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 </state>
@@ -63,16 +73,11 @@
                                     <action selector="developerLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eW0-0e-AbY"/>
                                 </connections>
                             </button>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="WY1-m7-u1r">
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="320" id="ot0-79-b3c"/>
-                                </constraints>
-                            </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Myp-Wn-9Of">
                                 <color key="backgroundColor" red="0.25882352941176467" green="0.52156862745098043" blue="0.95686274509803915" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="45" id="SEu-A8-99u"/>
-                                    <constraint firstAttribute="width" constant="250" id="dW0-mi-vyX"/>
+                                    <constraint firstAttribute="width" constant="250" id="IM1-Hc-K1m"/>
+                                    <constraint firstAttribute="height" constant="45" id="dfQ-Bm-1PH"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <inset key="titleEdgeInsets" minX="-16" minY="0.0" maxX="0.0" maxY="0.0"/>
@@ -85,18 +90,15 @@
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="leading" secondItem="Bkf-2q-his" secondAttribute="leading" id="0fC-yW-lJd"/>
+                            <constraint firstItem="Bkf-2q-his" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="1TW-EF-Z4f"/>
+                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="7Vr-ZI-dgJ"/>
                             <constraint firstAttribute="trailingMargin" secondItem="WY1-m7-u1r" secondAttribute="trailing" constant="20" id="F1h-ts-RJc"/>
-                            <constraint firstItem="I0r-6n-5gp" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="46" id="FkN-WU-Fac"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Myp-Wn-9Of" secondAttribute="bottom" constant="20" id="KpM-jP-yFQ"/>
                             <constraint firstItem="WY1-m7-u1r" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="19" id="NSe-sh-ffX"/>
-                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="trailing" secondItem="Bkf-2q-his" secondAttribute="trailing" id="PBo-Tr-qjC"/>
-                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="leading" secondItem="I0r-6n-5gp" secondAttribute="leading" id="WuV-wk-yQb"/>
-                            <constraint firstItem="Bkf-2q-his" firstAttribute="top" secondItem="WY1-m7-u1r" secondAttribute="bottom" constant="86" id="aS4-AY-EhX"/>
+                            <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="Bkf-2q-his" secondAttribute="bottom" constant="19" id="OLx-3x-f5i"/>
+                            <constraint firstItem="I0r-6n-5gp" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="VMT-WU-crO"/>
+                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="top" secondItem="I0r-6n-5gp" secondAttribute="bottom" constant="17" id="WQU-M3-eA5"/>
                             <constraint firstItem="WY1-m7-u1r" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="25" id="gSV-gC-P5C"/>
-                            <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="WY1-m7-u1r" secondAttribute="bottom" constant="154" id="pzE-w5-1yH"/>
-                            <constraint firstItem="Myp-Wn-9Of" firstAttribute="top" secondItem="I0r-6n-5gp" secondAttribute="bottom" constant="23" id="xIr-BK-C7W"/>
-                            <constraint firstItem="I0r-6n-5gp" firstAttribute="top" secondItem="Bkf-2q-his" secondAttribute="bottom" constant="23" id="xkZ-gA-mki"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="I0r-6n-5gp" secondAttribute="trailing" constant="47" id="yAD-4T-2WV"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="y7k-Zm-JRx"/>
@@ -177,7 +179,7 @@
                                                 <rect key="frame" x="0.0" y="28" width="375" height="43"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="qjq-Rz-ZS9" id="od4-5O-pHa">
-                                                    <frame key="frameInset" width="375" height="42"/>
+                                                    <frame key="frameInset" width="375" height="43"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Eet-Vy-MsS">
@@ -210,14 +212,14 @@
                                                 <connections>
                                                     <outlet property="contextualMenu" destination="vld-hp-yXn" id="tg9-dh-Pg3"/>
                                                     <outlet property="itemName" destination="Eet-Vy-MsS" id="5qe-jC-SaA"/>
-                                                    <segue destination="8WT-j1-5R7" kind="show" identifier="nextDirSegue" animates="NO" id="22C-oH-eAI"/>
+                                                    <segue destination="8WT-j1-5R7" kind="show" identifier="nextDirSegue" id="22C-oH-eAI"/>
                                                 </connections>
                                             </tableViewCell>
                                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="fileCell" id="htM-Vz-f7B" userLabel="FileCell" customClass="FillCell" customModule="StoreIt" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="71" width="375" height="43"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="htM-Vz-f7B" id="Mst-rY-CTU">
-                                                    <frame key="frameInset" width="375" height="42"/>
+                                                    <frame key="frameInset" width="375" height="43"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
