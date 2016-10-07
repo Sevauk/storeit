@@ -19,10 +19,7 @@ describe 'Watcher', ->
   describe '#start()', ->
     it 'should startup watcher', (done) ->
       notifier = -> done()
-      watcher.start()
-        .then -> console.log('started')
-        .then -> touch "#{store}/foo"
-      return
+      watcher.start().then -> touch "#{store}/foo"
 
   describe '#stop()', ->
     it 'should prevent watcher from emitting events', ->

@@ -4,7 +4,6 @@ import * as path from 'path'
 import del from 'del'
 
 import {FileObj} from '../../lib/protocol-objects.js'
-import {getFileHash} from './ipfs'
 import settings from './settings'
 
 Promise.promisifyAll(fs)
@@ -46,6 +45,8 @@ const fileExists = (filePath) =>
 const fileDelete = (filePath) => del(absolutePath(filePath), {force: true})
   .then(() => ({path: filePath}))
 
+const chunkDelete = (hash) => storePath(chunkPath(hash))
+
 const fileMove = (src, dst) =>
   fs.renameAsync(absolutePath(src), absolutePath(dst))
     .then(() => ({src, dst}))
@@ -58,16 +59,16 @@ const clear = (keepChunks=false) => {
   return del([`${store}/**`, `${store}/.**`, ...keep], {force: true})
 }
 
-const generateTree = (filePath='') => {
+const generateTree = (hashFunc, filePath='') => {
   const absPath = absolutePath(filePath)
   return fs.statAsync(absPath)
     .then(stat => {
       if (stat.isDirectory()) {
         return fs.readdirAsync(absPath)
-          .map(file => generateTree(path.join(filePath, file)))
+          .map(file => generateTree(hashFunc, path.join(filePath, file)))
           .then(files => new FileObj(filePath, null, files))
       }
-      return getFileHash(filePath)
+      return Promise.resolve(hashFunc(filePath))
         .then(hash => new FileObj(filePath, hash))
     })
 }
@@ -82,6 +83,7 @@ export default {
   create: fileCreate,
   exists: fileExists,
   del: fileDelete,
+  delChunk: chunkDelete,
   move: fileMove,
   clear,
   generateTree,

@@ -40,8 +40,7 @@ describe 'User File', ->
     it 'should create directories at store root', ->
       p = '/foo'
       userFile.dirCreate p
-        .then ->
-          test('-d', userFile.absolutePath p).should.be.true
+        .then -> test('-d', userFile.absolutePath p).should.be.true
 
     it 'should create sub directories if necessary', ->
       p = '/bar/subdirA/subdirB'
@@ -57,6 +56,12 @@ describe 'User File', ->
       p = '/bar/subdirA/file'
       userFile.create p
         .then -> test('-f', userFile.absolutePath p).should.be.true
+    it 'should write the data in file', ->
+      p = '/foo'
+      data = 'foobar'
+      userFile.create p, data
+        .then -> fs.readFileAsync userFile.absolutePath(p), 'utf8'
+        .should.eventually.equal data
 
   describe '#exists()', ->
     it 'should be fulfilled if file exists in user store', (done) ->
@@ -78,6 +83,14 @@ describe 'User File', ->
       userFile.del p
         .then -> test('-e', userFile.absolutePath p).should.be.false
 
+  describe '#delChunk()', ->
+    it 'should delete chunks hosted by user', ->
+      p = userFile.chunkPath 'foo'
+      host = settings.getHostDir()
+      userFile.create p
+        .then -> userFile.delChunk p
+        .then -> test('-e', p).should.be.false
+
   describe '#move()', ->
     it 'should rename a file in user store', ->
       src = '/foo'
@@ -88,7 +101,7 @@ describe 'User File', ->
       userFile.move src, dst
         .then ->
           test('-e', "#{store}/#{src}").should.be.false
-          fs.readFileSync("#{store}/#{dst}").toString().should.equal txt
+          fs.readFileSync("#{store}/#{dst}", 'utf8').should.equal txt
 
   describe '#getHostedChunks()', ->
     it 'should resolve to a chunks hash array', ->
@@ -101,15 +114,6 @@ describe 'User File', ->
           hosted.includes(chunk).should.be.true for chunk in res
 
   describe '#generateTree()', ->
-    before (done) ->
-      this.timeout 60000
-      child = spawn 'ipfs', ['daemon']
-      child.on 'error', (err) -> console.log 'error', err
-      node = ipfs.createNode(recoUnit: 100)
-      log.setLevel ''
-      node.connect().then ->
-        log.setLevel 'error'
-        done()
     it 'should generate the file tree from user store\'s file', ->
       mkdir "#{store}/foo"
       touch "#{store}/bar"
@@ -117,8 +121,8 @@ describe 'User File', ->
       fs.writeFileSync "#{store}/bar", 'bar'
       fs.writeFileSync "#{store}/foo/foobar", 'foobar'
       expected = fs.readFileSync './test/resources/generateTree.expected.json'
-      userFile.generateTree()
-        .then (res) -> res.should.eql JSON.parse(expected)
+      userFile.generateTree((p) -> "####{p}###")
+        .should.eventually.eql JSON.parse(expected)
 
   describe '#clear()', ->
     beforeEach ->

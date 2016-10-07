@@ -4,10 +4,9 @@ import logger from '../../lib/log'
 import userFile from './user-file.js'
 
 const MAX_RECO_TIME = 4
-let singleton
 
-class IPFSNode {
-  constructor(opts) {
+export default class IPFSNode {
+  constructor(opts={}) {
     this.connecting = false
     this.recoTime = 1
     this.recoUnit = opts.recoUnit || 1000
@@ -37,23 +36,12 @@ class IPFSNode {
     return this.node.id()
   }
 
-  download(filePath, ipfsHash, isChunk=false) {
-    let log = isChunk ? logger.debug : logger.info
-    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
-    return this.get(ipfsHash)
-      .then(buf => userFile.create(filePath, buf))
-      .delay(500)  // QUCIK FIX, FIXME
-      .then(() => this.add(filePath))
-      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
-  }
-
   getFileHash(filePath) {
     return this.add(filePath).then(res => res[0].Hash)
   }
 
   hashMatch(filePath, ipfsHash) {
-    return this.add(filePath)
-      .then(hash => hash[0].Hash === ipfsHash)
+    return this.getFileHash(filePath).then(hash => hash === ipfsHash)
   }
 
   add(filePath) {
@@ -63,6 +51,11 @@ class IPFSNode {
         logger.error(`[SYNC:fail] file: ${filePath}. Retrying`)
         return this.add(filePath)
       }))
+  }
+
+  rm(hash) {
+    if (ipfs.rm != null) return ipfs.rm(hash)
+    return Promise.resolve()
   }
 
   get(hash) {
@@ -82,37 +75,13 @@ class IPFSNode {
       }))
   }
 
-  rm(hash) {
-    if (ipfs.rm != null) return ipfs.rm(hash)
-    return Promise.resolve()
+  download(filePath, ipfsHash, isChunk=false) {
+    let log = isChunk ? logger.debug : logger.info
+    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
+    return this.get(ipfsHash)
+      .then(buf => userFile.create(filePath, buf))
+      .delay(500)  // QUCIK FIX, FIXME
+      .then(() => this.add(filePath))
+      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
   }
-
-  downloadChunk(hash) {
-    return this.download(userFile.chunkPath(hash), hash, true)
-  }
-
-  rmChunk(hash) {
-    return this.rm(hash).then(() => userFile.chunkDel(hash))
-  }
-
-  // @Sevauk: not sure I understood this one, correct this if I'm wrong
-  // downloadChunk(hash) {
-  //   if (hash.substr(0, 2) !== 'Qm')
-  //     throw new Error('bad IPFS Hash ' + hash)
-  //   return this.get(hash)
-  //     .then((data) => fs.writeFile(ipfsStore + hash, data))
-  //     // TODO: ipfs add directly instead
-  // }
-}
-
-export const createNode = (opts) => {
-  if (singleton == null)
-    singleton = new IPFSNode(opts)
-  else
-    logger.warn('[IPFS] node already created')
-  return singleton
-}
-export const getFileHash = filePath => {
-  if (singleton == null) throw new Error('[IPFS] not instanciated')
-  return singleton.getFileHash(filePath)
 }

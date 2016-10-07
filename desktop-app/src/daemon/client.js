@@ -5,7 +5,7 @@ import userFile from './user-file.js'
 import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
-import * as ipfs from './ipfs'
+import IPFSNode from './ipfs'
 import settings from './settings'
 
 const MAX_RECO_TIME = 4
@@ -19,7 +19,7 @@ export default class Client {
   constructor() {
     this.recoTime = 1
     this.responseHandlers = {}
-    this.ipfs = ipfs.createNode()
+    this.ipfs = new IPFSNode()
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
@@ -191,11 +191,12 @@ export default class Client {
 
   recvFSTR(req) {
     logger.debug(`[RECV:FSTR] ${logger.toJson(req)}`)
+    const hash = req.parameters.hash
     let fstr
     if (req.parameters.keep)
-      fstr = this.ipfs.downloadChunk(req.parameters.hash)
+      fstr = this.ipfs.download(userFile.chunkPath(hash), hash, true)
     else
-      fstr = this.ipfs.removeChunk(req.parameters.hash)
+      fstr = this.ipfs.rm(hash).then(() => userFile.delChunk(hash))
     return fstr
       .then(() => this.success(req.uid))
       .catch(err => logger.error('FSTR: ' + err))
@@ -210,7 +211,8 @@ export default class Client {
   }
 
   sendFADD(filePath) {
-    return userFile.generateTree(filePath)
+    const hashFunc = this.ipfs.getFileHash.bind(this.ipfs)
+    return userFile.generateTree(hashFunc, filePath)
       .then(files => this.request('FADD', {files: [files]}))
       .catch(err => logger.error('FADD: ' + err))
   }
