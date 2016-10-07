@@ -13,7 +13,7 @@ import GoogleSignIn
 
 class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     
-    let CORNER_RADIUS: CGFloat = 7
+    let CORNER_RADIUS: CGFloat = 4
     
     let networkManager = NetworkManager.sharedInstance
     
