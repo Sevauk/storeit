@@ -26,8 +26,13 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         super.viewDidLoad()
 
         fbButton.layer.cornerRadius = CORNER_RADIUS
+        //fbButton.center = view.center
+        
         developerButton.layer.cornerRadius = CORNER_RADIUS
+        //developerButton.center = view.center
+        
         googleButton.layer.cornerRadius = CORNER_RADIUS
+        //googleButton.center = view.center
         
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
