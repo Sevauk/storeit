@@ -2,6 +2,10 @@ import WebSocket from 'ws'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
+
+import fs from 'fs'
+Promise.promisifyAll(fs)
+
 import logger from '../../lib/log'
 import Watcher from './watcher'
 import {Command, Response} from '../../lib/protocol-objects'
@@ -61,7 +65,7 @@ export default class Client {
     this.sock = Promise.promisifyAll(this.sock)
     logger.info('[SOCK] attempting connection')
 
-    this.sock.on('error', () => logger.error('[SOCK] socket error occured'))
+    this.sock.on('error', (e) => logger.error(`[SOCK] socket error occured (${e})`))
     this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
 
     return new Promise(resolve => {
@@ -128,21 +132,51 @@ export default class Client {
   }
 
   reqJoin(authType, accessToken) {
+
+    let home = null
+
     return userFile.getHostedChunks()
       .then(hashes => ({authType, accessToken, hosting: hashes}))
       .then(data => this.request('JOIN', data))
       .tap(() => logger.info('[JOIN] Logged in'))
-      .then(params => this.recvFADD({parameters: {files: [params.home]}}))
+      .then(params => {
+        home = params.home
+        return this.recvFADD({parameters: {files: [params.home]}})
+      })
+      .then(() => this.addFilesUnknownByServ(home))
       .tap(() => logger.info('[JOIN] home synchronized'))
       .tap(() => this.fsWatcher.watch())
       .catch(err => logger.error(err))
+  }
+
+  addFilesUnknownByServ(dir) {
+    /*
+    * files that were added when the daemon wasn't running
+    * should be sent now to the server.
+    */
+
+    if (!dir || !dir.files || !dir.isDir)
+      return Promise.resolve()
+
+    return fs.readdirAsync(userFile.absolutePath(dir.path))
+      .map(fileName => {
+        if (!(fileName in dir.files)) {
+          this.sendFADD(dir.path + fileName)
+        }
+      })
+      .then(() =>
+        Promise.map(Object.keys(dir.files), (file) => {
+          if (file)
+            this.addFilesUnknownByServ(file)
+        }))
+      .catch((e) => logger.warn(e))
   }
 
   recvFADD(req, print=true) {
     const params = req.parameters
     if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
 
-    if (!params.files) return Promise.resolve()
+    if (!params.files) return Promise.resolve(params)
 
     if (!Array.isArray(params.files)) {
       params.files = Object.keys(params.files).map(key => params.files[key])

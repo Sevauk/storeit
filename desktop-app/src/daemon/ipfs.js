@@ -3,6 +3,7 @@ import ipfs from 'ipfs-api'
 import logger from '../../lib/log'
 import userFile from './user-file.js'
 
+// the filePath parameters should be relative to the synchronized directory's root
 const MAX_RECO_TIME = 4
 let singleton
 
@@ -11,6 +12,7 @@ class IPFSNode {
     this.connecting = false
     this.recoTime = 1
     this.connect()
+    this.downloading = {}
   }
 
   connect() {
@@ -35,18 +37,33 @@ class IPFSNode {
     return this.node.id()
   }
 
-  download(filePath, ipfsHash, isChunk=false) {
+
+  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+  download(filePath, ipfsHash, isChunk=false, progressCb) {
     let log = isChunk ? logger.debug : logger.info
     log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
-    return this.get(ipfsHash)
+
+    return this.get(filePath, ipfsHash, progressCb)
       .then(buf => userFile.create(filePath, buf))
       .delay(500)  // QUCIK FIX, FIXME
-      .then(() => this.add(filePath))
+      .then(() => {
+        delete this.downloading[filePath]
+        return this.add(filePath)
+      })
       .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
+      .catch((err) => log(`[IPFS] get interrupted (${err})`))
   }
 
+  // TODO: this should be optimized. add is overkill
   getFileHash(filePath) {
-    return this.add(filePath).then(res => res[0].Hash)
+
+    const opt = {}
+    opt['only-hash'] = true
+    opt['recursive'] = false
+    return this.add(filePath, opt).then(res => {
+      logger.debug(JSON.stringify(res, null, 2))
+      return res[0].Hash
+    })
   }
 
   hashMatch(filePath, ipfsHash) {
@@ -54,35 +71,100 @@ class IPFSNode {
       .then(hash => hash[0].Hash === ipfsHash)
   }
 
-  add(filePath) {
+  add(filePath, opt) {
     return this.ready()
-      .then(() => this.node.add(userFile.absolutePath(filePath)))
-      .catch(() => this.reconnect().then(() => {
-        logger.error(`[SYNC:fail] file: ${filePath}. Retrying`)
+      .then(() => this.node.add(userFile.absolutePath(filePath), opt))
+      .catch((e) => this.reconnect().then(() => {
+        logger.error(`[SYNC:fail] file: ${filePath} (${e}). Retrying`)
         return this.add(filePath)
       }))
   }
 
-  get(hash) {
+  checkForAlreadyDownloading(hash, filePath) {
+
+    if (!hash) {
+      logger.error('empty hash given :o ')
+      return Promise.reject()
+    }
+
+    if (filePath in this.downloading) {
+
+      logger.debug(`[IPFS] cancelling previous get for ${filePath}`)
+
+      const obj = this.downloading[filePath]
+      if (obj.close)
+        obj.close()
+      else if (obj === hash) // we are already downloading this hash
+        return Promise.reject()
+    }
+
+    this.downloading[filePath] = hash // store the hash and when the download starts store the stream object (see a few lines below)
+
+  }
+
+  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+  get(filePath, hash, progressCb) {
+
+    logger.debug('[IPFS] GET ' + hash)
+
+    if (this.checkForAlreadyDownloading(hash, filePath))
+      return Promise.reject()
+
     let data = []
 
     return this.ready()
       .then(() => this.node.cat(hash))
       .then((res) => new Promise((resolve, reject) => {
-        res.on('end', () => resolve(Buffer.concat(data)))
-        res.on('data', (chunk) => data.push(chunk))
-        res.on('close', () => reject())
-        res.on('error', () => reject())
+
+        this.downloading[filePath] = res
+        let totalSize = null
+        let downloadedSize = 0
+        let done = false
+
+        this.node.object.stat(hash)
+          .then((res) => {
+            totalSize = res.CumulativeSize
+          })
+          .catch((err) => logger.error(`[IPFS] object stat failed ${err}`))
+
+        res.on('end', () => {
+          done = true
+          return resolve(Buffer.concat(data))
+        })
+        res.on('data', (chunk) => {
+          downloadedSize += chunk.length
+          data.push(chunk)
+        })
+
+        const doneReject = () => {
+          done = true
+          return reject()
+        }
+
+        res.on('close', () => doneReject())
+        res.on('error', () => doneReject())
+
+        const tickProgress = () => {
+          Promise.delay(500).then(() => {
+            let progressPercentage = totalSize ? downloadedSize * 100 / totalSize : 0
+            progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+            if (!done)
+              tickProgress()
+          })
+        }
+
+        if (progressCb)
+          tickProgress()
+
       }))
       .catch((e) => this.reconnect().then(() => {
         logger.error(`[IPFS] ${hash} download failed (${e}). Retrying`)
-        return this.get(hash)
+        return this.get(filePath, hash)
       }))
   }
 
   rm(hash) {
-    if (ipfs.rm != null) return ipfs.rm(hash)
-    return Promise.resolve()
+    return ipfs.rm ? ipfs.rm(hash)  : Promise.resolve()
   }
 
   downloadChunk(hash) {
