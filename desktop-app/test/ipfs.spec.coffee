@@ -1,6 +1,7 @@
 require './lib/init'
 userFile = importDfl 'user-file'
 IPFSNode = importDfl 'ipfs'
+host = importDfl('settings').getHostDir()
 spawn = require('child_process').spawn
 
 child = spawn 'ipfs', ['daemon']
@@ -57,6 +58,11 @@ describe 'IPFS', ->
     it 'should create the file in user store with the fetched buffer', ->
       @timeout 5000
       p = '/bar'
-      ipfs.download p, fileHash
+      ipfs.download fileHash, p
         .then -> fs.readFileAsync userFile.absolutePath(p), 'utf8'
+        .should.eventually.equal fileData
+    it 'should create chunk in user host with the fetched buffer', ->
+      @timeout 5000
+      ipfs.download fileHash
+        .then -> fs.readFileAsync "#{host}/#{fileHash}", 'utf8'
         .should.eventually.equal fileData

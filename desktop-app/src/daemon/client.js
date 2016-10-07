@@ -162,7 +162,7 @@ export default class Client {
           .catch(() => userFile.create(file.path, ''))
           .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
           .then(isInStore => {
-            if (!isInStore) return this.ipfs.download(file.path, file.IPFSHash)
+            if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path)
             logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
           })
           .catch(logger.error)
@@ -194,9 +194,9 @@ export default class Client {
     const hash = req.parameters.hash
     let fstr
     if (req.parameters.keep)
-      fstr = this.ipfs.download(userFile.chunkPath(hash), hash, true)
+      fstr = this.ipfs.download(hash)
     else
-      fstr = this.ipfs.rm(hash).then(() => userFile.delChunk(hash))
+      fstr = this.ipfs.rm(hash).then(() => userFile.chunkDel(hash))
     return fstr
       .then(() => this.success(req.uid))
       .catch(err => logger.error('FSTR: ' + err))

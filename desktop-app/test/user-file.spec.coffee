@@ -3,6 +3,7 @@ userFile = importDfl 'user-file'
 ipfs = (require '../build/daemon/ipfs')
 settings = importDfl 'settings'
 store = settings.getStoreDir()
+host = settings.getHostDir()
 
 path = require('path')
 spawn = require('child_process').spawn
@@ -30,11 +31,6 @@ describe 'User File', ->
       ap = userFile.absolutePath p
       ap.should.equal path.join(store, p)
 
-  describe '#chunkPath()', ->
-    it 'should resolve storeit path from ipfs hash', ->
-      h = 'someHash'
-      chp = userFile.chunkPath h
-      chp.should.equal '/.storeit/' + h
 
   describe '#dirCreate()', ->
     it 'should create directories at store root', ->
@@ -63,14 +59,6 @@ describe 'User File', ->
         .then -> fs.readFileAsync userFile.absolutePath(p), 'utf8'
         .should.eventually.equal data
 
-  describe '#exists()', ->
-    it 'should be fulfilled if file exists in user store', (done) ->
-      p = '/foo'
-      touch "#{store}/#{p}"
-      userFile.exists(p).should.be.fulfilled.and.notify done
-    it 'should be rejected if file does not exist in user store', (done) ->
-      userFile.exists('/bar').should.be.rejected.and.notify done
-
   describe '#del()', ->
     it 'should delete files in user store', ->
       p = '/foo'
@@ -83,14 +71,6 @@ describe 'User File', ->
       userFile.del p
         .then -> test('-e', userFile.absolutePath p).should.be.false
 
-  describe '#delChunk()', ->
-    it 'should delete chunks hosted by user', ->
-      p = userFile.chunkPath 'foo'
-      host = settings.getHostDir()
-      userFile.create p
-        .then -> userFile.delChunk p
-        .then -> test('-e', p).should.be.false
-
   describe '#move()', ->
     it 'should rename a file in user store', ->
       src = '/foo'
@@ -99,15 +79,43 @@ describe 'User File', ->
       txt = 'hello wolrd'
       fs.writeFileSync "#{store}/#{src}", txt
       userFile.move src, dst
-        .then ->
-          test('-e', "#{store}/#{src}").should.be.false
-          fs.readFileSync("#{store}/#{dst}", 'utf8').should.equal txt
+      .then ->
+        test('-e', "#{store}/#{src}").should.be.false
+        fs.readFileSync("#{store}/#{dst}", 'utf8').should.equal txt
+
+  describe '#exists()', ->
+    it 'should be fulfilled if file exists in user store', (done) ->
+      p = '/foo'
+      touch "#{store}/#{p}"
+      userFile.exists(p).should.be.fulfilled.and.notify done
+    it 'should be rejected if file does not exist in user store', (done) ->
+      userFile.exists('/bar').should.be.rejected.and.notify done
+
+  describe '#chunkPath()', ->
+    it 'should resolve storeit path from ipfs hash', ->
+      h = 'someHash'
+      chp = userFile.chunkPath h
+      chp.should.equal "#{userFile.storePath(host)}/#{h}"
+
+  describe '#chunkCreate()', ->
+    it 'should create a chunk in user host dir', ->
+      h = 'someHash'
+      data = 'foobar'
+      userFile.chunkCreate h, data
+        .then -> fs.readFileSync("#{host}/#{h}", 'utf8').should.equal data
+
+  describe '#chunkDel()', ->
+    it 'should delete chunks hosted by user', ->
+      chunk = 'foo'
+      userFile.chunkCreate chunk
+        .then -> userFile.chunkDel chunk
+        .then -> test('-e', "#{host}/#{chunk}").should.be.false
 
   describe '#getHostedChunks()', ->
     it 'should resolve to a chunks hash array', ->
       hosted = ['azdaz', 'dsdqs', 'sqdsd']
-      mkdir "#{store}/.storeit"
-      touch "#{store}/.storeit/#{chunk}" for chunk in hosted
+      mkdir "#{host}"
+      touch "#{host}/#{chunk}" for chunk in hosted
       userFile.getHostedChunks()
         .then (res) ->
           res.includes(chunk).should.be.true for chunk in hosted
@@ -138,10 +146,10 @@ describe 'User File', ->
       userFile.clear()
         .then -> fs.readdirAsync store
         .then (files) -> files.length.should.equal 0
-    it 'should keep chunks if specified as arg', ->
-      mkdir "#{store}/.storeit"
-      touch "#{store}/.storeit/chunkA"
-      touch "#{store}/.storeit/chunkB"
+    it 'should preserve chunks if asked to', ->
+      mkdir "#{host}"
+      touch "#{host}/chunkA"
+      touch "#{host}/chunkB"
       userFile.clear(true)
         .then -> fs.readdirAsync store
         .then (files) -> files.length.should.equal 1

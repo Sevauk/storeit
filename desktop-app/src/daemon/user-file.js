@@ -10,10 +10,6 @@ Promise.promisifyAll(fs)
 
 const storePath = p => '/' + path.relative(settings.getStoreDir(), p)
 const absolutePath = (p='') => path.join(settings.getStoreDir(), p)
-const chunkPath = hash => {
-  let absPath = path.join(settings.getHostDir(), hash)
-  return storePath(absPath)
-}
 
 const dirCreate = (dirPath) => {
   const subdirs = dirPath.split('/')
@@ -36,20 +32,22 @@ const fileCreate = (filePath, data) => {
   const fsPath = absolutePath(filePath)
   return dirCreate(path.dirname(filePath))
     .then(() => fs.writeFileAsync(fsPath, data))
-    .then(() => ({path: filePath, data}))
+    .then(() => ({path: fsPath, data}))
 }
-
-const fileExists = (filePath) =>
-  fs.accessAsync(absolutePath(filePath), fs.constants.F_OK)
 
 const fileDelete = (filePath) => del(absolutePath(filePath), {force: true})
   .then(() => ({path: filePath}))
 
-const chunkDelete = (hash) => storePath(chunkPath(hash))
-
 const fileMove = (src, dst) =>
   fs.renameAsync(absolutePath(src), absolutePath(dst))
     .then(() => ({src, dst}))
+
+const fileExists = (filePath) =>
+  fs.accessAsync(absolutePath(filePath), fs.constants.F_OK)
+
+const chunkPath = hash => storePath(path.join(settings.getHostDir(), hash))
+const chunkCreate = (ipfsHash, data) => fileCreate(chunkPath(ipfsHash), data)
+const chunkDelete = hash => fileDelete(chunkPath(hash))
 
 const clear = (keepChunks=false) => {
   const store = settings.getStoreDir()
@@ -78,12 +76,13 @@ const getHostedChunks = () => fs.readdirAsync(settings.getHostDir())
 export default {
   absolutePath,
   storePath,
-  chunkPath,
   dirCreate,
   create: fileCreate,
   exists: fileExists,
   del: fileDelete,
-  delChunk: chunkDelete,
+  chunkPath,
+  chunkCreate,
+  chunkDel: chunkDelete,
   move: fileMove,
   clear,
   generateTree,

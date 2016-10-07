@@ -75,13 +75,15 @@ export default class IPFSNode {
       }))
   }
 
-  download(filePath, ipfsHash, isChunk=false) {
-    let log = isChunk ? logger.debug : logger.info
-    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
+  download(ipfsHash, filePath) {
+    const log = filePath ? logger.info : logger.debug
+    const type = filePath ? 'file' : 'chunk'
+    if (!filePath) filePath = userFile.chunkPath(ipfsHash)
+
+    log(`[SYNC:download] ${type}: ${filePath} [${ipfsHash}]`)
     return this.get(ipfsHash)
       .then(buf => userFile.create(filePath, buf))
-      .delay(500)  // QUCIK FIX, FIXME
       .then(() => this.add(filePath))
-      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
+      .tap(() => log(`[SYNC:success] ${type}: ${filePath} [${ipfsHash}]`))
   }
 }

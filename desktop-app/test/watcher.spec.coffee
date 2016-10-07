@@ -41,7 +41,7 @@ describe 'Watcher', ->
     it 'should not emit events on host dir', ->
       notifier = should.fail
       watcher.start()
-        .then -> userFile.create userFile.chunkPath('foo')
+        .then -> userFile.chunkCreate 'foo'
         .then -> Promise.delay 50
 
     it 'should emit FADD events on file creation', (done) ->
