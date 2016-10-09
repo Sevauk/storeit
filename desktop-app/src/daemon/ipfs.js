@@ -71,12 +71,12 @@ export default class IPFSNode {
   }
 
   // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
-  get(filePath, hash, progressCb) {
+  get(hash, filePath, progressCb) {
 
     logger.debug('[IPFS] GET ' + hash)
 
     if (this.checkForAlreadyDownloading(hash, filePath))
-      return Promise.reject()
+      return Promise.reject(new Error('IPFS: file is already being downloaded'))
 
     let data = []
 
@@ -106,7 +106,7 @@ export default class IPFSNode {
 
         const doneReject = () => {
           done = true
-          return reject()
+          return reject(new Error('IPFS: download failed'))
         }
 
         res.on('close', () => doneReject())
@@ -115,7 +115,8 @@ export default class IPFSNode {
         const tickProgress = () => {
           Promise.delay(500).then(() => {
             let progressPercentage = totalSize ? downloadedSize * 100 / totalSize : 0
-            progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+            if (progressCb)
+              progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
             if (!done)
               tickProgress()
           })
@@ -131,31 +132,40 @@ export default class IPFSNode {
       }))
   }
 
-  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
-  download(filePath, ipfsHash, isChunk=false, progressCb) {
-    let log = isChunk ? logger.debug : logger.info
-    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
+  download(ipfsHash, filePath, progressCb) {
+    const log = filePath ? logger.info : logger.debug
+    const type = filePath ? 'file' : 'chunk'
+    if (!filePath) filePath = userFile.chunkPath(ipfsHash)
 
-    return this.get(filePath, ipfsHash, progressCb)
+    log(`[SYNC:download] ${type}: ${filePath} [${ipfsHash}]`)
+    return this.get(ipfsHash, filePath, progressCb)
       .then(buf => userFile.create(filePath, buf))
-      .delay(500)  // QUCIK FIX, FIXME
       .then(() => {
         delete this.downloading[filePath]
         return this.add(filePath)
       })
-      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
-      .catch((err) => log(`[IPFS] get interrupted (${err})`))
+      .tap(() => log(`[SYNC:success] ${type}: ${filePath} [${ipfsHash}]`))
   }
 
-  // download(ipfsHash, filePath) {
-  //   const log = filePath ? logger.info : logger.debug
-  //   const type = filePath ? 'file' : 'chunk'
-  //   if (!filePath) filePath = userFile.chunkPath(ipfsHash)
-  //
-  //   log(`[SYNC:download] ${type}: ${filePath} [${ipfsHash}]`)
-  //   return this.get(ipfsHash)
-  //     .then(buf => userFile.create(filePath, buf))
-  //     .then(() => this.add(filePath))
-  //     .tap(() => log(`[SYNC:success] ${type}: ${filePath} [${ipfsHash}]`))
-  // }
+  checkForAlreadyDownloading(hash, filePath) {
+
+    if (!hash) {
+      logger.error('empty hash given :o ')
+      return Promise.reject()
+    }
+
+    if (filePath in this.downloading) {
+
+      logger.debug(`[IPFS] cancelling previous get for ${filePath}`)
+
+      const obj = this.downloading[filePath]
+      if (obj.close)
+        obj.close()
+      else if (obj === hash) // we are already downloading this hash
+        return Promise.reject()
+    }
+
+    this.downloading[filePath] = hash // store the hash and when the download starts store the stream object (see a few lines below)
+
+  }
 }
