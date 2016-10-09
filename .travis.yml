@@ -1,22 +1,28 @@
 language: node_js
 node_js:
-  - "6"
+- '6'
 
 before_install:
-  - npm i -g jspm
-  - jspm registry export github
+- npm i -g jspm
+- jspm registry export github
 
 install:
-  - wget 'https://dist.ipfs.io/go-ipfs/v0.4.2/go-ipfs_v0.4.2_linux-amd64.tar.gz'
-  - tar xvfz go-ipfs_v0.4.2_linux-amd64.tar.gz
-  - export PATH=$PWD/go-ipfs:$PATH
-  - ipfs version
-  - npm install --prefix ./desktop-app ./desktop-app
-  - npm run build --prefix ./desktop-app
+- wget 'https://dist.ipfs.io/go-ipfs/v0.4.2/go-ipfs_v0.4.2_linux-amd64.tar.gz'
+- tar xvfz go-ipfs_v0.4.2_linux-amd64.tar.gz
+- export PATH=$PWD/go-ipfs:$PATH
+- ipfs version
+- npm install --prefix ./desktop-app ./desktop-app
+- npm run build --prefix ./desktop-app
 
 script:
-  - npm run test:lint --prefix ./desktop-app
-  - npm run coverall --prefix ./desktop-app
+- npm run lint --prefix ./desktop-app
+- npm run cover --prefix ./desktop-app
 
 after_success:
-  - coveralls
+- npm run report --prefix ./desktop-app
+
+notifications:
+  slack:
+    on_pull_requests: false
+    rooms:
+      secure: v46xfGHsxa57VAZnOEHqEHdegnZNzcIoQvb52un7vBNLbB1w5xTodyFp4KhKjodZh2i0pWutSgG+m4vlGAvew/Zbaadfv44Z1hteeo0+2Z2+79jZgkJCvAXWLM2RJh5423oaeSyw9UgQ03/54UEphqArhcLsd8Wzm7qlxz5mUTrnLxyUgEXfL0n7RxKSsEBv81gr2My5gHy8UWAh8cQGOqf4Ss0G/Vcilay5syqUGy05V8e/8k7h2M7M5fNPntXaw7mPioiB+y690ZaOcNP0Kl30l/bsIonhXs3LpYyw7SqvP7AbxNTqPnOPm5E1S9szb484PFnkYWVavOjmCqL0yv8Ngwsl8xQxIlyv4mBV4y6oWOYTzOEwLdiaxtq36nueey7au38xmgViqVKJ8cYTCMeyO12lJTeMI6XsvRjFCu/XbMXtyRPKXyMQV/VofO3I44NMlwwew9duepMgYL42teKI0gGtn9u3Brw1QV2w2/gOf6oMrHvi4ZJlI0nILMTpFLnHjIlFxyEWcLvcVDO8G2Dkw8GSr7zwV7aYqXV1Q0F3lUBrMbOSGdhmPpZfaFPbwjuCI89zBceDEonw8yyoWjtnVR4de7DSkB/hNFCuhaKO/EBUL7yi3IgayiRMpxGekWiQMelU8ip4G2sjWPSwDzCZ4wgIaxsC7ZxeQCnd0WU=

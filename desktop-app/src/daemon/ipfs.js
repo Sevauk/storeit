@@ -5,14 +5,13 @@ import userFile from './user-file.js'
 
 // the filePath parameters should be relative to the synchronized directory's root
 const MAX_RECO_TIME = 4
-let singleton
 
-class IPFSNode {
-  constructor() {
+export default class IPFSNode {
+  constructor(opts={}) {
     this.connecting = false
     this.recoTime = 1
-    this.connect()
     this.downloading = {}
+    this.recoUnit = opts.recoUnit || 1000
   }
 
   connect() {
@@ -26,49 +25,36 @@ class IPFSNode {
   }
 
   reconnect() {
-    logger.error(`[IPFS] attempting to reconnect in ${this.recoTime} seconds`)
-    let done = Promise.delay(this.recoTime * 1000)
+    const sec = this.recoTime * this.recoUnit / 1000
+    logger.error(`[IPFS] attempting to reconnect in ${sec} seconds`)
+    let done = Promise.delay(this.recoTime * this.recoUnit)
       .then(() => this.connect())
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
     return done
+  }
+
+  close() {
+    this.node = null
   }
 
   ready() {
     return this.node.id()
   }
 
-
-  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
-  download(filePath, ipfsHash, isChunk=false, progressCb) {
-    let log = isChunk ? logger.debug : logger.info
-    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
-
-    return this.get(filePath, ipfsHash, progressCb)
-      .then(buf => userFile.create(filePath, buf))
-      .delay(500)  // QUCIK FIX, FIXME
-      .then(() => {
-        delete this.downloading[filePath]
-        return this.add(filePath)
-      })
-      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
-      .catch((err) => log(`[IPFS] get interrupted (${err})`))
-  }
-
   // TODO: this should be optimized. add is overkill
   getFileHash(filePath) {
+    const opt = {
+      // 'only-hash': true,
+      // 'recursive': false
+    }
 
-    const opt = {}
-    opt['only-hash'] = true
-    opt['recursive'] = false
-    return this.add(filePath, opt).then(res => {
-      logger.debug(JSON.stringify(res, null, 2))
-      return res[0].Hash
-    })
+    return this.add(filePath, opt)
+      // .tap(res => logger.debug(logger.toJson(res)))
+      .then(res => res[0].Hash)
   }
 
   hashMatch(filePath, ipfsHash) {
-    return this.add(filePath)
-      .then(hash => hash[0].Hash === ipfsHash)
+    return this.getFileHash(filePath).then(hash => hash === ipfsHash)
   }
 
   add(filePath, opt) {
@@ -80,26 +66,8 @@ class IPFSNode {
       }))
   }
 
-  checkForAlreadyDownloading(hash, filePath) {
-
-    if (!hash) {
-      logger.error('empty hash given :o ')
-      return Promise.reject()
-    }
-
-    if (filePath in this.downloading) {
-
-      logger.debug(`[IPFS] cancelling previous get for ${filePath}`)
-
-      const obj = this.downloading[filePath]
-      if (obj.close)
-        obj.close()
-      else if (obj === hash) // we are already downloading this hash
-        return Promise.reject()
-    }
-
-    this.downloading[filePath] = hash // store the hash and when the download starts store the stream object (see a few lines below)
-
+  rm(hash) {
+    return ipfs.rm ? ipfs.rm(hash)  : Promise.resolve()
   }
 
   // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
@@ -163,36 +131,31 @@ class IPFSNode {
       }))
   }
 
-  rm(hash) {
-    return ipfs.rm ? ipfs.rm(hash)  : Promise.resolve()
+  // progressCb(filePath, hash, totalSize, downloadedSize, progressPercentage)
+  download(filePath, ipfsHash, isChunk=false, progressCb) {
+    let log = isChunk ? logger.debug : logger.info
+    log(`[SYNC:download] file: ${filePath} [${ipfsHash}]`)
+
+    return this.get(filePath, ipfsHash, progressCb)
+      .then(buf => userFile.create(filePath, buf))
+      .delay(500)  // QUCIK FIX, FIXME
+      .then(() => {
+        delete this.downloading[filePath]
+        return this.add(filePath)
+      })
+      .tap(() => log(`[SYNC:success] file: ${filePath} [${ipfsHash}]`))
+      .catch((err) => log(`[IPFS] get interrupted (${err})`))
   }
 
-  downloadChunk(hash) {
-    return this.download(userFile.chunkPath(hash), hash, true)
-  }
-
-  rmChunk(hash) {
-    return this.rm(hash).then(() => userFile.chunkDel(hash))
-  }
-
-  // @Sevauk: not sure I understood this one, correct this if I'm wrong
-  // downloadChunk(hash) {
-  //   if (hash.substr(0, 2) !== 'Qm')
-  //     throw new Error('bad IPFS Hash ' + hash)
-  //   return this.get(hash)
-  //     .then((data) => fs.writeFile(ipfsStore + hash, data))
-  //     // TODO: ipfs add directly instead
+  // download(ipfsHash, filePath) {
+  //   const log = filePath ? logger.info : logger.debug
+  //   const type = filePath ? 'file' : 'chunk'
+  //   if (!filePath) filePath = userFile.chunkPath(ipfsHash)
+  //
+  //   log(`[SYNC:download] ${type}: ${filePath} [${ipfsHash}]`)
+  //   return this.get(ipfsHash)
+  //     .then(buf => userFile.create(filePath, buf))
+  //     .then(() => this.add(filePath))
+  //     .tap(() => log(`[SYNC:success] ${type}: ${filePath} [${ipfsHash}]`))
   // }
-}
-
-export const createNode = () => {
-  if (singleton == null)
-    singleton = new IPFSNode
-  else
-    logger.warn('[IPFS] node already created')
-  return singleton
-}
-export const getFileHash = filePath => {
-  if (singleton == null) throw new Error('[IPFS] not instanciated')
-  return singleton.getFileHash(filePath)
 }

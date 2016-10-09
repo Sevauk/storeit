@@ -1,0 +1,6 @@
+{
+  "watch": ["./build", "./lib"],
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

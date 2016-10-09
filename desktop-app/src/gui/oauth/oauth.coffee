@@ -8,7 +8,8 @@ userSettings = (require '../remote.coffee!') 'settings'
 render = require '../render.coffee!'
 settings = require '../settings/settings.coffee!'
 
-auth = (type) -> ipc.send 'auth', type
+auth = (type) ->
+  ipc.send 'auth', type
 
 listen = ->
   ipc.on 'auth', (ev, arg) -> settings.spawn()

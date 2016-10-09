@@ -3,9 +3,9 @@ import chokidar from 'chokidar'
 import logger from '../../lib/log'
 import userFile from './user-file'
 
-export class EventType {
-  constructor(type, path, stats={}) {
-    this.path = userFile.storePath(path)
+export class FsEvent {
+  constructor(type, p, stats={}) {
+    this.path = userFile.storePath(p)
     this.meta = stats
     switch (type) {
       case 'add':
@@ -50,54 +50,56 @@ const OS_GENERATED = [
   /.Spotlight-V100$/,
   /.Trashes$/,
   /ehthumbs.db$/,
-  /Thumbs.d$/,
+  /Thumbs.db$/,
 ]
 
 export default class Watcher {
   constructor(watchPath, ignoredPath, notifier) {
-    this.handlers = {}
     this.ignoreSet = new Set()
+    this.watchPath = watchPath
+    this.ignoredPath = Array.isArray(ignoredPath) ? ignoredPath : [ignoredPath]
     this.notifier = notifier
-    this.monitor = chokidar.watch(watchPath, {
+  }
+
+  start() {
+    this.monitor = chokidar.watch(this.watchPath, {
       persistent: true,
-      ignored: [...OS_GENERATED, ...ignoredPath]
+      ignored: [...OS_GENERATED, ...(this.ignoredPath.map(p =>
+        p instanceof RegExp ? p : new RegExp(p.replace(/\./g, '\\.'))
+      ))]
     })
 
-    this.watching = false
     this.monitor.on('error', error => logger.error(`[WATCH] Error: ${error}`))
 
-    this.monitor.on('ready', () => {
-      logger.info('[WATCH] Initial scan complete. Ready for changes')
-      this.monitor
-        .on('add', (path, stats) => this.listener('add', path, stats))
-        .on('change', (path, stats) => this.listener('change', path, stats))
-        .on('unlink', (path, stats) => this.listener('unlink', path, stats))
-        .on('addDir', (path, stats) => this.listener('addDir', path, stats))
-        .on('unlinkDir', (path, stats) =>
-          this.listener('unlinkDir', path, stats))
+    return new Promise((resolve) => {
+      this.monitor.on('ready', () => {
+        this.monitor
+          .on('add', (p, stats) => this.dispatch('add', p, stats))
+          .on('addDir', (p, stats) => this.dispatch('addDir', p, stats))
+          .on('change', (p, stats) => this.dispatch('change', p, stats))
+          .on('unlink', p => this.dispatch('unlink', p))
+          .on('unlinkDir', p => this.dispatch('unlinkDir', p))
+        logger.info('[WATCH] Initial scan complete. Ready for changes')
+        resolve()
+      })
     })
   }
 
-  watch() {
-    this.watching = true
+  stop() {
+    if (this.monitor) this.monitor.close()
   }
 
-  unwatch() {
-    this.watching = false
-  }
-
-  listener(evType, path, stats) {
-    if (!this.watching) return
-    let ev = new EventType(evType, path, stats)
+  dispatch(evType, p, stats) {
+    let ev = new FsEvent(evType, p, stats)
 
     if (!this.ignoreEvent(ev)) {
       if (!this.notifier(ev)) {
         logger.error(`[WATCH] unhandled event ${ev.type}`)
       }
     }
-    // else {
-    //   logger.debug(`[WATCH] ignored event: ${logger.toJson(ev)}`)
-    // }
+    else {
+      logger.debug(`[WATCH] ignored event: ${logger.toJson(ev)}`)
+    }
   }
 
   ignoreEvent(ev) {
@@ -105,10 +107,6 @@ export default class Watcher {
       return false // @Sevauk: ?
 
     return this.isIgnored(ev.path)
-  }
-
-  setEventHandler(listener) {
-    this.handler = listener
   }
 
   ignore(file) {

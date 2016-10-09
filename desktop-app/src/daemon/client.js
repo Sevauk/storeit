@@ -6,27 +6,42 @@ import userFile from './user-file.js'
 import fs from 'fs'
 Promise.promisifyAll(fs)
 
+import StoreitClient from '../../lib/client'
 import logger from '../../lib/log'
 import Watcher from './watcher'
-import {Command, Response} from '../../lib/protocol-objects'
-import * as ipfs from './ipfs'
+import IPFSNode from './ipfs'
 import settings from './settings'
 
-const MAX_RECO_TIME = 4
 const authTypes = {
   'facebook': 'fb',
   'google': 'gg'
 }
 
-export default class Client {
+export default class DesktopClient extends StoreitClient {
 
   constructor() {
-    this.recoTime = 1
-    this.responseHandlers = {}
-    this.ipfs = ipfs.createNode()
-    this.fsWatcher = new Watcher(settings.getStoreDir(), [/\.storeit*/],
+    super((...args) => WebSocket(...args))
+
+    this.ipfs = new IPFSNode()
+    const ignored = userFile.storePath(settings.getHostDir())
+    this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
-    this.fsWatcher.watch()
+  }
+
+  start() {
+    return Promise.all([
+      this.fsWatcher.start(),
+      this.ipfs.connect(),
+      this.connect()
+    ])
+  }
+
+  stop() {
+    return Promise.all([
+      this.fsWatcher.stop(),
+      this.ipfs.close(),
+      this.close()
+    ])
   }
 
   auth(type, devId, opener) {
@@ -59,79 +74,16 @@ export default class Client {
   }
 
   connect(type, devid, opener) {
-
-    const {SERVER_ADDR, SERVER_PORT} = process.env
-    this.sock = new WebSocket(`ws://${SERVER_ADDR}:${SERVER_PORT}`)
-
-    this.sock = Promise.promisifyAll(this.sock)
-    logger.info('[SOCK] attempting connection')
-
-    this.sock.on('error', (e) => logger.error(`[SOCK] socket error occured (${e})`))
-    this.sock.on('message', data => this.manageResponse(JSON.parse(data)))
-
-    return new Promise(resolve => {
-      this.sock.on('open', () => {
-        resolve(this.auth(type, devid, opener)
-          .catch(() => logger.error('Bad authentication')))
-      })
-      this.sock.on('close', () => resolve(this.reconnect(type, devid, opener)))
-    })
-      .then(() => this.recoTime = 1)
-  }
-
-  reconnect(type, devid, opener) {
-    logger.error(`[SOCK] attempting to reconnect in ${this.recoTime} seconds`)
-    let done = Promise.delay(this.recoTime * 1000).then(() => this.connect(type, devid, opener))
-    if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
-    return done
+    type = type || this.authSettigns.type
+    devid = devid || this.authSettigns.devid
+    opener = opener || this.authSettigns.opener
+    return super.connect()
+      .then(() => this.auth(type, devid, opener))
   }
 
   reloadSettings() {
     // TODO
     settings.reload()
-  }
-
-  manageResponse(res) {
-    let handler = this.responseHandlers[res.commandUid]
-    if (handler != null) delete this.responseHandlers[res.commandUid]
-    else handler = this[`recv${res.command}`] // set to default handler
-
-    if (handler != null) handler.call(this, res)
-    else logger.error(`[RESPONSE:orphan] ${logger.toJson(res)}`)
-  }
-
-  send(data, type='') {
-    logger.debug(`[SEND:${type}] ${logger.toJson(data)}`)
-    return this.sock.sendAsync(JSON.stringify(data))
-  }
-
-  response(uid, msg='', code=0) {
-    return this.send(new Response(code, msg, uid), 'response')
-  }
-
-  success(uid, msg='') {
-    return this.response(uid, msg, 0)
-  }
-
-  error(uid, msg='error', code=1) {
-    return this.response(uid, msg, code)
-  }
-
-  waitResponse(req) {
-    let msg
-    return new Promise((resolve, reject) => {
-      this.responseHandlers[req.uid] = res => {
-        msg = `[RESP:${res.code === 0 ? 'ok' : 'err'}] ${logger.toJson(res)}`
-        res.code === 0 ? resolve(res) : reject(new Error(msg))
-      }
-    }).tap(() => logger.debug(msg))
-  }
-
-  request(req, params) {
-    let data = new Command(req, params)
-    return this.send(data, 'request')
-      .then(() => this.waitResponse(data))
-      .then(res => res.parameters)
   }
 
   reqJoin(authType, accessToken) {
@@ -148,8 +100,7 @@ export default class Client {
       })
       .then(() => this.addFilesUnknownByServ(home))
       .tap(() => logger.info('[JOIN] home synchronized'))
-      .tap(() => this.fsWatcher.watch())
-      .catch(err => logger.error(err))
+      .tap(() => this.fsWatcher.start())
   }
 
   addFilesUnknownByServ(dir) {
@@ -199,11 +150,11 @@ export default class Client {
           .catch(() => userFile.create(file.path, ''))
           .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
           .then(isInStore => {
-            if (!isInStore) return this.ipfs.download(file.path, file.IPFSHash)
+            if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path)
             logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
           })
           .catch(logger.error)
-          .finally(() => this.fsWatcher.unignore(file.path))
+          .then(() => this.fsWatcher.unignore(file.path))
       }
     })
   }
@@ -228,26 +179,24 @@ export default class Client {
 
   recvFSTR(req) {
     logger.debug(`[RECV:FSTR] ${logger.toJson(req)}`)
-    let fstr
+    const hash = req.parameters.hash
     if (req.parameters.keep)
-      fstr = this.ipfs.downloadChunk(req.parameters.hash)
+      return this.ipfs.download(hash)
     else
-      fstr = this.ipfs.removeChunk(req.parameters.hash)
-    return fstr
-      .then(() => this.success(req.uid))
-      .catch(err => logger.error('FSTR: ' + err))
+      return this.ipfs.rm(hash).then(() => userFile.chunkDel(hash))
   }
 
   getFsEvent(ev) {
     let handler = this[`send${ev.type}`]
-    if (handler === null) return false
+    if (handler == null) return false
 
     handler.call(this, ev.path).catch(logger.error)
     return true
   }
 
   sendFADD(filePath) {
-    return userFile.generateTree(filePath)
+    const hashFunc = this.ipfs.getFileHash.bind(this.ipfs)
+    return userFile.generateTree(hashFunc, filePath)
       .then(files => this.request('FADD', {files: [files]}))
       .catch(err => logger.error('FADD: ' + err))
   }

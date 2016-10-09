@@ -26,11 +26,11 @@ auth = (authType) ->
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
-  daemon.auth(authType, authWin.loadURL.bind(authWin))
-    .then ->
-      authWin.close()
-    .catch (e) ->
-      authWin.close()
+  # daemon.auth(authType, authWin.loadURL.bind(authWin))
+  #   .then ->
+  #     authWin.close()
+  #   .catch (e) ->
+  #     authWin.close()
 
 tray = null
 init = ->
@@ -49,9 +49,9 @@ init = ->
   daemon.connect().then -> loadPage()
 
 ipc.on 'auth', (ev, authType) ->
-  auth(authType)
-    .then -> ev.sender.send 'auth', 'done'
-    .catch -> ev.sender.send 'auth', 'done'
+  # auth(authType)
+  #   .then -> ev.sender.send 'auth', 'done'
+  #   .catch -> ev.sender.send 'auth', 'done'
 
 ipc.on 'reload', (ev) -> # daemon.restart() #TODO
 
