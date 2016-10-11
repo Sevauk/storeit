@@ -59,6 +59,8 @@ public class SocketService extends Service {
         @Override
         public void run() {
 
+            Log.v(LOGTAG, "Starting socket on thread : " + Thread.currentThread().getId());
+
             // Loop on connection
             mConnected = false;
 
