@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     ActionBar mActionBar;
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
-    
+
     public FloatingActionButton getFloatingButton() {
         return fbtn;
     }
@@ -387,11 +389,24 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    private void logout() {
+        SharedPreferences sharedPrefs = getSharedPreferences(
+                getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("oauth_token", "");
+        editor.putString("oauth_method", "");
+        editor.apply();
+
+        // Add restart first activity
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_settings:
+            case R.id.action_logout:
+
                 break;
             case android.R.id.home:
                 break;
@@ -401,6 +416,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        Log.v("MainActivity", "Activity result : " + requestCode);
+
         if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
             Uri uri = data.getData();
             fbtn.setVisibility(View.VISIBLE);

@@ -4,11 +4,14 @@ import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
@@ -55,11 +58,17 @@ public class LoginActivity extends Activity {
 
     private boolean destroySocketService = true;
     private boolean destroyIpfsService = true;
-    
+
     private SocketService mSocketService = null;
     private IpfsService mIpfsService = null;
     private String mEmail;
     String SCOPE = "oauth2:https://www.googleapis.com/auth/userinfo.email";
+
+    private boolean autologin = false;
+    private ProgressDialog progessDialog = null;
+
+    private String m_token = "";
+    private String m_method = "";
 
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
@@ -68,7 +77,7 @@ public class LoginActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-//                    if (joinResponse.getCode() == 0) {
+                    if (joinResponse.getCode() == 0) {
 
                         Log.v("LoginActivity", "ici");
 
@@ -85,9 +94,46 @@ public class LoginActivity extends Activity {
                         intent.putExtra("home", homeJson);
                         intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                        if (progessDialog != null)
+                            progessDialog.dismiss();
+
                         startActivity(intent);
+                    } else {
+                        if (progessDialog != null)
+                            progessDialog.dismiss();
+
+                        SharedPreferences sharedPrefs = getSharedPreferences(
+                                getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+                        SharedPreferences.Editor editor = sharedPrefs.edit();
+                        editor.putString("oauth_token", "");
+                        editor.putString("oauth_method", "");
+                        editor.apply();
+
+                        Toast.makeText(LoginActivity.this, "Please login", Toast.LENGTH_SHORT).show();
                     }
-        //        }
+                }
+            });
+        }
+
+        @Override
+        public void handleConnection(final boolean success) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v("MainActivity", "handleConnection");
+                    if (success) {
+                        if (autologin) {
+                            if (!mSocketService.sendJOIN(m_method, m_token)) {
+                                progessDialog.dismiss();
+                                Toast.makeText(LoginActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } else if (autologin && progessDialog.isShowing()) {
+                        progessDialog.dismiss();
+                    }
+                }
             });
         }
 
@@ -124,6 +170,15 @@ public class LoginActivity extends Activity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
+                SharedPreferences sharedPrefs = getSharedPreferences(
+                        getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putString("oauth_token", token);
+                editor.putString("oauth_method", "gg");
+                editor.apply();
+
                 mSocketService.sendJOIN("gg", token);
             }
         });
@@ -168,7 +223,7 @@ public class LoginActivity extends Activity {
     private ServiceConnection mIpfsServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
-            mIpfsService = ((IpfsService.LocalBinder)service).getService();
+            mIpfsService = ((IpfsService.LocalBinder) service).getService();
             mIpfsServiceBound = true;
         }
 
@@ -233,12 +288,16 @@ public class LoginActivity extends Activity {
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
 
+        SharedPreferences sharedPrefs = getSharedPreferences(
+                getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+        final SharedPreferences.Editor editor = sharedPrefs.edit();
+
         SignInButton button = (SignInButton) findViewById(R.id.google_login);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mSocketService.isConnected())
-                {
+                if (!mSocketService.isConnected()) {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -247,15 +306,17 @@ public class LoginActivity extends Activity {
             }
         });
 
-        Button developerButton = (Button)findViewById(R.id.developer_login);
+        Button developerButton = (Button) findViewById(R.id.developer_login);
         developerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!mSocketService.isConnected())
-                {
+                if (!mSocketService.isConnected()) {
                     Toast.makeText(LoginActivity.this, "Not connected", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                editor.putString("oauth_token", "developer");
+                editor.putString("oauth_method", "gg");
+                editor.apply();
 
                 mSocketService.sendJOIN("gg", "developer");
             }
@@ -271,6 +332,11 @@ public class LoginActivity extends Activity {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 Log.d("LoginActivity", loginResult.getAccessToken().getToken());
+
+                editor.putString("oauth_token", loginResult.getAccessToken().getToken());
+                editor.putString("oauth_method", "fb");
+                editor.apply();
+
                 mSocketService.sendJOIN("fb", loginResult.getAccessToken().getToken());
             }
 
@@ -299,7 +365,7 @@ public class LoginActivity extends Activity {
             }
         }
 
-        ImageButton settingsBtn = (ImageButton)findViewById(R.id.app_settings_btn);
+        ImageButton settingsBtn = (ImageButton) findViewById(R.id.app_settings_btn);
         settingsBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -307,6 +373,21 @@ public class LoginActivity extends Activity {
                 startActivity(i);
             }
         });
+
+        m_token = sharedPrefs.getString("oauth_token", "");
+        m_method = sharedPrefs.getString("oauth_method", "");
+
+        if (!m_token.isEmpty() && !m_method.isEmpty()) {
+            autologin = true;
+
+            progessDialog = new ProgressDialog(LoginActivity.this);
+            progessDialog.setMessage("Connecting...");
+            progessDialog.setIndeterminate(true);
+            progessDialog.setCancelable(false);
+            progessDialog.show();
+
+        }
+
     }
 
     @Override

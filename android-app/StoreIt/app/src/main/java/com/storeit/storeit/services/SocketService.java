@@ -29,6 +29,8 @@ import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.protocol.command.Response;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /*
 * This service handle the websocket connection
@@ -42,7 +44,7 @@ public class SocketService extends Service {
     private final IBinder myBinder = new LocalBinder();
 
     public String server;
-    private static final int TIMEOUT = 5000;
+    private static final int TIMEOUT = 10000;
     public static final String LOGTAG = "SocketService";
 
     private boolean mConnected = false;
@@ -71,6 +73,11 @@ public class SocketService extends Service {
                             .createSocket(server)
                             .addListener(new WebSocketAdapter() {
 
+                                public void onConnected(WebSocket websocket, Map<String, List<String>> headers)
+                                {
+
+                                }
+
                                 public void onDisconnected(WebSocket websocket,
                                                            WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame,
                                                            boolean closedByServer) throws IOException, WebSocketException {
@@ -84,7 +91,6 @@ public class SocketService extends Service {
                                 public void onTextMessage(WebSocket websocket, String message) {
                                     Log.v(LOGTAG, "received : " + message);
                                     int cmdType = CommandManager.getCommandType(message);
-                                    Log.v(LOGTAG, "Command : " + cmdType);
                                     switch (cmdType) {
                                         case CommandManager.RESP:
                                             Log.v(LOGTAG, "Response!");
@@ -143,10 +149,20 @@ public class SocketService extends Service {
                             .connect();
 
                     mConnected = true;
+                    Log.v(LOGTAG, "mConnected : " + mConnected);
+                    Log.v(LOGTAG, "mLoginHandler : " + (mLoginHandler != null));
+
+                    if (mLoginHandler != null)
+                    {
+                        Log.v(LOGTAG, "call handleConnection()");
+                        mLoginHandler.handleConnection(true);
+                    }
+
                 } catch (WebSocketException | IOException e) {
                     e.printStackTrace();
                     mConnected = false;
                     Log.e(LOGTAG, "Cannot connect to server... Retrying in 5 seconds");
+                    mLoginHandler.handleConnection(false);
                     SystemClock.sleep(5000);
                 }
             }
@@ -233,6 +249,12 @@ public class SocketService extends Service {
 
     public void setmLoginHandler(LoginHandler handler) {
         mLoginHandler = handler;
+        if (mConnected)
+        {
+            Log.v(LOGTAG, "call handleConnection()");
+            mLoginHandler.handleConnection(true);
+        }
+
     }
 
     public void setFileCommandandler(FileCommandHandler handler) {

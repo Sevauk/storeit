@@ -26,7 +26,6 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
 
     protected void onPreExecute(){
         super.onPreExecute();
-
     }
 
     @Override
@@ -45,7 +44,7 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
 
             String result = IOUtils.toString(in);
 
-            Log.v("StoreitPreferences", result);
+            Log.v("StoreitPreferences", "la" + result);
 
         } catch (IOException e) {
             e.printStackTrace();

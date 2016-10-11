@@ -53,7 +53,6 @@ public class IpfsStatTask extends AsyncTask<Void, Void, Long> {
 
     @Override
     protected void onPostExecute(Long size) {
-        Log.v("StoreitPreference", "In async tasl");
         mClearCacheButton.setSummary("Ipfs currently use : " + (float) (size / 1048576) + " mo");
     }
 }
