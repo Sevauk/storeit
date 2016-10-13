@@ -14,7 +14,7 @@ class NetworkManager {
     static let sharedInstance = NetworkManager()
 
     private let WSManager: WebSocketManager
-    private let _host = "localhost" // "158.69.196.83"
+    private let _host = "iglu.mobi"//"localhost" // "158.69.196.83"
     private let _port = 7641
     
     var host: String {

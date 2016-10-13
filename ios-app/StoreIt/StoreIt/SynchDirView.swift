@@ -29,32 +29,41 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.list.delegate = self
-        self.list.dataSource = self
+        list.delegate = self
+        list.dataSource = self
 
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(uploadOptions))
+    	navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
+    	                                                    target: self,
+    	                                                    action: #selector(uploadOptions))
         
         if (!ActionSheetsManager.isInitialized()) {
-            self.addActions()
+            addActions()
         }
     }
     
     // function triggered when back button of navigation bar is pressed
     override func willMove(toParentViewController parent: UIViewController?) {
         super.willMove(toParentViewController: parent)
+        
         if (parent == nil) {
-            self.navigationManager.goPreviousDir()
+            navigationManager.goPreviousDir()
         }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-    	self.moveToolBar.isHidden = !self.navigationManager.movingOptions.isMoving
+    	
+        moveToolBar.isHidden = !navigationManager.movingOptions.isMoving
         
-        self.navigationManager.list = self.list
-        self.navigationManager.moveToolBar = self.moveToolBar
+        navigationManager.list = list
+        navigationManager.moveToolBar = moveToolBar
 
-        self.list.reloadData()
+        let currentPath = navigationManager.buildCurrentDirectoryPath()
+        
+        navigationItem.title = ( currentPath == "/" ?
+            navigationManager.rootDirTitle : currentPath.components(separatedBy: "/").last!)
+        
+        list.reloadData()
     }
     
     override func didReceiveMemoryWarning() {
@@ -73,15 +82,14 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             if (segue.identifier == "nextDirSegue") {
                 
                 let listView = (segue.destination as! SynchDirView)
-                let targetPath = self.navigationManager.goToNextDir(target)
+                _ = navigationManager.goToNextDir(target)
                 
-                listView.navigationItem.title = targetPath
-                listView.navigationManager.movingOptions.isMoving = self.navigationManager.movingOptions.isMoving
+                listView.navigationManager.movingOptions.isMoving = navigationManager.movingOptions.isMoving
             }
             else if (segue.identifier == "showFileSegue") {
                 let fileView = segue.destination as! FileView
                 
-                fileView.navigationItem.title = self.navigationManager.getTargetName(target)
+                fileView.navigationItem.title = navigationManager.getTargetName(target)
                 fileView.showActivityIndicatory()
 
                 IpfsManager.get(hash: target.IPFSHash) { data in
@@ -95,7 +103,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
 	// MARK: Creation and management of table cells
     
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.navigationManager.getSortedItems().count
+        return navigationManager.getSortedItems().count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -104,8 +112,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     // Function triggered when a cell is selected
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if let selectedFile: File = self.navigationManager.getSelectedFileAtRow(indexPath: indexPath) {
-            let isDir: Bool = self.navigationManager.isSelectedFileAtRowADir(indexPath: indexPath)
+        if let selectedFile: File = navigationManager.getSelectedFileAtRow(indexPath: indexPath) {
+            let isDir: Bool = navigationManager.isSelectedFileAtRowADir(indexPath: indexPath)
             
             if (isDir) {
                 self.performSegue(withIdentifier: "nextDirSegue", sender: selectedFile)
@@ -116,16 +124,16 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     }
     
     func createItemCellAtIndexPath(indexPath: IndexPath) -> UITableViewCell {
-        let isDir: Bool = self.navigationManager.isSelectedFileAtRowADir(indexPath: indexPath)
-        let items: [String] = self.navigationManager.getSortedItems()
+        let isDir: Bool = navigationManager.isSelectedFileAtRowADir(indexPath: indexPath)
+        let items: [String] = navigationManager.getSortedItems()
                 
         if (isDir) {
-            let cell = self.list.dequeueReusableCell(withIdentifier: CellIdentifiers.directory.rawValue) as! DirectoryCell
+            let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.directory.rawValue) as! DirectoryCell
             cell.itemName.text = "\(items[(indexPath as NSIndexPath).row])"
             cell.contextualMenu.tag = (indexPath as NSIndexPath).row
             return cell
         } else {
-            let cell = self.list.dequeueReusableCell(withIdentifier: CellIdentifiers.file.rawValue) as! FillCell
+            let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.file.rawValue) as! FillCell
             cell.itemName.text = "\(items[(indexPath as NSIndexPath).row])"
             cell.contextualMenu.tag = (indexPath as NSIndexPath).row
             return cell
@@ -135,11 +143,13 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     // MARK: Action sheet creation and management
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
-        self.dismiss(animated: true, completion: {_ in
+        dismiss(animated: true, completion: {_ in
             let referenceUrl = editingInfo["UIImagePickerControllerReferenceURL"] as! URL
+            
             if let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject {
                 PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
                     (imagedata, dataUTI, orientation, info) in
+                    
                     if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
                     {
                         let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
@@ -187,7 +197,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             
         }))
         
-        self.present(alert, animated: true, completion: nil)
+        present(alert, animated: true, completion: nil)
     }
     
     func pickImageFromLibrary(action: UIAlertAction) -> Void {
@@ -198,7 +208,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             imagePicker.sourceType = UIImagePickerControllerSourceType.photoLibrary
             imagePicker.allowsEditing = true
             
-            self.present(imagePicker, animated: true, completion: nil)
+            present(imagePicker, animated: true, completion: nil)
         }
         
     }
@@ -211,39 +221,39 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             camera.sourceType = UIImagePickerControllerSourceType.camera
             camera.delegate = self
             
-            self.present(camera, animated: true, completion: nil)
+            present(camera, animated: true, completion: nil)
         }
     }
     
     func moveFile(action: UIAlertAction) -> Void {
         if let index = self.selectedIndex {
             if let selectedFile = self.navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
-                self.moveToolBar.isHidden = false
+                moveToolBar.isHidden = false
                 
-                self.list!.contentInset = UIEdgeInsetsMake(0, 0, self.moveToolBar.frame.size.height, 0)
+                list!.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
                 
-                self.navigationManager.movingOptions.isMoving = true
-                self.navigationManager.movingOptions.src = selectedFile.path
-                self.navigationManager.movingOptions.file = self.navigationManager.getFileObjInCurrentDir(selectedFile.path)
+                navigationManager.movingOptions.isMoving = true
+                navigationManager.movingOptions.src = selectedFile.path
+                navigationManager.movingOptions.file = navigationManager.getFileObjInCurrentDir(selectedFile.path)
             
-                self.selectedIndex = nil
+                selectedIndex = nil
             }
         }
     }
     
     func deleteFile(action: UIAlertAction) -> Void {
-        if let index = self.selectedIndex {
+        if let index = selectedIndex {
             if let selectedFile = navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
-                self.networkManager.fdel([selectedFile.path]) { _ in
-                    self.selectedIndex = nil
+                networkManager.fdel([selectedFile.path]) { _ in
+                	self.selectedIndex = nil
                 }
             }
         }
     }
     
     func renameFile(action: UIAlertAction) -> Void {
-        if let index = self.selectedIndex {
-            if let selectedFile = self.navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
+        if let index = selectedIndex {
+            if let selectedFile = navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
                 let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .alert)
                 
                 // TODO: bug here, selection does not work
@@ -274,7 +284,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                         }
                     }
                 }))
-                self.present(alert, animated: true, completion: nil)
+                present(alert, animated: true, completion: nil)
         	}
         }
     }
@@ -324,7 +334,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     func uploadOptions() {
         if let actionSheet = ActionSheetsManager.getActionSheet(actionSheetType: ActionSheet.upload) {
             actionSheet.view.tintColor = STOREIT_RED
-            self.present(actionSheet, animated: true, completion: nil)
+            present(actionSheet, animated: true, completion: nil)
         }
     }
     
@@ -337,7 +347,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             
             if let actionSheet = ActionSheetsManager.getActionSheet(actionSheetType: actionSheetType) {
                 actionSheet.view.tintColor = STOREIT_RED
-                self.present(actionSheet, animated: true, completion: nil)
+                present(actionSheet, animated: true, completion: nil)
             }
         }
     }
@@ -353,13 +363,13 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             self.navigationManager.movingOptions.file?.path = dest
             self.navigationManager.movingOptions.dest = dest
             
-            self.networkManager.fmove((self.navigationManager.movingOptions), completion: nil)
+            networkManager.fmove((self.navigationManager.movingOptions), completion: nil)
         }
     }
     
     @IBAction func cancelMove(_ sender: AnyObject) {
-        self.moveToolBar.isHidden = true
-        self.list!.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
-        self.navigationManager.movingOptions = MovingOptions()
+        moveToolBar.isHidden = true
+        list!.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
+        navigationManager.movingOptions = MovingOptions()
     }
 }
