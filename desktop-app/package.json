@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
     "postinstall": "jspm clean && jspm install && shx cp -n .env.sample .env && npm run init",
-    "init": "ipfs init || true",
+    "init": "ipfs init || exit 0",
     "start": "npm run build && concurrently -rk 'npm run ipfs' 'npm run daemon'",
     "ipfs": "ipfs daemon",
     "daemon": "node -r dotenv/config bootstrap.js",
