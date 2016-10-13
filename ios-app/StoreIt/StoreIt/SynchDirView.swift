@@ -82,9 +82,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             if (segue.identifier == "nextDirSegue") {
                 
                 let listView = (segue.destination as! SynchDirView)
-                let targetPath = navigationManager.goToNextDir(target)
+                _ = navigationManager.goToNextDir(target)
                 
-                //listView.navigationItem.title = targetPath
                 listView.navigationManager.movingOptions.isMoving = navigationManager.movingOptions.isMoving
             }
             else if (segue.identifier == "showFileSegue") {
