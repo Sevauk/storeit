@@ -14,7 +14,7 @@ class WebSocketManager {
     
     private let url: URL
     private let ws: WebSocket
-    private let navigationManager = NavigationManager.sharedInstance
+    private let navigationManager = NavigationManager.shared
 
     init(host: String, port: Int) {
         self.url = URL(string: "ws://\(host):\(port)/")!
@@ -53,7 +53,7 @@ class WebSocketManager {
         for path in paths {
             let updateElement = UpdateElement(path: path)
                         
-            let index = self.navigationManager.updateTree(updateElement)
+            let index = self.navigationManager.updateTree(with: updateElement)
             
             if (index != -1) {
                 self.removeRowAtIndex(index)
@@ -76,7 +76,7 @@ class WebSocketManager {
     private func renameFile(_ src: String, dest: String) {
         let updateElementForRename = UpdateElement(src: src, dest: dest)
 
-        let index = self.navigationManager.updateTree(updateElementForRename)
+        let index = self.navigationManager.updateTree(with: updateElementForRename)
         
         if (index != -1) {
             self.updateList()
@@ -87,8 +87,8 @@ class WebSocketManager {
         let updateElementForDeletion = UpdateElement(path: src)
         let updateElementForAddition = UpdateElement(file: file, isMoving: true)
         
-        let index = self.navigationManager.updateTree(updateElementForDeletion)
-        let index_2 = self.navigationManager.updateTree(updateElementForAddition)
+        let index = self.navigationManager.updateTree(with: updateElementForDeletion)
+        let index_2 = self.navigationManager.updateTree(with: updateElementForAddition)
         
         self.navigationManager.movingOptions = MovingOptions()
         
@@ -103,7 +103,7 @@ class WebSocketManager {
         for file in files {
             let updateElement = UpdateElement(file: file, isMoving: false)
 
-            let index = self.navigationManager.updateTree(updateElement)
+            let index = self.navigationManager.updateTree(with: updateElement)
             
             if (index != -1) {
                 self.updateList()
@@ -115,11 +115,11 @@ class WebSocketManager {
         for file in files {
             if (file.IPFSHash != "") {
                 let updateElement = UpdateElement(property: Property.ipfsHash, file: file)
-                _ = self.navigationManager.updateTree(updateElement)
+                _ = self.navigationManager.updateTree(with: updateElement)
             }
             if (file.metadata != "") {
                 let updateElement = UpdateElement(property: Property.metadata, file: file)
-                _ = self.navigationManager.updateTree(updateElement)
+                _ = self.navigationManager.updateTree(with: updateElement)
             }
         }
     }
@@ -152,7 +152,7 @@ class WebSocketManager {
                                 let home: File? = params["home"]
                                 
                                 if let files = home?.files {
-                                    self.navigationManager.setItems(files)
+                                    self.navigationManager.set(with: files)
                                     self.updateList()
                                 }
                             }
@@ -220,7 +220,7 @@ class WebSocketManager {
                                 if (self.isRenaming(parameters.src, dest: parameters.dest)) {
                                     self.renameFile(parameters.src, dest: parameters.dest)
                                 } else {
-                                    if let file = self.navigationManager.getFileObjByPath(parameters.src) {
+                                    if let file = self.navigationManager.getFile(at: parameters.src) {
                                         file.path = parameters.dest
                                         self.moveFile(parameters.src, file: file)
                                     }
