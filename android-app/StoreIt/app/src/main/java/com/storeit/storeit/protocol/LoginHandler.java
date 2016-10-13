@@ -7,5 +7,6 @@ import com.storeit.storeit.protocol.command.JoinResponse;
  */
 public interface LoginHandler {
     public void handleJoin(JoinResponse joinResponse);
+    public void handleConnection();
     public void handleDisconnection();
 }

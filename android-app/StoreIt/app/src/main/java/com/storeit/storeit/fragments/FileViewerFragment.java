@@ -71,7 +71,7 @@ public class FileViewerFragment extends Fragment {
 
         coordinatorLayout = (CoordinatorLayout)rootView.findViewById(R.id.coordinatorLayout);
 
-        adapter = new ExplorerAdapter(manager, getContext());
+        adapter = new ExplorerAdapter(manager, getActivity());
         explorersRecyclerView.setAdapter(adapter);
         explorersRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
