@@ -11,29 +11,40 @@ import ObjectMapper
 import FBSDKLoginKit
 import GoogleSignIn
 
-class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
+class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
+    
+    let CORNER_RADIUS: CGFloat = 7
     
     let networkManager = NetworkManager.sharedInstance
     
-    @IBOutlet weak var FBLoginButton: FBSDKLoginButton!
+    @IBOutlet weak var googleButton: UIButton!
+    @IBOutlet weak var developerButton: UIButton!
     @IBOutlet weak var signInButton: GIDSignInButton!
+    @IBOutlet weak var fbButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        fbButton.layer.cornerRadius = CORNER_RADIUS
+        developerButton.layer.cornerRadius = CORNER_RADIUS
+        googleButton.layer.cornerRadius = CORNER_RADIUS
+        
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
-        
-        FBLoginButton.readPermissions = ["public_profile", "email"]
-        FBLoginButton.delegate = self
         
         if let connectionType = SessionManager.getConnectionType() {
             if connectionType == ConnectionType.google {
                 GIDSignIn.sharedInstance().signInSilently()
             } else if connectionType == ConnectionType.facebook {
                 processFacebookLogin()
+            } else if connectionType == ConnectionType.developer {
+                processDeveloperLogin()
             }
         }
+    }
+    
+    @IBAction func developerLogin(_ sender: AnyObject) {
+        processDeveloperLogin()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -46,42 +57,47 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     }
     
     // MARK: FACEBOOK
-    
-    func loginButton(_ loginButton: FBSDKLoginButton!, didCompleteWith result: FBSDKLoginManagerLoginResult!, error: Error!) {
-        if ((error) != nil) {
-            print(error)
-            self.logout()
-        }
-        else if result.isCancelled {
-            print(result)
-            self.logout()
-        }
-        else {
-            if result.grantedPermissions.contains("email"){
-				processFacebookLogin()
-            }
-        }
-    }
-    
-    // do something for fb token refresh
+
     func processFacebookLogin() {
-        _ = SessionManager.set(token: FBSDKAccessToken.current().tokenString)
+        
+    	// refresh token here
         
         networkManager.initConnection(loginFunction: loginFunction, logoutFunction: logoutToLoginView)
         
         self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
     }
     
-    func loginButtonWillLogin(_ loginButton: FBSDKLoginButton!) -> Bool {
+    @IBAction func fbLogin(_ sender: AnyObject) {
+        let login: FBSDKLoginManager = FBSDKLoginManager()
+        
         SessionManager.set(connectionType: ConnectionType.facebook)
-        return true
-    }
-    
-    func loginButtonDidLogOut(_ loginButton: FBSDKLoginButton!) {
-        self.logout()
+        
+        login.logIn(withReadPermissions: ["public_profile", "email"], from: self) { (result, error) in
+            guard let result = result else {
+                print(error)
+                self.logout()
+                return
+            }
+            
+            if result.isCancelled {
+                print(result)
+                self.logout()
+            }
+                
+            else {
+                if result.grantedPermissions.contains("email"){
+                    _ = SessionManager.set(token: result.token.tokenString)
+                    self.processFacebookLogin()
+                }
+            }
+        }
     }
     
     // MARK: GOOGLE
+    
+    @IBAction func googleLogin(_ sender: AnyObject) {
+    	GIDSignIn.sharedInstance().signIn()
+    }
     
     func sign(_ signIn: GIDSignIn!,
               present viewController: UIViewController!) {
@@ -112,19 +128,31 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     }
     
     func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
-        self.logout()
+        logout()
     }
 
     // MARK: Utils
     
+    func processDeveloperLogin() {
+        networkManager.initConnection(loginFunction: loginDeveloperFunction, logoutFunction: logoutToLoginView)
+        SessionManager.set(connectionType: ConnectionType.developer)
+        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+    }
+    
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
-        self.logout()
+        logout()
+    }
+    
+    func loginDeveloperFunction() {
+        networkManager.joinDeveloper { _ in
+            print("[LoginView] JOIN as developer succeeded")
+        }
     }
     
     func loginFunction() {
         if let token = SessionManager.getToken() {
             if let connectionType = SessionManager.getConnectionType() {
-                self.networkManager.join(connectionType.rawValue, accessToken: token) { _ in
+                	networkManager.join(connectionType.rawValue, accessToken: token) { _ in
                     print("[LoginView] JOIN succeeded")
                 }
             }
@@ -148,7 +176,7 @@ class LoginView: UIViewController, FBSDKLoginButtonDelegate, GIDSignInDelegate, 
     
     func logoutToLoginView() {
         _ = self.navigationController?.popToRootViewController(animated: true)
-        self.logout()
+        logout()
     }
 
 }
