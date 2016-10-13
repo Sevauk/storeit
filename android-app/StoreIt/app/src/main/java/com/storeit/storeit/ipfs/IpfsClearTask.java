@@ -4,13 +4,22 @@ import android.os.AsyncTask;
 import android.preference.Preference;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.internal.bind.ArrayTypeAdapter;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by loulo on 11/10/2016.
@@ -18,24 +27,95 @@ import java.net.URL;
 
 public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
 
+    String nodeUrl = "http://127.0.0.1";
     Preference mClearButton;
+
+    public class IpfsPinLs {
+
+        class Key {
+            public String Type;
+        }
+
+        public HashMap<String, Key> Keys;
+    }
 
     public IpfsClearTask(Preference clearButton) {
         mClearButton = clearButton;
     }
 
-    protected void onPreExecute(){
+    protected void onPreExecute() {
         super.onPreExecute();
     }
 
-    @Override
-    protected Void doInBackground(Void... voids) {
-        String nodeUrl = "http://127.0.0.1";
+    private List<String> listFiles() {
+        nodeUrl = "http://127.0.0.1";
 
-        URL url = null;
+        ArrayList<String> hashes = new ArrayList<>();
+
+        URL url;
         HttpURLConnection urlConnection = null;
-        long size = -1;
 
+        try {
+            url = new URL(nodeUrl + ":5001/api/v0/pin/ls");
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setConnectTimeout(20000);
+            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+            String result = IOUtils.toString(in);
+            Gson gson = new Gson();
+            IpfsPinLs res = gson.fromJson(result, IpfsPinLs.class);
+
+            if (res == null)
+                return hashes;
+
+            for (Map.Entry<String, IpfsPinLs.Key> entry : res.Keys.entrySet()) {
+                IpfsPinLs.Key value = entry.getValue();
+                String hash = entry.getKey();
+
+                if (value.Type.equals("recursive")) {
+                    hashes.add(hash);
+                }
+            }
+            Log.v("StoreitPreferences", res.toString());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+        return hashes;
+    }
+
+    private void unpinHashes(List<String> hashes) {
+
+        for (String hash : hashes) {
+            URL url;
+            HttpURLConnection urlConnection = null;
+            try {
+                url = new URL(nodeUrl + ":5001/api/v0/pin/rm&arg=" + hash);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setConnectTimeout(20000);
+                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+
+                String result = IOUtils.toString(in);
+                Log.v("StoreitPreferences", "la" + result);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+            }
+        }
+    }
+
+    void callGc() {
+
+
+        URL url;
+        HttpURLConnection urlConnection = null;
         try {
             url = new URL(nodeUrl + ":5001/api/v0/repo/gc");
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -43,7 +123,6 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
 
             String result = IOUtils.toString(in);
-
             Log.v("StoreitPreferences", "la" + result);
 
         } catch (IOException e) {
@@ -53,7 +132,16 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
                 urlConnection.disconnect();
             }
         }
-        return  null;
+    }
+
+    @Override
+    protected Void doInBackground(Void... voids) {
+
+        List<String> hashes = listFiles();
+        unpinHashes(hashes);
+        callGc();
+
+        return null;
     }
 
     @Override
