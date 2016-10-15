@@ -29,11 +29,11 @@ class NetworkManager {
     
     
     private init() {
-        self.WSManager = WebSocketManager(host: _host, port: _port)
+        WSManager = WebSocketManager(host: _host, port: _port)
     }
 
     func close() {
-        self.WSManager.disconnect()
+        WSManager.disconnect()
     }
     
     func isConnected() -> Bool {
@@ -41,7 +41,7 @@ class NetworkManager {
     }
     
     func initConnection(loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
-        self.WSManager.eventsInitializer(loginFunction, logoutFunction: logoutFunction)
+        WSManager.eventsInitializer(loginFunction, logoutFunction: logoutFunction)
     }
     
     func joinDeveloper(completion: (() -> ())?) {
@@ -51,7 +51,7 @@ class NetworkManager {
         
         UidFactory.uid += 1
         
-        self.WSManager.sendRequest(jsonJoinCommand!, completion: completion)
+        WSManager.send(jsonJoinCommand!, completion: completion)
 
     }
     
@@ -62,7 +62,7 @@ class NetworkManager {
         
         UidFactory.uid += 1
 
-        self.WSManager.sendRequest(jsonJoinCommand!, completion: completion)
+        WSManager.send(jsonJoinCommand!, completion: completion)
     }
     
     func fadd(_ files: [File], completion: (() -> ())?) {
@@ -72,7 +72,7 @@ class NetworkManager {
 
         UidFactory.addNewWaitingCommand(cmdInfos.FADD, objects: files as AnyObject)
 
-        self.WSManager.sendRequest(jsonFaddCommand!, completion: completion)
+        WSManager.send(jsonFaddCommand!, completion: completion)
     }
 
     func fdel(_ files: [String], completion: (() -> ())?) {
@@ -82,7 +82,7 @@ class NetworkManager {
         
         UidFactory.addNewWaitingCommand(cmdInfos.FDEL, objects: files as AnyObject)
         
-        self.WSManager.sendRequest(jsonFdelCommand!, completion: completion)
+        WSManager.send(jsonFdelCommand!, completion: completion)
     }
     
     func fupt(_ files: [File], completion: (() -> ())?) {
@@ -92,7 +92,7 @@ class NetworkManager {
         
         UidFactory.addNewWaitingCommand(cmdInfos.FUPT, objects: files as AnyObject)
         
-        self.WSManager.sendRequest(jsonFuptCommand!, completion: completion)
+        WSManager.send(jsonFuptCommand!, completion: completion)
     }
     
     func fmove(_ movingOptions: MovingOptions, completion: (() -> ())?) {
@@ -102,7 +102,7 @@ class NetworkManager {
         
         UidFactory.addNewWaitingCommand(cmdInfos.FMOV, objects: movingOptions as AnyObject)
         
-        self.WSManager.sendRequest(jsonFmovCommand!, completion: completion)
+        WSManager.send(jsonFmovCommand!, completion: completion)
     }
     
 }

@@ -18,11 +18,11 @@ class Response : Mappable {
     var parameters: [String:File]?
     
     init() {
-        self.code = -1
-        self.text = ""
-        self.command = ""
-        self.commandUid = -1
-        self.parameters = nil
+        code = -1
+        text = ""
+        command = ""
+        commandUid = -1
+        parameters = nil
     }
     
     init(code: Int, text: String, commandUid: Int, command: String, parameters: [String: File]?) {
@@ -34,11 +34,11 @@ class Response : Mappable {
     }
     
     required init?(map: Map) {
-        self.code = -1
-        self.text = ""
-        self.command = ""
-        self.commandUid = -1
-        self.parameters = nil
+        code = -1
+        text = ""
+        command = ""
+        commandUid = -1
+        parameters = nil
     }
     
     func mapping(map: Map) {

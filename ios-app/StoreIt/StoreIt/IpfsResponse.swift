@@ -15,8 +15,8 @@ class IpfsAddResponse: Mappable {
     var hash: String
     
     init() {
-        self.name = ""
-        self.hash = ""
+        name = ""
+        hash = ""
     }
     
     init(name: String, hash: String) {
@@ -25,8 +25,8 @@ class IpfsAddResponse: Mappable {
     }
     
     required init?(map: Map) {
-        self.name = ""
-        self.hash = ""
+        name = ""
+        hash = ""
     }
     
     func mapping(map: Map) {

@@ -68,7 +68,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         // Dispose of any resources that can be recreated.
     }
     
-    // MARK: segues management
+    // MARK: SEGUE MANAGEMENT
     
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
         return false // segues are triggered manually
@@ -99,7 +99,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         }
     }
 
-	// MARK: Creation and management of table cells
+	// MARK: TABLE VIEW MANAGEMENT
     
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return navigationManager.getSortedItems().count
@@ -139,7 +139,112 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         }
     }
 
-    // MARK: Action sheet creation and management
+    // MARK: ACTION SHEET MANAGEMENT
+    
+    enum ActionSheet {
+        case directory
+        case file
+        case upload
+    }
+    
+    func buildAction(title: String, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) -> UIAlertAction {
+        return UIAlertAction(title: title, style: style, handler: handler)
+    }
+    
+    func buildFileActionSheet(title: String, message: String) -> UIAlertController {
+        let rename = buildAction(title: "Renommer", style: .default, handler: renameFile)
+        let move = buildAction(title: "Déplacer", style: .default, handler: moveFile)
+        let delete = buildAction(title: "Supprimer", style: .default, handler: deleteFile)
+        let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
+        
+        var offline: UIAlertAction?
+        
+        if let index = selectedIndex {
+            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+                
+                if (!selectedFile.isDir) {
+                    let offlineActivated = navigationManager.isOfflineActivated(for: selectedFile.IPFSHash)
+                    
+                    if (offlineActivated) {
+                        offline = buildAction(title: "Désactiver le mode hors ligne pour ce fichier",
+                                              style: .default,
+                                              handler: deactivateOfflineForFile)
+                    } else {
+                        offline = buildAction(title: "Activer le mode hors ligne pour ce fichier",
+                                              style: .default,
+                                              handler: activateOfflineForFile)
+                    }
+                }
+            }
+        }
+        
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+        
+        alertController.addAction(rename)
+        alertController.addAction(move)
+        alertController.addAction(delete)
+        
+        if let offline = offline {
+            alertController.addAction(offline)
+        }
+        
+        alertController.addAction(cancel)
+        
+        return alertController
+    }
+    
+    func buildUploadActionSheet() -> UIAlertController {
+        let newDirectory = buildAction(title: "Créer un dossier", style: .default, handler: createNewDirectory)
+        let uploadFromLibrary = buildAction(title: "Importer depuis mes photos et vidéos", style: .default, handler: pickImageFromLibrary)
+        let uploadFromCamera = buildAction(title: "Prendre avec l'appareil photo", style: .default, handler: takeImageWithCamera)
+        let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
+        
+        let alertController = UIAlertController(title: "Ajout d'un nouvel élément", message: "Choisissez une option", preferredStyle: .actionSheet)
+        
+        alertController.addAction(newDirectory)
+        alertController.addAction(uploadFromLibrary)
+        alertController.addAction(uploadFromCamera)
+        alertController.addAction(cancel)
+        
+        return alertController
+    }
+    
+    func buildActionSheet(for type: ActionSheet) -> UIAlertController {
+        switch type {
+            
+        case .directory:
+            return buildFileActionSheet(title: "Dossier", message: "Que voulez-vous faire ?")
+            
+        case .file:
+            return buildFileActionSheet(title: "Fichier", message: "Que voulez-vous faire ?")
+            
+        case .upload:
+            return buildUploadActionSheet()
+        }
+        
+    }
+    
+    func uploadOptions() {
+        let actionSheet = buildActionSheet(for: .upload)
+        
+        actionSheet.view.tintColor = LIGHT_GREY
+        present(actionSheet, animated: true, completion: nil)
+    }
+    
+    @IBAction func openContextualMenu(_ sender: AnyObject) {
+        if let index = sender.tag {
+            self.selectedIndex = sender.tag
+            
+            let isDir = navigationManager.isFileADir(at: IndexPath(row: index, section: 0))
+            let actionSheet = isDir ? buildActionSheet(for: .directory) : buildActionSheet(for: .file)
+            
+            actionSheet.view.tintColor = LIGHT_GREY
+            present(actionSheet, animated: true, completion: nil)
+        }
+    }
+
+    
+    // MARK: ACTION SHEET HANDLERS
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
         dismiss(animated: true, completion: {_ in
@@ -225,206 +330,93 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     }
     
     func moveFile(action: UIAlertAction) -> Void {
-        if let index = self.selectedIndex {
-            if let selectedFile = self.navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                moveToolBar.isHidden = false
-                
-                list!.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
-                
-                navigationManager.movingOptions.isMoving = true
-                navigationManager.movingOptions.src = selectedFile.path
-                navigationManager.movingOptions.file = navigationManager.getFileInCurrentDir(at: selectedFile.path)
+        selectedFile { file in
+            moveToolBar.isHidden = false
             
-                selectedIndex = nil
-            }
+            list!.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
+            
+            navigationManager.movingOptions.isMoving = true
+            navigationManager.movingOptions.src = file.path
+            navigationManager.movingOptions.file = navigationManager.getFileInCurrentDir(at: file.path)
+            
+            selectedIndex = nil
         }
     }
     
     func deleteFile(action: UIAlertAction) -> Void {
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                networkManager.fdel([selectedFile.path]) { _ in
-                	self.selectedIndex = nil
-                }
+        selectedFile { file in
+            networkManager.fdel([file.path]) { _ in
+                self.selectedIndex = nil
             }
         }
     }
     
     func renameFile(action: UIAlertAction) -> Void {
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .alert)
+        selectedFile { file in
+            let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .alert)
+            
+            // TODO: bug here, selection does not work
+            alert.addTextField { (textField) -> Void in
+                textField.becomeFirstResponder()
+                textField.selectedTextRange = textField.textRange(from: textField.beginningOfDocument, to: textField.endOfDocument)
+                textField.text = file.path.components(separatedBy: "/").last!
+            }
+            
+            alert.addAction(UIAlertAction(title: "Annuler", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
                 
-                // TODO: bug here, selection does not work
-                alert.addTextField { (textField) -> Void in
-                    textField.becomeFirstResponder()
-                    textField.selectedTextRange = textField.textRange(from: textField.beginningOfDocument, to: textField.endOfDocument)
-                    textField.text = selectedFile.path.components(separatedBy: "/").last!
-                }
+                let input = alert.textFields![0] as UITextField
                 
-                alert.addAction(UIAlertAction(title: "Annuler", style: .cancel, handler: nil))
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+                // TODO: check input
+                
+                if let text = input.text {
+                    var components = file.path.components(separatedBy: "/").dropFirst()
+                    components = components.dropLast()
+                    components.append(text)
                     
-                    let input = alert.textFields![0] as UITextField
+                    let newPath = "/" + components.joined(separator: "/")
+                    self.navigationManager.movingOptions.src = file.path
+                    self.navigationManager.movingOptions.dest = newPath
                     
-                    // TODO: check input
-                    
-                    if let text = input.text {
-                        var components = selectedFile.path.components(separatedBy: "/").dropFirst()
-                        components = components.dropLast()
-                        components.append(text)
-                        
-                        let newPath = "/" + components.joined(separator: "/")
-                        self.navigationManager.movingOptions.src = selectedFile.path
-                        self.navigationManager.movingOptions.dest = newPath
-                        
-                        self.networkManager.fmove(self.navigationManager.movingOptions) { _ in
-                            self.selectedIndex = nil
-                        }
+                    self.networkManager.fmove(self.navigationManager.movingOptions) { _ in
+                        self.selectedIndex = nil
                     }
-                }))
-                
-                alert.view.tintColor = LIGHT_GREY
-                
-                present(alert, animated: true, completion: nil)
-        	}
+                }
+            }))
+            
+            alert.view.tintColor = LIGHT_GREY
+            
+            present(alert, animated: true, completion: nil)
         }
     }
 
     func activateOfflineForFile(action: UIAlertAction) -> Void {
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                print("Getting ipfs data ...")
-                
-                IpfsManager.get(hash: selectedFile.IPFSHash) { data in
-                    
-                    if let data = data {
-                    	self.offlineManager.write(hash: selectedFile.IPFSHash, to: selectedFile.path, content: data)
-                    } else {
-                        print("Could not get ipfs data for file with hash \(selectedFile.IPFSHash)")
-                    }
+        selectedFile { file in
+            print("Getting ipfs data ...")
+            
+            IpfsManager.get(hash: file.IPFSHash) { data in
+                if let data = data {
+                    self.offlineManager.write(hash: file.IPFSHash, to: file.path, content: data)
+                } else {
+                    print("Could not get ipfs data for file with hash \(file.IPFSHash)")
                 }
             }
         }
     }
     
     func deactivateOfflineForFile(action: UIAlertAction) -> Void {
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-            	let removeSuccessful = self.offlineManager.remove(hash: selectedFile.IPFSHash, at: selectedFile.path)
-                
-                if (removeSuccessful) {
-                    self.navigationManager.removeFromCurrentHashes(hash: selectedFile.IPFSHash)
-                }
+        selectedFile { file in
+            let removeSuccessful = self.offlineManager.remove(hash: file.IPFSHash, at: file.path)
+            
+            if (removeSuccessful) {
+                self.navigationManager.removeFromCurrentHashes(hash: file.IPFSHash)
             }
         }
     }
     
-    enum ActionSheet {
-        case directory
-        case file
-        case upload
-    }
+    // MARK: MOVE FEATURE
     
-    func buildAction(title: String, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) -> UIAlertAction {
-        return UIAlertAction(title: title, style: style, handler: handler)
-    }
-    
-    func buildFileActionSheet(title: String, message: String) -> UIAlertController {
-        let rename = buildAction(title: "Renommer", style: .default, handler: renameFile)
-        let move = buildAction(title: "Déplacer", style: .default, handler: moveFile)
-        let delete = buildAction(title: "Supprimer", style: .default, handler: deleteFile)
-        let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
-
-        var offline: UIAlertAction?
-        
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                
-                if (!selectedFile.isDir) {
-                    let offlineActivated = navigationManager.isOfflineActivated(for: selectedFile.IPFSHash)
-                    
-                    if (offlineActivated) {
-                        offline = buildAction(title: "Désactiver le mode hors ligne pour ce fichier",
-                                              style: .default,
-                                              handler: deactivateOfflineForFile)
-                    } else {
-                        offline = buildAction(title: "Activer le mode hors ligne pour ce fichier",
-                                              style: .default,
-                                              handler: activateOfflineForFile)
-                    }
-                }
-            }
-        }
-        
-        let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
-        
-        alertController.addAction(rename)
-        alertController.addAction(move)
-        alertController.addAction(delete)
- 
-        if let offline = offline {
-            alertController.addAction(offline)
-        }
-        
-        alertController.addAction(cancel)
-        
-        return alertController
-    }
-    
-    func buildUploadActionSheet() -> UIAlertController {
-        let newDirectory = buildAction(title: "Créer un dossier", style: .default, handler: createNewDirectory)
-        let uploadFromLibrary = buildAction(title: "Importer depuis mes photos et vidéos", style: .default, handler: pickImageFromLibrary)
-        let uploadFromCamera = buildAction(title: "Prendre avec l'appareil photo", style: .default, handler: takeImageWithCamera)
-        let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
-
-        let alertController = UIAlertController(title: "Ajout d'un nouvel élément", message: "Choisissez une option", preferredStyle: .actionSheet)
-        
-        alertController.addAction(newDirectory)
-        alertController.addAction(uploadFromLibrary)
-        alertController.addAction(uploadFromCamera)
-        alertController.addAction(cancel)
-        
-        return alertController
-    }
-    
-    func buildActionSheet(for type: ActionSheet) -> UIAlertController {
-        switch type {
-            
-        case .directory:
-            return buildFileActionSheet(title: "Dossier", message: "Que voulez-vous faire ?")
-            
-        case .file:
-            return buildFileActionSheet(title: "Fichier", message: "Que voulez-vous faire ?")
-            
-        case .upload:
-            return buildUploadActionSheet()
-        }
-        
-    }
-    
-    func uploadOptions() {
-        let actionSheet = buildActionSheet(for: .upload)
-        
-        actionSheet.view.tintColor = LIGHT_GREY
-        present(actionSheet, animated: true, completion: nil)
-    }
-    
-    @IBAction func openContextualMenu(_ sender: AnyObject) {
-        if let index = sender.tag {
-            self.selectedIndex = sender.tag
-            
-            let isDir = navigationManager.isFileADir(at: IndexPath(row: index, section: 0))
-            let actionSheet = isDir ? buildActionSheet(for: .directory) : buildActionSheet(for: .file)
-            
-            actionSheet.view.tintColor = LIGHT_GREY
-            present(actionSheet, animated: true, completion: nil)
-        }
-    }
-    
-    // MARK: move feature
-    
-    @IBAction func moveInCurrentDirectory(sender: AnyObject) {
+    @IBAction func moveInCurrentDirectory(_ sender: AnyObject) {
         if let src = navigationManager.movingOptions.src {
             let targetPath = navigationManager.buildCurrentDirectoryPath()
 			let fileName = src.components(separatedBy: "/").last!
@@ -441,5 +433,15 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         moveToolBar.isHidden = true
         list!.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
         navigationManager.movingOptions = MovingOptions()
+    }
+    
+    // MARK: UTILS
+    
+    func selectedFile(handler: (File) -> Void) {
+        if let index = selectedIndex {
+            if let file = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+                handler(file)
+            }
+        }
     }
 }

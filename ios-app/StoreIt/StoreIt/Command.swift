@@ -16,9 +16,9 @@ class Command<T: Mappable>: Mappable {
     var parameters: T?
     
     init() {
-        self.uid = -1
-        self.command = ""
-        self.parameters = nil
+        uid = -1
+        command = ""
+        parameters = nil
     }
     
     init(uid: Int, command: String, parameters: T) {
@@ -28,9 +28,9 @@ class Command<T: Mappable>: Mappable {
     }
     
     required init?(map: Map) {
-        self.uid = -1
-        self.command = ""
-        self.parameters = nil
+        uid = -1
+        command = ""
+        parameters = nil
     }
     
     func mapping(map: Map) {

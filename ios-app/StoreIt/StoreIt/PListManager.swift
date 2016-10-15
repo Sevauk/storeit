@@ -15,7 +15,7 @@ class PListManager {
     private static var path: String?
     
     init() {
-        let rootPath = NSSearchPathForDirectoriesInDomains(Foundation.FileManager.SearchPathDirectory.documentDirectory, .userDomainMask, true)[0]
+        let rootPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
         let plistPathInDocument = rootPath + "/storeit_data.plist"
         let fileManager = Foundation.FileManager.default
         
