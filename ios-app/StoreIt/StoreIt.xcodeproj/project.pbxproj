@@ -24,7 +24,6 @@
 		85145A731D3EC41900520B1E /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85145A721D3EC41900520B1E /* FileView.swift */; };
 		8531C2921CE670F50009B26A /* SynchDirView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8531C2911CE670F50009B26A /* SynchDirView.swift */; };
 		853B29011CD8B33000742F8D /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B29001CD8B33000742F8D /* WebSocketManager.swift */; };
-		854E27E91CF5C795007DA015 /* StoreitActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 854E27E81CF5C795007DA015 /* StoreitActionSheet.swift */; };
 		8553CC9D1DA01C4E009E9184 /* globals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8553CC9C1DA01C4E009E9184 /* globals.swift */; };
 		855AFB2D1D15CAB4009B81D9 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 855AFB2C1D15CAB4009B81D9 /* Command.swift */; };
 		855AFB2F1D15CCC6009B81D9 /* CommandInfos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 855AFB2E1D15CCC6009B81D9 /* CommandInfos.swift */; };
@@ -43,6 +42,7 @@
 		85838F361DAFE76D00C21DDA /* MovingOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85838F351DAFE76D00C21DDA /* MovingOptions.swift */; };
 		858B096E1D23D9D400CB1190 /* IpfsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 858B096D1D23D9D400CB1190 /* IpfsResponse.swift */; };
 		85A553861D96A19F009AFC1B /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A553851D96A19F009AFC1B /* SessionManager.swift */; };
+		85A6662E1DB0002100B369A0 /* OfflineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A6662D1DB0002100B369A0 /* OfflineManager.swift */; };
 		85B154121D140D18003B62FE /* PListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B154111D140D18003B62FE /* PListManager.swift */; };
 		85B196891D9A9333008B620B /* 2017_logo_storeit.png in Resources */ = {isa = PBXBuildFile; fileRef = 85B196881D9A9333008B620B /* 2017_logo_storeit.png */; };
 		85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B5A8F21D2C09AE00529533 /* UidFactory.swift */; };
@@ -99,7 +99,6 @@
 		8531C2911CE670F50009B26A /* SynchDirView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SynchDirView.swift; sourceTree = "<group>"; };
 		853B29001CD8B33000742F8D /* WebSocketManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
 		8546231E4A9BD5A16D51A7ED /* Pods-StoreItUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StoreItUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-StoreItUITests/Pods-StoreItUITests.release.xcconfig"; sourceTree = "<group>"; };
-		854E27E81CF5C795007DA015 /* StoreitActionSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreitActionSheet.swift; sourceTree = "<group>"; };
 		8553CC9C1DA01C4E009E9184 /* globals.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = globals.swift; sourceTree = "<group>"; };
 		855AFB2C1D15CAB4009B81D9 /* Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
 		855AFB2E1D15CCC6009B81D9 /* CommandInfos.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandInfos.swift; sourceTree = "<group>"; };
@@ -118,6 +117,7 @@
 		85838F351DAFE76D00C21DDA /* MovingOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MovingOptions.swift; sourceTree = "<group>"; };
 		858B096D1D23D9D400CB1190 /* IpfsResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IpfsResponse.swift; sourceTree = "<group>"; };
 		85A553851D96A19F009AFC1B /* SessionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		85A6662D1DB0002100B369A0 /* OfflineManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OfflineManager.swift; sourceTree = "<group>"; };
 		85B154111D140D18003B62FE /* PListManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PListManager.swift; sourceTree = "<group>"; };
 		85B196881D9A9333008B620B /* 2017_logo_storeit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2017_logo_storeit.png; sourceTree = "<group>"; };
 		85B5A8F21D2C09AE00529533 /* UidFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UidFactory.swift; sourceTree = "<group>"; };
@@ -257,7 +257,6 @@
 				8531C2911CE670F50009B26A /* SynchDirView.swift */,
 				850831511CE7332200C11EB5 /* DirectoryCell.swift */,
 				850831531CE7358C00C11EB5 /* FileCell.swift */,
-				854E27E81CF5C795007DA015 /* StoreitActionSheet.swift */,
 				85708E811D130ED5001B7415 /* ParametersView.swift */,
 				85145A721D3EC41900520B1E /* FileView.swift */,
 			);
@@ -285,6 +284,7 @@
 				858B096D1D23D9D400CB1190 /* IpfsResponse.swift */,
 				85838F331DAFE73600C21DDA /* UpdateElement.swift */,
 				85838F351DAFE76D00C21DDA /* MovingOptions.swift */,
+				85A6662D1DB0002100B369A0 /* OfflineManager.swift */,
 			);
 			name = FileManagement;
 			sourceTree = "<group>";
@@ -621,6 +621,7 @@
 				853B29011CD8B33000742F8D /* WebSocketManager.swift in Sources */,
 				85D0E6101D1D985E00C564C3 /* IpfsManager.swift in Sources */,
 				850831521CE7332200C11EB5 /* DirectoryCell.swift in Sources */,
+				85A6662E1DB0002100B369A0 /* OfflineManager.swift in Sources */,
 				855AFB311D15D081009B81D9 /* Response.swift in Sources */,
 				8500F70C1C97103E00C69875 /* File.swift in Sources */,
 				85BA025B1CEDBD7200A8FC6F /* NavigationManager.swift in Sources */,
@@ -631,7 +632,6 @@
 				85A553861D96A19F009AFC1B /* SessionManager.swift in Sources */,
 				85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */,
 				85FF45E31D3CD7E200A89436 /* ErrorResponse.swift in Sources */,
-				854E27E91CF5C795007DA015 /* StoreitActionSheet.swift in Sources */,
 				855AFB3C1D16D643009B81D9 /* Parameters.swift in Sources */,
 				850831541CE7358C00C11EB5 /* FileCell.swift in Sources */,
 				855AFB3E1D171080009B81D9 /* ResponseResolver.swift in Sources */,

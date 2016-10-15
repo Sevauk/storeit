@@ -11,7 +11,7 @@ import ObjectMapper
 
 class NetworkManager {
     
-    static let sharedInstance = NetworkManager()
+    static let shared = NetworkManager()
 
     private let WSManager: WebSocketManager
     private let _host = "localhost"//"iglu.mobi" // "158.69.196.83"

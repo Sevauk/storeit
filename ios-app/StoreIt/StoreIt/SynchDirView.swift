@@ -23,8 +23,9 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     var selectedIndex: Int? = nil
     
-    let networkManager = NetworkManager.sharedInstance
+    let networkManager = NetworkManager.shared
     let navigationManager = NavigationManager.shared
+    let offlineManager = OfflineManager.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -88,6 +89,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                 fileView.navigationItem.title = navigationManager.getName(for: target)
                 fileView.showActivityIndicatory()
 
+                print("GETTING DATA FOR HASH : \(target.IPFSHash)")
+                
                 IpfsManager.get(hash: target.IPFSHash) { data in
                     fileView.data = data
                     fileView.presentQlPreviewController()
@@ -280,11 +283,43 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                         }
                     }
                 }))
+                
+                alert.view.tintColor = LIGHT_GREY
+                
                 present(alert, animated: true, completion: nil)
         	}
         }
     }
 
+    func activateOfflineForFile(action: UIAlertAction) -> Void {
+        if let index = selectedIndex {
+            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+                print("Getting ipfs data ...")
+                
+                IpfsManager.get(hash: selectedFile.IPFSHash) { data in
+                    
+                    if let data = data {
+                    	self.offlineManager.write(hash: selectedFile.IPFSHash, to: selectedFile.path, content: data)
+                    } else {
+                        print("Could not get ipfs data for file with hash \(selectedFile.IPFSHash)")
+                    }
+                }
+            }
+        }
+    }
+    
+    func deactivateOfflineForFile(action: UIAlertAction) -> Void {
+        if let index = selectedIndex {
+            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+            	let removeSuccessful = self.offlineManager.remove(hash: selectedFile.IPFSHash, at: selectedFile.path)
+                
+                if (removeSuccessful) {
+                    self.navigationManager.removeFromCurrentHashes(hash: selectedFile.IPFSHash)
+                }
+            }
+        }
+    }
+    
     enum ActionSheet {
         case directory
         case file
@@ -300,12 +335,38 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         let move = buildAction(title: "Déplacer", style: .default, handler: moveFile)
         let delete = buildAction(title: "Supprimer", style: .default, handler: deleteFile)
         let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
+
+        var offline: UIAlertAction?
+        
+        if let index = selectedIndex {
+            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+                
+                if (!selectedFile.isDir) {
+                    let offlineActivated = navigationManager.isOfflineActivated(for: selectedFile.IPFSHash)
+                    
+                    if (offlineActivated) {
+                        offline = buildAction(title: "Désactiver le mode hors ligne pour ce fichier",
+                                              style: .default,
+                                              handler: deactivateOfflineForFile)
+                    } else {
+                        offline = buildAction(title: "Activer le mode hors ligne pour ce fichier",
+                                              style: .default,
+                                              handler: activateOfflineForFile)
+                    }
+                }
+            }
+        }
         
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         
         alertController.addAction(rename)
         alertController.addAction(move)
         alertController.addAction(delete)
+ 
+        if let offline = offline {
+            alertController.addAction(offline)
+        }
+        
         alertController.addAction(cancel)
         
         return alertController
@@ -318,7 +379,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
 
         let alertController = UIAlertController(title: "Ajout d'un nouvel élément", message: "Choisissez une option", preferredStyle: .actionSheet)
-                
+        
         alertController.addAction(newDirectory)
         alertController.addAction(uploadFromLibrary)
         alertController.addAction(uploadFromCamera)
@@ -353,7 +414,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         if let index = sender.tag {
             self.selectedIndex = sender.tag
             
-            let isDir = self.navigationManager.isFileADir(at: IndexPath(row: index, section: 0))
+            let isDir = navigationManager.isFileADir(at: IndexPath(row: index, section: 0))
             let actionSheet = isDir ? buildActionSheet(for: .directory) : buildActionSheet(for: .file)
             
             actionSheet.view.tintColor = LIGHT_GREY
@@ -369,10 +430,10 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
 			let fileName = src.components(separatedBy: "/").last!
             let dest = "\(targetPath)\(targetPath.characters.last! == "/" ? "" : "/" )\(fileName)"
             
-            self.navigationManager.movingOptions.file?.path = dest
-            self.navigationManager.movingOptions.dest = dest
+            navigationManager.movingOptions.file?.path = dest
+            navigationManager.movingOptions.dest = dest
             
-            networkManager.fmove((self.navigationManager.movingOptions), completion: nil)
+            networkManager.fmove((navigationManager.movingOptions), completion: nil)
         }
     }
     

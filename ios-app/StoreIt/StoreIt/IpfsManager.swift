@@ -21,7 +21,7 @@ class IpfsManager {
     }
 
     // TODO: multipart request with Alamofire
-    static func add(filePath: URL, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) {
+    static func add(filePath: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) {
         let CRLF = "\r\n"
         let boundary = self.generateBoundaryString()
         
@@ -51,7 +51,8 @@ class IpfsManager {
         request.httpBody = body as Data
         
         let session = URLSession.shared
-        let task = session.dataTask(with: request, completionHandler: completionHandler as! (Data?, URLResponse?, Error?) -> Void)
+        
+        let task = session.dataTask(with: request, completionHandler: completionHandler)
 
         task.resume()
     }

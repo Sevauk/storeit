@@ -32,6 +32,8 @@ class NavigationManager {
     private var items: [String]
     private var currentDirectory: [String: File]
     
+    private var currentOfflineHashes: [String]
+    
     var list: UITableView?
     var moveToolBar: UIToolbar?
     
@@ -42,12 +44,14 @@ class NavigationManager {
         indexes = []
         currentDirectory = [:]
         items = []
+        currentOfflineHashes = []
     }
     
     func set(with items: [String: File]) {
         storeItSynchDir = items
         currentDirectory = items
         self.items = Array(items.keys)
+        updateCurrentHashes()
     }
     
     // MARK: NAVIGATION FUNCTIONS
@@ -58,6 +62,7 @@ class NavigationManager {
         indexes.append(targetName)
         currentDirectory = getCurrentFiles()
         items = Array(nextDir.files.keys)
+        updateCurrentHashes()
         
         return targetName
     }
@@ -66,6 +71,7 @@ class NavigationManager {
         _ = indexes.popLast()
         currentDirectory = getCurrentFiles()
         items = Array(currentDirectory.keys)
+        updateCurrentHashes()
     }
     
     // MARK: UPDATE TREE FUNCTIONS
@@ -214,6 +220,20 @@ class NavigationManager {
     }
     
     // MARK: UTIL FUNCTIONS
+    
+    private func updateCurrentHashes() {
+        currentOfflineHashes = OfflineManager.shared.getHashes(at: buildCurrentDirectoryPath())
+    }
+    
+    func isOfflineActivated(for hash: String) -> Bool {
+        return currentOfflineHashes.contains(hash)
+    }
+    
+    func removeFromCurrentHashes(hash: String) {
+        if let index = currentOfflineHashes.index(of: hash) {
+            currentOfflineHashes.remove(at: index)
+        }
+    }
     
     func getSortedItems() -> [String] {
         return items.sorted()
