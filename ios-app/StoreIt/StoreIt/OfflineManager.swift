@@ -80,30 +80,32 @@ class OfflineManager {
         }
     }
     
-    func update(hash: String, at oldPath: String, to newPath: String?) -> Bool {
-        let fileUrl = buildUrl(for: hash, at: oldPath)
-        
-        // REMOVE
-        guard let _ = newPath else {
-            do {
-            	try fileManager.removeItem(at: fileUrl)
-                print("SUCCESS: File with hash \(hash) removed from offline data directory !")
-                
-                return true
-            } catch {
-                print("ERROR: Could not remove file with hash \(hash) from offline data directory !")
-                
-                return false
-            }
-        }
-        
-        // MOVE
+    func move(hash: String, at oldPath: String, to newPath: String) {
+        let oldFileUrl = buildUrl(for: hash, at: oldPath)
+        let newFileUrl = buildUrl(for: hash, at: newPath, createIntermediates: true)
 
-        return false
+        do {
+        	try fileManager.moveItem(at: oldFileUrl, to: newFileUrl)
+            NavigationManager.shared.addToCurrentHashes(hash: hash)
+            print("SUCCESS: File with hash \(hash) has been moved to its new location in offline data directory !")
+        } catch {
+            print("ERROR: Could not move file with hash \(hash) to its new location in offline data directory !")
+        }
     }
     
     func remove(hash: String, at path: String) -> Bool {
-        return update(hash: hash, at: path, to: nil)
+        let fileUrl = buildUrl(for: hash, at: path)
+
+        do {
+            try fileManager.removeItem(at: fileUrl)
+            print("SUCCESS: File with hash \(hash) removed from offline data directory !")
+            
+            return true
+        } catch {
+            print("ERROR: Could not remove file with hash \(hash) from offline data directory !")
+            
+            return false
+        }
     }
     
     func contains(hash: String, at path: String) -> Bool {

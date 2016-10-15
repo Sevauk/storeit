@@ -89,12 +89,13 @@ class WebSocketManager {
         
         let index = navigationManager.updateTree(with: updateElementForDeletion)
         let index_2 = navigationManager.updateTree(with: updateElementForAddition)
-        
+
         navigationManager.movingOptions = MovingOptions()
         
         closeMoveToolbar()
         
         if (index != -1 || index_2 != -1) {
+            OfflineManager.shared.move(hash: file.IPFSHash, at: src, to: file.path)
             updateList()
         }
     }

@@ -397,6 +397,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             IpfsManager.get(hash: file.IPFSHash) { data in
                 if let data = data {
                     self.offlineManager.write(hash: file.IPFSHash, to: file.path, content: data)
+                    self.navigationManager.addToCurrentHashes(hash: file.IPFSHash)
                 } else {
                     print("Could not get ipfs data for file with hash \(file.IPFSHash)")
                 }

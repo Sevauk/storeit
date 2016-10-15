@@ -223,6 +223,7 @@ class NavigationManager {
     
     private func updateCurrentHashes() {
         currentOfflineHashes = OfflineManager.shared.getHashes(at: buildCurrentDirectoryPath())
+        print("Current offline hashes updated : \(currentOfflineHashes)")
     }
     
     func isOfflineActivated(for hash: String) -> Bool {
@@ -233,6 +234,10 @@ class NavigationManager {
         if let index = currentOfflineHashes.index(of: hash) {
             currentOfflineHashes.remove(at: index)
         }
+    }
+    
+    func addToCurrentHashes(hash: String) {
+        currentOfflineHashes.append(hash)
     }
     
     func getSortedItems() -> [String] {
