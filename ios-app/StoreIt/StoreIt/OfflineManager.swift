@@ -80,6 +80,13 @@ class OfflineManager {
         }
     }
     
+    func getData(for hash: String, at path: String) -> Data? {
+        let fileUrl = buildUrl(for: hash, at: path)
+        let relativePath = fileUrl.relativePath
+        
+        return fileManager.contents(atPath: relativePath)
+    }
+    
     func move(hash: String, at oldPath: String, to newPath: String) {
         let oldFileUrl = buildUrl(for: hash, at: oldPath)
         let newFileUrl = buildUrl(for: hash, at: newPath, createIntermediates: true)

@@ -289,7 +289,7 @@
                         <outlet property="list" destination="2DC-Ug-Ua6" id="lqj-Ff-fXJ"/>
                         <outlet property="moveToolBar" destination="lSG-A4-8Rg" id="g5o-l0-dmG"/>
                         <outlet property="tabBarItem" destination="LZY-Ty-zno" id="kVQ-J3-WoE"/>
-                        <segue destination="W57-VD-ZO7" kind="show" identifier="showFileSegue" id="qI2-21-Y2L"/>
+                        <segue destination="W57-VD-ZO7" kind="show" identifier="showFileSegue" animates="NO" id="qI2-21-Y2L"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="J0l-OA-TyR" userLabel="First Responder" sceneMemberID="firstResponder"/>

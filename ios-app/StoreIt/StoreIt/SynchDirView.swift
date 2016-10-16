@@ -83,17 +83,30 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                 
                 listView.navigationManager.movingOptions.isMoving = navigationManager.movingOptions.isMoving
             }
+                
+            // TODO: TRY WITHOUT FILE VIEW (PRESENT QL HERE)
             else if (segue.identifier == "showFileSegue") {
                 let fileView = segue.destination as! FileView
                 
                 fileView.navigationItem.title = navigationManager.getName(for: target)
                 fileView.showActivityIndicatory()
 
-                print("GETTING DATA FOR HASH : \(target.IPFSHash)")
+                let offlineActivated = navigationManager.isOfflineActivated(for: target.IPFSHash)
                 
-                IpfsManager.get(hash: target.IPFSHash) { data in
-                    fileView.data = data
+                if (offlineActivated) {
+                    print("GETTING DATA WITH OFFLINE MODE FOR HASH : \(target.IPFSHash)")
+                    
+                    fileView.data = offlineManager.getData(for: target.IPFSHash, at: target.path)
+                    fileView.navigationControllerCopy = self.navigationController
                     fileView.presentQlPreviewController()
+                } else {
+                    print("GETTING DATA WITH IPFS FOR HASH : \(target.IPFSHash)")
+                    
+                    IpfsManager.get(hash: target.IPFSHash) { data in
+                        fileView.data = data
+                        fileView.navigationControllerCopy = self.navigationController
+                        fileView.presentQlPreviewController()
+                    }
                 }
             }
         }

@@ -12,6 +12,7 @@ import QuickLook
 class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
 
     var data: Data? = nil
+    var navigationControllerCopy: UINavigationController?
     
     let fileManager = Foundation.FileManager.default
     var tmpDirUrl: URL
@@ -19,26 +20,35 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
     required init?(coder aDecoder: NSCoder) {
         // Creation of tmp dir
         let identifier = ProcessInfo.processInfo.globallyUniqueString
-        self.tmpDirUrl = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(identifier, isDirectory: true)
+        tmpDirUrl = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(identifier, isDirectory: true)
         
         super.init(coder: aDecoder)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+    	super.viewWillAppear(animated)
+        
+        
     }
     
     func previewControllerWillDismiss(_ controller: QLPreviewController) {
-        self.clearTmpDir()
-        _ = self.navigationController?.popViewController(animated: false)
+        clearTmpDir()
+		_ = navigationController?.popViewController(animated: false)
     }
     
     func presentQlPreviewController() {
         let QL = QLPreviewController()
+        
         QL.dataSource = self
         QL.delegate = self
-        
-        self.navigationController?.present(QL, animated: false, completion: nil)
+
+        // Use of a copy of navigationController because sometimes it's not init yet (offline mode: getting data to quickly)
+        navigationControllerCopy?.present(QL, animated: false, completion: nil)
     }
     
     func showActivityIndicatory() {
@@ -49,31 +59,32 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
         actInd.hidesWhenStopped = true
         actInd.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
 
-        self.view.addSubview(actInd)
+        view.addSubview(actInd)
         
         actInd.startAnimating()
     }
     
-    // TODO: Try / Catch
     func clearTmpDir() {
         try! fileManager.removeItem(at: self.tmpDirUrl)
     }
     
-    // TODO: Try / Catch
     func createTmpFile() -> URL? {
-
-        if let unwrapData = self.data {
-
+        if let unwrapData = data {
             // Creation of tmp file
-            let fileName = self.navigationItem.title!
-            try! self.fileManager.createDirectory(at: self.tmpDirUrl, withIntermediateDirectories: true, attributes: nil)
+            let fileName = navigationItem.title!
             
-            let fileURL = self.tmpDirUrl.appendingPathComponent(fileName)
+            do {
+            	try fileManager.createDirectory(at: tmpDirUrl, withIntermediateDirectories: true, attributes: nil)
+            	let fileURL = tmpDirUrl.appendingPathComponent(fileName)
+                
+                // Write data to file
+                try unwrapData.write(to: fileURL, options: .atomicWrite)
+                
+                return fileURL
+            } catch {
+            	print("ERROR: while creating temporary file for QLPreviewController")
+            }
             
-            // Write data to file
-            try! unwrapData.write(to: fileURL, options: .atomicWrite)
-            
-            return fileURL
         }
         return nil
     }
@@ -87,7 +98,7 @@ class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewContro
         if let doc = self.createTmpFile() {
             return doc as QLPreviewItem
         }
-        return URL(string: "") as! QLPreviewItem // fix that later because it will crash, thx swift 3
+        return URL(fileURLWithPath: "") as QLPreviewItem
     }
     
 }
