@@ -24,6 +24,7 @@
 		85145A731D3EC41900520B1E /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85145A721D3EC41900520B1E /* FileView.swift */; };
 		8531C2921CE670F50009B26A /* SynchDirView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8531C2911CE670F50009B26A /* SynchDirView.swift */; };
 		853B29011CD8B33000742F8D /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853B29001CD8B33000742F8D /* WebSocketManager.swift */; };
+		854338961DBA4238000829B5 /* ic_insert_drive_file.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 854338951DBA4238000829B5 /* ic_insert_drive_file.imageset */; };
 		8553CC9D1DA01C4E009E9184 /* globals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8553CC9C1DA01C4E009E9184 /* globals.swift */; };
 		855AFB2D1D15CAB4009B81D9 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 855AFB2C1D15CAB4009B81D9 /* Command.swift */; };
 		855AFB2F1D15CCC6009B81D9 /* CommandInfos.swift in Sources */ = {isa = PBXBuildFile; fileRef = 855AFB2E1D15CCC6009B81D9 /* CommandInfos.swift */; };
@@ -98,6 +99,7 @@
 		85220E6F1D12B1A000069573 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		8531C2911CE670F50009B26A /* SynchDirView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SynchDirView.swift; sourceTree = "<group>"; };
 		853B29001CD8B33000742F8D /* WebSocketManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
+		854338951DBA4238000829B5 /* ic_insert_drive_file.imageset */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ic_insert_drive_file.imageset; sourceTree = "<group>"; };
 		8546231E4A9BD5A16D51A7ED /* Pods-StoreItUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StoreItUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-StoreItUITests/Pods-StoreItUITests.release.xcconfig"; sourceTree = "<group>"; };
 		8553CC9C1DA01C4E009E9184 /* globals.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = globals.swift; sourceTree = "<group>"; };
 		855AFB2C1D15CAB4009B81D9 /* Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
@@ -310,6 +312,7 @@
 				85F5BC011DA017B900BDD2CA /* btn_google_dark_normal_ios.png */,
 				85F5BBFD1DA0042700BDD2CA /* FB-f-Logo__white_29.png */,
 				85B196881D9A9333008B620B /* 2017_logo_storeit.png */,
+				854338951DBA4238000829B5 /* ic_insert_drive_file.imageset */,
 				855C03A71D70469B00F53398 /* ic_person.imageset */,
 				855C03A51D70469200F53398 /* ic_settings_white.imageset */,
 				855C03A31D70468700F53398 /* ic_settings.imageset */,
@@ -457,6 +460,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				854338961DBA4238000829B5 /* ic_insert_drive_file.imageset in Resources */,
 				85F5BBFE1DA0042700BDD2CA /* FB-f-Logo__white_29.png in Resources */,
 				855C03A01D70465300F53398 /* ic_folder_open.imageset in Resources */,
 				855C03A81D70469B00F53398 /* ic_person.imageset in Resources */,
