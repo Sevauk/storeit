@@ -8,7 +8,9 @@
 
 import UIKit
 
-class FillCell: UITableViewCell {
+class FileCell: UITableViewCell {
     @IBOutlet weak var contextualMenu: UIButton!
     @IBOutlet weak var itemName: UILabel!
+    @IBOutlet weak var offlineImage: UIImageView!
+    @IBOutlet weak var fileImage: UIImageView!
 }

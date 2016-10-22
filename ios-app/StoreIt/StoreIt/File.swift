@@ -16,7 +16,9 @@ class File: Mappable {
     var IPFSHash: String
     var isDir: Bool
     var files: [String: File]
-        
+    
+    var isSynching = false
+    
     init() {
         path = ""
         metadata = ""

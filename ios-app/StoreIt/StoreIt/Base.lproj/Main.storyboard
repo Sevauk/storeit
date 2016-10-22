@@ -137,7 +137,7 @@
                 <navigationController id="yzH-Dm-ieM" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Dossier StoreIt" image="ic_folder_open.png" id="H3d-e6-xqj"/>
                     <simulatedTabBarMetrics key="simulatedBottomBarMetrics" translucent="NO"/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="nf0-De-ASy">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" misplaced="YES" id="nf0-De-ASy">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -175,51 +175,11 @@
                                     <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="43" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="2DC-Ug-Ua6">
                                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <prototypes>
-                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="directoryCell" rowHeight="43" id="qjq-Rz-ZS9" userLabel="DirectoryCell" customClass="DirectoryCell" customModule="StoreIt" customModuleProvider="target">
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="fileCell" id="htM-Vz-f7B" userLabel="FileCell" customClass="FileCell" customModule="StoreIt" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="28" width="375" height="43"/>
                                                 <autoresizingMask key="autoresizingMask"/>
-                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="qjq-Rz-ZS9" id="od4-5O-pHa">
-                                                    <frame key="frameInset" width="375" height="43"/>
-                                                    <autoresizingMask key="autoresizingMask"/>
-                                                    <subviews>
-                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Eet-Vy-MsS">
-                                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                            <color key="textColor" red="0.33333333333333331" green="0.33333333333333331" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                            <nil key="highlightedColor"/>
-                                                        </label>
-                                                        <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vld-hp-yXn">
-                                                            <state key="normal" image="ic_more_vert"/>
-                                                            <connections>
-                                                                <action selector="openContextualMenu:" destination="8WT-j1-5R7" eventType="touchUpInside" id="jxA-Et-OZM"/>
-                                                            </connections>
-                                                        </button>
-                                                        <imageView userInteractionEnabled="NO" alpha="0.55000000000000004" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_folder.png" translatesAutoresizingMaskIntoConstraints="NO" id="kyf-nD-gqu"/>
-                                                    </subviews>
-                                                    <constraints>
-                                                        <constraint firstItem="Eet-Vy-MsS" firstAttribute="leading" secondItem="kyf-nD-gqu" secondAttribute="trailing" constant="13" id="1qG-H0-LpA"/>
-                                                        <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerY" secondItem="od4-5O-pHa" secondAttribute="centerY" id="340-mh-i08"/>
-                                                        <constraint firstItem="vld-hp-yXn" firstAttribute="baseline" secondItem="Eet-Vy-MsS" secondAttribute="baseline" constant="7" id="8bR-td-9kc"/>
-                                                        <constraint firstItem="kyf-nD-gqu" firstAttribute="leading" secondItem="od4-5O-pHa" secondAttribute="leadingMargin" constant="8" id="BXB-sX-g5d"/>
-                                                        <constraint firstItem="Eet-Vy-MsS" firstAttribute="leading" secondItem="od4-5O-pHa" secondAttribute="leadingMargin" constant="44" id="DF4-3E-pue"/>
-                                                        <constraint firstAttribute="trailingMargin" secondItem="vld-hp-yXn" secondAttribute="trailing" id="Q8a-tx-yDf"/>
-                                                        <constraint firstItem="vld-hp-yXn" firstAttribute="centerY" secondItem="Eet-Vy-MsS" secondAttribute="centerY" id="QWS-3D-soA"/>
-                                                        <constraint firstItem="kyf-nD-gqu" firstAttribute="bottom" secondItem="od4-5O-pHa" secondAttribute="bottomMargin" id="UQW-tb-nTy"/>
-                                                        <constraint firstItem="Eet-Vy-MsS" firstAttribute="centerX" secondItem="od4-5O-pHa" secondAttribute="centerX" id="aDe-oM-ab7"/>
-                                                        <constraint firstItem="vld-hp-yXn" firstAttribute="bottom" secondItem="kyf-nD-gqu" secondAttribute="bottom" id="mee-P7-atD"/>
-                                                        <constraint firstItem="kyf-nD-gqu" firstAttribute="centerY" secondItem="Eet-Vy-MsS" secondAttribute="centerY" id="oFb-z0-RI6"/>
-                                                    </constraints>
-                                                </tableViewCellContentView>
-                                                <connections>
-                                                    <outlet property="contextualMenu" destination="vld-hp-yXn" id="tg9-dh-Pg3"/>
-                                                    <outlet property="itemName" destination="Eet-Vy-MsS" id="5qe-jC-SaA"/>
-                                                    <segue destination="8WT-j1-5R7" kind="show" identifier="nextDirSegue" id="22C-oH-eAI"/>
-                                                </connections>
-                                            </tableViewCell>
-                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="fileCell" id="htM-Vz-f7B" userLabel="FileCell" customClass="FillCell" customModule="StoreIt" customModuleProvider="target">
-                                                <rect key="frame" x="0.0" y="71" width="375" height="43"/>
-                                                <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="htM-Vz-f7B" id="Mst-rY-CTU">
-                                                    <frame key="frameInset" width="375" height="43"/>
+                                                    <frame key="frameInset" width="375" height="42"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
@@ -228,27 +188,45 @@
                                                                 <action selector="openContextualMenu:" destination="8WT-j1-5R7" eventType="touchUpInside" id="GFN-zo-K0L"/>
                                                             </connections>
                                                         </button>
-                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QxY-hc-CM0">
+                                                        <imageView userInteractionEnabled="NO" alpha="0.55000000000000004" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="9ob-d0-F5z">
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="30" id="AmT-qd-ReI"/>
+                                                                <constraint firstAttribute="height" constant="30" id="LDF-LO-gv1"/>
+                                                            </constraints>
+                                                        </imageView>
+                                                        <imageView userInteractionEnabled="NO" alpha="0.55000000000000004" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="d2Z-Jc-Bn0">
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="24" id="NX1-Vc-Kvv"/>
+                                                                <constraint firstAttribute="height" constant="24" id="i3a-LC-Gbn"/>
+                                                            </constraints>
+                                                        </imageView>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QxY-hc-CM0">
+                                                            <constraints>
+                                                                <constraint firstAttribute="width" constant="240" id="lc9-lf-EZW"/>
+                                                            </constraints>
                                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                             <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             <nil key="highlightedColor"/>
                                                         </label>
-                                                        <imageView userInteractionEnabled="NO" alpha="0.55000000000000004" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_insert_drive_file" translatesAutoresizingMaskIntoConstraints="NO" id="ChS-rG-8gp"/>
                                                     </subviews>
                                                     <constraints>
-                                                        <constraint firstItem="E3b-TD-tbm" firstAttribute="baseline" secondItem="QxY-hc-CM0" secondAttribute="baseline" constant="-20" id="5E2-yT-fU6"/>
-                                                        <constraint firstItem="E3b-TD-tbm" firstAttribute="top" secondItem="QxY-hc-CM0" secondAttribute="top" id="AoS-C1-rcU"/>
-                                                        <constraint firstItem="QxY-hc-CM0" firstAttribute="centerY" secondItem="Mst-rY-CTU" secondAttribute="centerY" id="Dw1-uQ-S06"/>
-                                                        <constraint firstItem="QxY-hc-CM0" firstAttribute="leading" secondItem="Mst-rY-CTU" secondAttribute="leadingMargin" constant="44" id="Eve-tH-Y8Q"/>
-                                                        <constraint firstAttribute="trailingMargin" secondItem="E3b-TD-tbm" secondAttribute="trailing" id="UNV-4G-eIC"/>
-                                                        <constraint firstItem="ChS-rG-8gp" firstAttribute="top" secondItem="Mst-rY-CTU" secondAttribute="topMargin" constant="2" id="XM7-Dp-2br"/>
-                                                        <constraint firstItem="QxY-hc-CM0" firstAttribute="centerX" secondItem="Mst-rY-CTU" secondAttribute="centerX" constant="0.5" id="aN9-lH-gNH"/>
-                                                        <constraint firstItem="ChS-rG-8gp" firstAttribute="leading" secondItem="Mst-rY-CTU" secondAttribute="leadingMargin" constant="8" id="rmn-Oh-sqt"/>
+                                                        <constraint firstItem="E3b-TD-tbm" firstAttribute="leading" secondItem="9ob-d0-F5z" secondAttribute="trailing" constant="2" id="0ys-T6-HJf"/>
+                                                        <constraint firstItem="d2Z-Jc-Bn0" firstAttribute="leading" secondItem="Mst-rY-CTU" secondAttribute="leading" constant="8" id="9Ht-h2-tkE"/>
+                                                        <constraint firstItem="9ob-d0-F5z" firstAttribute="centerY" secondItem="Mst-rY-CTU" secondAttribute="centerY" id="9OK-rW-vKt"/>
+                                                        <constraint firstAttribute="trailing" secondItem="E3b-TD-tbm" secondAttribute="trailing" constant="8" id="D9c-gx-2F7"/>
+                                                        <constraint firstItem="QxY-hc-CM0" firstAttribute="bottom" secondItem="Mst-rY-CTU" secondAttribute="bottomMargin" id="dSh-OR-cyQ"/>
+                                                        <constraint firstItem="QxY-hc-CM0" firstAttribute="leading" secondItem="d2Z-Jc-Bn0" secondAttribute="trailing" constant="23" id="j1D-7T-93f"/>
+                                                        <constraint firstItem="d2Z-Jc-Bn0" firstAttribute="centerY" secondItem="Mst-rY-CTU" secondAttribute="centerY" id="mUh-uW-E3j"/>
+                                                        <constraint firstItem="E3b-TD-tbm" firstAttribute="centerY" secondItem="Mst-rY-CTU" secondAttribute="centerY" id="wSr-hM-Fit"/>
+                                                        <constraint firstItem="QxY-hc-CM0" firstAttribute="top" secondItem="Mst-rY-CTU" secondAttribute="topMargin" constant="4" id="xv4-kH-VAx"/>
                                                     </constraints>
                                                 </tableViewCellContentView>
                                                 <connections>
                                                     <outlet property="contextualMenu" destination="E3b-TD-tbm" id="NUS-g1-3fc"/>
+                                                    <outlet property="fileImage" destination="d2Z-Jc-Bn0" id="mse-9f-USb"/>
                                                     <outlet property="itemName" destination="QxY-hc-CM0" id="FNK-Tt-tTD"/>
+                                                    <outlet property="offlineImage" destination="9ob-d0-F5z" id="ghG-he-r7i"/>
+                                                    <segue destination="8WT-j1-5R7" kind="show" identifier="nextDirSegue" id="IuR-3c-OCV"/>
                                                 </connections>
                                             </tableViewCell>
                                         </prototypes>
@@ -305,7 +283,7 @@
                 <navigationController storyboardIdentifier="StoreItSynchDir" automaticallyAdjustsScrollViewInsets="NO" navigationBarHidden="YES" id="2ie-nq-pmo" customClass="StoreItNavigationController" customModule="StoreIt" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Item" id="7OQ-AH-5mL"/>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="EXb-fo-DGY">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" misplaced="YES" id="EXb-fo-DGY">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="barTintColor" red="0.86274509799999999" green="0.4039215686" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -398,9 +376,7 @@
         <image name="2017_logo_storeit" width="520" height="965"/>
         <image name="FB-f-Logo__white_29.png" width="29" height="29"/>
         <image name="btn_google_dark_normal_ios.png" width="48" height="48"/>
-        <image name="ic_folder.png" width="24" height="24"/>
         <image name="ic_folder_open.png" width="24" height="24"/>
-        <image name="ic_insert_drive_file" width="24" height="24"/>
         <image name="ic_more_vert" width="24" height="24"/>
         <image name="ic_settings" width="24" height="24"/>
     </resources>

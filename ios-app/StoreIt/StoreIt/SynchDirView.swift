@@ -33,6 +33,9 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         list.delegate = self
         list.dataSource = self
 
+        list.rowHeight = UITableViewAutomaticDimension
+        list.estimatedRowHeight = 100
+        
     	navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
     	                                                    target: self,
     	                                                    action: #selector(uploadOptions))
@@ -119,36 +122,35 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return createCell(at: indexPath)
-    }
-    
-    // Function triggered when a cell is selected
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if let selectedFile: File = navigationManager.getFile(at: indexPath) {
-            let isDir: Bool = navigationManager.isFileADir(at: indexPath)
-            
-            if (isDir) {
-                performSegue(withIdentifier: "nextDirSegue", sender: selectedFile)
-            } else {
-                performSegue(withIdentifier: "showFileSegue", sender: selectedFile)
-            }
-        }
-    }
-    
-    func createCell(at indexPath: IndexPath) -> UITableViewCell {
-        let isDir: Bool = navigationManager.isFileADir(at: indexPath)
+        let file = navigationManager.getFile(at: indexPath)!
         let items: [String] = navigationManager.getSortedItems()
         
-        if (isDir) {
-            let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.directory.rawValue) as! DirectoryCell
-            cell.itemName.text = "\(items[(indexPath as NSIndexPath).row])"
-            cell.contextualMenu.tag = (indexPath as NSIndexPath).row
-            return cell
-        } else {
-            let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.file.rawValue) as! FillCell
-            cell.itemName.text = "\(items[(indexPath as NSIndexPath).row])"
-            cell.contextualMenu.tag = (indexPath as NSIndexPath).row
-            return cell
+        let synchedImage = navigationManager.isOfflineActivated(for: file.IPFSHash) ?
+            UIImage(named: "ic_offline_pin") : nil
+        
+        let fileImage = file.isDir ?
+            DIR_IMG : FILE_IMG
+        
+        let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.file.rawValue) as! FileCell
+        
+        cell.fileImage.image = fileImage
+        cell.itemName.text = "\(items[indexPath.row])"
+        cell.itemName.sizeToFit()
+        cell.contextualMenu.tag = indexPath.row
+        cell.offlineImage.image = synchedImage
+ 
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        selectedIndex = indexPath.row
+        
+        selectedFile { file in
+            if (file.isDir) {
+                performSegue(withIdentifier: "nextDirSegue", sender: file)
+            } else {
+                performSegue(withIdentifier: "showFileSegue", sender: file)
+            }
         }
     }
 
@@ -407,10 +409,16 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         selectedFile { file in
             print("Getting ipfs data ...")
             
+            self.startSynchImageRotation(for: file)
+            
             IpfsManager.get(hash: file.IPFSHash) { data in
                 if let data = data {
+    
                     self.offlineManager.write(hash: file.IPFSHash, to: file.path, content: data)
                     self.navigationManager.addToCurrentHashes(hash: file.IPFSHash)
+                
+                    self.stopSynchImageRotation(for: file)
+
                 } else {
                     print("Could not get ipfs data for file with hash \(file.IPFSHash)")
                 }
@@ -424,8 +432,51 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             
             if (removeSuccessful) {
                 self.navigationManager.removeFromCurrentHashes(hash: file.IPFSHash)
+               
+                cellForSelectedFile { cell in
+                    cell.offlineImage.image = nil
+                }
             }
         }
+    }
+    
+    func rotateSynchImage(imageView: UIImageView, for file: File) {
+        UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveLinear, animations: {
+            
+            imageView.transform = imageView.transform.rotated(by: CGFloat(M_PI))
+            
+            }, completion: {
+                (value: Bool) in
+                
+                UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveLinear, animations: {
+                    imageView.transform = CGAffineTransform.identity
+                    
+                    }, completion: { _ in
+
+                        if (file.isSynching) {
+                            self.rotateSynchImage(imageView: imageView, for: file)
+                        } else {
+                            imageView.image = UIImage(named: "ic_offline_pin")
+                        }
+                })
+        })
+    }
+    
+    func startSynchImageRotation(for file: File) {
+        if let index = selectedIndex {
+            let cell = list.cellForRow(at: IndexPath(row: index, section: 0)) as! FileCell
+            let image = cell.offlineImage
+
+            image!.image = UIImage(named: "ic_sync")
+            
+            file.isSynching = true
+            
+            rotateSynchImage(imageView: image!, for: file)
+        }
+    }
+    
+    func stopSynchImageRotation(for file: File) {
+        file.isSynching = false
     }
     
     // MARK: MOVE FEATURE
@@ -451,11 +502,19 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     // MARK: UTILS
     
-    func selectedFile(handler: (File) -> Void) {
+    func selectedFile(completion: (File) -> Void) {
         if let index = selectedIndex {
             if let file = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                handler(file)
+                completion(file)
             }
         }
     }
+    
+    func cellForSelectedFile(completion: (FileCell) -> Void) {
+        if let index = selectedIndex {
+            let cell = list.cellForRow(at: IndexPath(row: index, section: 0)) as! FileCell
+            completion(cell)
+        }
+    }
+    
 }
