@@ -8,7 +8,7 @@ userSettings = (require '../remote.coffee!') 'settings'
 render = require '../render.coffee!'
 
 save = ->
-  userSettings.setFolderPath $('#storeit-dir').val()
+  userSettings.setStoreDir $('#storeit-dir').val()
   userSettings.setAllocated $('storeit-space').val()
   userSettings.setBandwidth $('storeit-bandwidth').val()
   userSettings.save()
@@ -19,7 +19,7 @@ reset = ->
   ipc.send 'reload'
 
 init = ->
-  $('#storeit-dir').val userSettings.getFolderPath()
+  $('#storeit-dir').val userSettings.getStoreDir()
   $('#storeit-space').val userSettings.getAllocated()
   $('#storeit-bandwidth').val userSettings.getBandwidth()
 

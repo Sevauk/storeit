@@ -12,7 +12,7 @@ display = null
 mainWin = null
 
 view = menubar
-  alwaysOnTop: true #TODO remove
+  # alwaysOnTop: true #TODO remove
   height: 500
   icon: "#{__dirname}/../assets/images/icon.png"
   tooltip: 'StoreIt'

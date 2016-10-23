@@ -1,9 +1,9 @@
-body.container-fluid {
+body.menu_box.container-fluid {
 	padding-left: 0;
 	padding-right: 0;
 }
 
-#header {
+.menu_box #header {
 	height: 40px;
 	background-color: #9bbccc;
 	width: 100%;
@@ -11,15 +11,15 @@ body.container-fluid {
   padding: 0;
 }
 
-#header .logo {
+.menu_box #header .logo {
 	height: 80%;
 }
 
-#container {
+.menu_box #container {
 	width: 100%;
 }
 
-#list .item{
+.menu_box #list .item{
 	width: 100%;
 	margin: 0;
 	border-bottom: 1px solid #aeb2b3;
@@ -28,7 +28,7 @@ body.container-fluid {
 	padding-bottom: 10px;
 }
 
-#list .progress {
+.menu_box #list .progress {
 	margin-bottom: 0;
 }
 
@@ -43,7 +43,7 @@ body.container-fluid {
 	width: 135px;
 }
 
-#list .media-body {
+.menu_box #list .media-body {
   padding-right: 10px;
 }
 
