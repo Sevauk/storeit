@@ -21,7 +21,9 @@ describe 'IPFS', ->
       .then -> userFile.clear()
       .then -> done()
 
-  after -> userFile.clear()
+  after ->
+    userFile.clear()
+    child.kill()
 
   describe '#ready()', ->
     it 'should resolve when node is ready', (done) ->
@@ -61,8 +63,13 @@ describe 'IPFS', ->
       ipfs.download fileHash, p
         .then -> fs.readFileAsync userFile.absolutePath(p), 'utf8'
         .should.eventually.equal fileData
+    it 'should call the progress callback during download', ->
+      ipfs.download fileHash, '/bar', (percent) ->
+        (typeof percent).should.equal 'number'
     it 'should create chunk in user host with the fetched buffer', ->
       @timeout 5000
       ipfs.download fileHash
         .then -> fs.readFileAsync "#{host}/#{fileHash}", 'utf8'
         .should.eventually.equal fileData
+
+    it 'should stop previous downloads if file is already being downloaded', ->

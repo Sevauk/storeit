@@ -3,9 +3,6 @@ import WebSocket from 'ws'
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
 
-import fs from 'fs'
-Promise.promisifyAll(fs)
-
 import StoreitClient from '../../lib/client'
 import logger from '../../lib/log'
 import Watcher from './watcher'
@@ -86,6 +83,29 @@ export default class DesktopClient extends StoreitClient {
     settings.reload()
   }
 
+  addFilesUnknownByServ(home) {
+    return userFile.getUnknownFiles(home)
+      // .each(filePath => this.sendFADD(filePath)) TODO
+  }
+
+  syncDir(file) {
+    return userFile.dirCreate(file.path)
+      .tap(() => logger.info(`[DIR-SYNC] ${file.path}`))
+      .then(() => this.recvFADD({parameters: {files: file.files}}, false))
+      .tap(() => logger.info(`[DIR-SYNC:end] ${file.path} `))
+  }
+
+  syncFile(file) {
+    logger.info(`[SYNC:start] ${file.path}`)
+    return userFile.exists(file.path)
+      .catch(() => userFile.create(file.path, ''))
+      .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
+      .then(isInStore => {
+        if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path)
+        logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
+      })
+  }
+
   reqJoin(authType, accessToken) {
 
     let home = null
@@ -100,62 +120,19 @@ export default class DesktopClient extends StoreitClient {
       })
       .then(() => this.addFilesUnknownByServ(home))
       .tap(() => logger.info('[JOIN] home synchronized'))
-      .tap(() => this.fsWatcher.start())
-  }
-
-  addFilesUnknownByServ(dir) {
-    /*
-    * files that were added when the daemon wasn't running
-    * should be sent now to the server.
-    */
-
-    if (!dir || !dir.files || !dir.isDir)
-      return Promise.resolve()
-
-    return fs.readdirAsync(userFile.absolutePath(dir.path))
-      .map(fileName => {
-        if (!(fileName in dir.files)) {
-          this.sendFADD(dir.path + fileName)
-        }
-      })
-      .then(() =>
-        Promise.map(Object.keys(dir.files), (file) => {
-          if (file)
-            this.addFilesUnknownByServ(file)
-        }))
-      .catch((e) => logger.warn(e))
   }
 
   recvFADD(req, print=true) {
-    const params = req.parameters
-    if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
+    if (print) logger.debug(`[RECV:FADD] ${logger.toJson(req.parameters)}`)
 
-    if (!params.files) return Promise.resolve(params)
+    let files = req.parameters.files
+    if (!Array.isArray(files))
+      files = Object.keys(files).map(key => files[key])
 
-    if (!Array.isArray(params.files)) {
-      params.files = Object.keys(params.files).map(key => params.files[key])
-    }
-
-    return Promise.map(params.files, (file) => {
+    return Promise.map(files, (file) => {
       this.fsWatcher.ignore(file.path)
-      if (file.isDir) {
-        return userFile.dirCreate(file.path)
-          .tap(() => logger.info(`[DIR-SYNC] ${file.path}`))
-          .then(() => this.recvFADD({parameters: {files: file.files}}, false))
-          .tap(() => logger.info(`[DIR-SYNC:end] ${file.path} `))
-      }
-      else {
-        logger.info(`[SYNC:start] ${file.path}`)
-        return userFile.exists(file.path)
-          .catch(() => userFile.create(file.path, ''))
-          .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
-          .then(isInStore => {
-            if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path)
-            logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
-          })
-          .catch(logger.error)
-          .then(() => this.fsWatcher.unignore(file.path))
-      }
+      return (file.isDir ? this.syncDir(file) : this.syncFile(file))
+        .then(() => this.fsWatcher.unignore(file.path))
     })
   }
 

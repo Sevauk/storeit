@@ -73,6 +73,47 @@ const generateTree = (hashFunc, filePath='') => {
 
 const getHostedChunks = () => fs.readdirAsync(settings.getHostDir())
 
+/*
+1. readdir => files
+2. filter => newFiles
+3.
+
+*/
+
+const addSubDir = (dir, fileName) => {
+  const storeitPath = path.join(dir.path, fileName)
+  return fs.statAsync(absolutePath(storeitPath))
+    .then(stats => {
+      if (stats.isDirectory()) dir.files[fileName] = new FileObj(storeitPath, null)
+    })
+}
+
+// WIP
+const getUnknownFiles = (dir) => {
+  let newFiles
+  let res = []
+  return fs.readdirAsync(absolutePath(dir.path))
+    .tap(() => console.log(''))
+    .tap(() => console.log(''))
+    .tap(files => console.log('files:', files))
+
+    .filter(fileName => dir.files == null || dir.files[fileName] == null)
+    .tap(files => newFiles = files)
+    .tap(() => console.log('new files:', newFiles))
+
+    .each(fileName => res.push(path.join(dir.path, fileName)))
+    .then(() => newFiles)
+    .tap(() => console.log('res:', res))
+
+    .each(fileName => addSubDir(fileName))
+
+    // .tap(() => console.log('dir:', dir))
+    // .then(() => dir.files ? Object.keys(dir.files) : [])
+    // .map(fileName => dir.files[fileName])
+    // .filter(file => file.isDir)
+    // .each(file => getUnknownFiles(file, res))
+}
+
 export default {
   absolutePath,
   storePath,
@@ -86,5 +127,6 @@ export default {
   move: fileMove,
   clear,
   generateTree,
-  getHostedChunks
+  getHostedChunks,
+  getUnknownFiles
 }
