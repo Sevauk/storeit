@@ -26,11 +26,15 @@ auth = (authType) ->
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
-  # daemon.auth(authType, authWin.loadURL.bind(authWin))
-  #   .then ->
-  #     authWin.close()
-  #   .catch (e) ->
-  #     authWin.close()
+  opts =
+    type: authType
+    devId: null # TODO
+    authWin: authWin.loadURL.bind(authWin)
+  daemon.start opts
+    .then -> authWin.close()
+    .catch (e) -> authWin.close()
+    .then -> daemon.start()
+    .then -> loadPage 'settings'
 
 tray = null
 init = ->
@@ -46,7 +50,11 @@ init = ->
     {label: 'Restart', click: -> daemon.restart()} #TODO
     {label: 'Quit', click: -> app.quit()}
   ]
-  daemon.connect().then -> loadPage()
+  authType = settings.getAuthType()
+  if authType?
+    auth(authType)
+  else
+    loadPage()
 
 ipc.on 'auth', (ev, authType) ->
   # auth(authType)
@@ -54,6 +62,13 @@ ipc.on 'auth', (ev, authType) ->
   #   .catch -> ev.sender.send 'auth', 'done'
 
 ipc.on 'reload', (ev) -> # daemon.restart() #TODO
+
+terminate = (err) ->
+  console.error err
+  process.exit 1
+
+process.on 'error', terminate
+process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program

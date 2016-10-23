@@ -17,19 +17,20 @@ const authTypes = {
 export default class DesktopClient extends StoreitClient {
 
   constructor() {
-    super((...args) => WebSocket(...args))
+    super((...args) => new WebSocket(...args))
 
     this.ipfs = new IPFSNode()
+    this.authSettigns = {}
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
   }
 
-  start() {
+  start(authOpts) {
     return Promise.all([
       this.fsWatcher.start(),
       this.ipfs.connect(),
-      this.connect()
+      this.connect(authOpts)
     ])
   }
 
@@ -41,9 +42,9 @@ export default class DesktopClient extends StoreitClient {
     ])
   }
 
-  auth(type, devId, opener) {
+  auth(opts={}) {
     let service
-    switch (type) {
+    switch (opts.type) {
       case 'facebook':
         service = new FacebookService()
         break
@@ -56,9 +57,9 @@ export default class DesktopClient extends StoreitClient {
         return this.login()
     }
 
-    logger.info(`[AUTH] login with ${type} OAuth`)
-    return service.oauth(opener)
-      .then(tokens => this.reqJoin(authTypes[type], tokens.access_token))
+    logger.info(`[AUTH] login with ${opts.type} OAuth`)
+    return service.oauth(opts.win)
+      .then(tokens => this.reqJoin(authTypes[opts.type], tokens.access_token))
   }
 
   developer(devId='') {
@@ -70,12 +71,12 @@ export default class DesktopClient extends StoreitClient {
     throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
   }
 
-  connect(type, devid, opener) {
-    type = type || this.authSettigns.type
-    devid = devid || this.authSettigns.devid
-    opener = opener || this.authSettigns.opener
+  connect(opts={}) {
+    this.authSettigns.type = opts.type || this.authSettigns.type
+    this.authSettigns.devId = opts.devId || this.authSettigns.devId || 0
+    this.authSettigns.win = opts.win || this.authSettigns.win
     return super.connect()
-      .then(() => this.auth(type, devid, opener))
+      .then(() => this.auth(this.authSettigns))
   }
 
   reloadSettings() {

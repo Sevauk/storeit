@@ -21,6 +21,8 @@ listen = ->
 wait = ->
   $('.login-buttons button').click ->
 
+console.log 'oauth'
+
 module.exports =
   spawn: ->
     authType = userSettings.getAuthType()

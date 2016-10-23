@@ -75,7 +75,7 @@ export default class IPFSNode {
 
     return this.getResource(hash, id)
       .then(res => new Promise((resolve, reject) => {
-        const fail = () => reject(new Error(`[IPFS]: download failed ${e}`))
+        const fail = (e) => reject(new Error(`[IPFS]: download failed ${e}`))
         if (notify) notify(0)
 
         res.on('close', e => fail(e))
