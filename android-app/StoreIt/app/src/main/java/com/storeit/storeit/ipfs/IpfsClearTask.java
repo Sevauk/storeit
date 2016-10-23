@@ -1,23 +1,16 @@
 package com.storeit.storeit.ipfs;
-
 import android.os.AsyncTask;
 import android.preference.Preference;
 import android.util.Log;
-
 import com.google.gson.Gson;
-import com.google.gson.internal.bind.ArrayTypeAdapter;
-
 import org.apache.commons.io.IOUtils;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -27,10 +20,10 @@ import java.util.Map;
 
 public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
 
-    String nodeUrl = "http://127.0.0.1";
-    Preference mClearButton;
+    private String nodeUrl = "http://127.0.0.1";
+    private Preference mClearButton;
 
-    public class IpfsPinLs {
+    private class IpfsPinLs {
 
         class Key {
             public String Type;
@@ -111,7 +104,7 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    void callGc() {
+    private void callGc() {
 
 
         URL url;
@@ -123,7 +116,7 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
 
             String result = IOUtils.toString(in);
-            Log.v("StoreitPreferences", "la" + result);
+            Log.v("StoreitPreferences", "call gc" + result);
 
         } catch (IOException e) {
             e.printStackTrace();
