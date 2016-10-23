@@ -287,12 +287,12 @@ public class MainActivity extends AppCompatActivity {
                     // Create new folder
                     StoreitFile folder;
 
-                    if (fragment.getCurrentFile().getPath().equals("/")) {
-                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + fileName, null, true);
+                    if (fragment.getCurrentFile().equals("/")) {
+                        folder = new StoreitFile(fragment.getCurrentFile() + fileName, null, true);
                     } else {
-                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + fileName, null, true);
+                        folder = new StoreitFile(fragment.getCurrentFile() + File.separator + fileName, null, true);
                     }
-                    filesManager.addFile(folder, fragment.getCurrentFile());
+                    filesManager.addFile(folder, filesManager.getFileByPath(fragment.getCurrentFile()));
                     refreshFileExplorer();
                     mSocketService.sendFADD(folder);
                 }
