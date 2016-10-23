@@ -44,11 +44,10 @@ readableSize = (bytes) ->
 
 
 createItem = (id, file) ->
-  $('#list').prepend('<hr>') unless itemsCount++ is 0
-  $(makeItem(id, file)).prependTo($('#list'))
+  item = makeItem(id, file)
+  $(item).prependTo($('#list'))
 
 showInFolder = (filePath) ->
-  console.log('show:', userFile.absolutePath(filePath))
   shell.showItemInFolder userFile.absolutePath(filePath)
 
 finishDownload = (id, file) ->
@@ -56,12 +55,15 @@ finishDownload = (id, file) ->
   $("##{id} .progress-bar").removeClass 'progress-bar-striped'
   $("##{id} .media-body .buttons")
     .append("""
-      <button class="btn show-in">Show in folder</button>
+      <button class="btn btn-default show-in">Show in folder</button>
+      <button class="btn btn-default remove">Remove from list</button>
     """)
   $("##{id} .media-body .show-in").click(-> showInFolder(file.path))
   show = -> $("##{id} .media-body .buttons").show()
   hide = -> $("##{id} .media-body .buttons").hide()
+  remove = -> $("##{id}").parent().remove()
   $("##{id}").hover(show, hide)
+  $("##{id} .remove").click(remove)
 
 updateStatus = (percent, file) ->
   id = md5(file.path)
@@ -77,7 +79,6 @@ updateStatus = (percent, file) ->
 module.exports =
   spawn: ->
     $('body').addClass('menu_box')
-    $('#header').remove()
     render.template template
     file = path: '/foo', size: 500
     updateStatus 10, file

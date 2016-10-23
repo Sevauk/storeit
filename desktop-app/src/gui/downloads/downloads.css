@@ -1,15 +1,31 @@
+body.container-fluid {
+	padding-left: 0;
+	padding-right: 0;
+}
+
 #header {
-	display: none;
+	height: 40px;
+	background-color: #9bbccc;
+	width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#header .logo {
+	height: 80%;
 }
 
 #container {
-	margin-top: 10px;
 	width: 100%;
 }
 
 #list .item{
 	width: 100%;
 	margin: 0;
+	border-bottom: 1px solid #aeb2b3;
+	background: #dde3e6;
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 
 #list .progress {
@@ -18,13 +34,24 @@
 
 #list .buttons {
 	margin-top: 5px;
+	text-align: center;
+}
+
+#list .buttons button {
+	color: #5b8498;
+	border-color: #5b8498;
+	width: 135px;
+}
+
+#list .media-body {
+  padding-right: 10px;
 }
 
 .menu_box {
-	/*position: relative;*/
-	/*background: #88b7d5;*/
-	border: 4px solid #c2e1f5;
+	background: #ebf0f3;
+	border: 2px solid #aeb2b3;
 }
+
 .menu_box:after, .menu_box:before {
 	bottom: 100%;
 	left: 50%;
