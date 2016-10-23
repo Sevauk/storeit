@@ -1,3 +1,4 @@
+menubar = require 'menubar'
 electron = require 'electron'
 {app} = electron
 ipc = electron.ipcMain
@@ -5,9 +6,18 @@ ipc = electron.ipcMain
 {logger} = (require '../lib/log')
 StoreItClient = (require '../build/daemon/client').default
 global.settings = (require '../build/daemon/settings').default
+global.userFile = (require '../build/daemon/user-file').default
 
 display = null
 mainWin = null
+
+view = menubar
+  alwaysOnTop: true #TODO remove
+  height: 500
+  icon: "#{__dirname}/../assets/images/icon.png"
+  tooltip: 'StoreIt'
+  width: 300
+
 loadPage = (page) ->
   unless mainWin?
     mainWin = new electron.BrowserWindow
@@ -39,10 +49,7 @@ auth = (authType) ->
 tray = null
 init = ->
   display = electron.screen.getPrimaryDisplay()
-  tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
-  tray.setToolTip 'StoreIt'
-
-  tray.setContextMenu electron.Menu.buildFromTemplate [
+  view.tray.setContextMenu electron.Menu.buildFromTemplate [
     {label: 'Settings', click: -> loadPage 'settings'}
     {label: 'Statistics', click: -> loadPage 'stats'} #TODO
     {label: 'Logout', click: -> daemon.logout()} #TODO
@@ -50,6 +57,9 @@ init = ->
     {label: 'Restart', click: -> daemon.restart()} #TODO
     {label: 'Quit', click: -> app.quit()}
   ]
+  view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"
+  view.window.openDevTools() if OPTIONS.dev
+
   authType = settings.getAuthType()
   if authType?
     auth(authType)
@@ -73,5 +83,5 @@ process.on 'uncaughtException', terminate
 exports.run = (program) ->
   global.OPTIONS = program
   global.daemon = new StoreItClient
-  app.on 'ready', -> init()
+  view.on 'after-create-window', -> init()
   app.on 'activate', -> init() unless mainWin?

@@ -6,6 +6,7 @@ template = require './app.jade!'
 require './app.css!'
 
 pages =
+ downloads: require './downloads/downloads.coffee!'
  oauth: require './oauth/oauth.coffee!'
  settings: require './settings/settings.coffee!'
 
