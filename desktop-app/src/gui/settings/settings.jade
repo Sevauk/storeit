@@ -4,8 +4,10 @@
   
   form(role="form")
     .form-group
-      label(for="storeit-dir") Synced Directory Path
-      input#storeit-dir.form-control(type="text")
+      label(for="storeit-dir") Change Directory Path:
+      span #{' '}
+      span#storeit-dir-curr
+      input#storeit-dir.form-control(type="file" webkitdirectory directory)
     .form-group
       label(for="storeit-space") Allocated space
       .input-group

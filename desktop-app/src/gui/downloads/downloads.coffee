@@ -2,9 +2,10 @@ $ = require 'bootstrap'
 template = require './downloads.jade!'
 require './downloads.css!'
 
-shell = (System._nodeRequire 'electron').shell
 render = require '../render.coffee!'
 userFile = (require '../remote.coffee!') 'userFile'
+
+shell = (System._nodeRequire 'electron').shell
 md5 = require('md5')
 
 itemsCount = 0

@@ -12,6 +12,7 @@ save = ->
   userSettings.setAllocated $('storeit-space').val()
   userSettings.setBandwidth $('storeit-bandwidth').val()
   userSettings.save()
+  $('#storeit-dir-curr').text userSettings.getStoreDir()
   ipc.send 'reload'
 
 reset = ->
@@ -19,7 +20,7 @@ reset = ->
   ipc.send 'reload'
 
 init = ->
-  $('#storeit-dir').val userSettings.getStoreDir()
+  $('#storeit-dir-curr').text userSettings.getStoreDir()
   $('#storeit-space').val userSettings.getAllocated()
   $('#storeit-bandwidth').val userSettings.getBandwidth()
 
