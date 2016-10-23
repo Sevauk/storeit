@@ -70,6 +70,7 @@ public class LoginActivity extends Activity {
     private String m_token = "";
     private String m_method = "";
 
+
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
         public void handleJoin(final JoinResponse joinResponse) {
@@ -83,6 +84,7 @@ public class LoginActivity extends Activity {
 
                         // The service will be handled by MainActivity;
                         destroySocketService = false;
+                        destroyIpfsService = false;
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 

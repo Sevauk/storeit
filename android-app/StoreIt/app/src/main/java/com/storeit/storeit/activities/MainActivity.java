@@ -80,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
 
+    private boolean destroyIpfs = true;
+    private boolean destroySocket = true;
+
     public FloatingActionButton getFloatingButton() {
         return fbtn;
     }
@@ -335,8 +338,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
 
         if (mSocketServiceBound) {
             unbindService(mSocketServiceConnection);
