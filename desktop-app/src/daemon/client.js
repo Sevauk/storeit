@@ -78,6 +78,7 @@ export default class DesktopClient extends StoreitClient {
   connect() {
     return super.connect()
       .then(() => this.auth(this.authSettigns))
+      .catch(() => this.reconnect())
   }
 
   reloadSettings() {

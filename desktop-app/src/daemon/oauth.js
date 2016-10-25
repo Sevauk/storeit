@@ -66,7 +66,7 @@ class OAuthProvider {
 
 export class GoogleService extends OAuthProvider {
   constructor() {
-    super('gg')
+    super('google')
 
     const {GAPI_CLIENT_ID, GAPI_CLIENT_SECRET} = process.env
 
@@ -108,7 +108,7 @@ export class GoogleService extends OAuthProvider {
 
 export class FacebookService extends OAuthProvider {
   constructor() {
-    super('fb')
+    super('facebook')
 
     const {FBAPI_CLIENT_ID, FBAPI_CLIENT_SECRET} = process.env
     this.client = fbgraph

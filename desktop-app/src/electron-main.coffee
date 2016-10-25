@@ -8,6 +8,7 @@ StoreItClient = (require '../build/daemon/client').default
 global.settings = (require '../build/daemon/settings').default
 global.userFile = (require '../build/daemon/user-file').default
 
+ready = false
 display = null
 mainWin = null
 
@@ -28,7 +29,7 @@ loadPage = (page) ->
   mainWin.openDevTools() if OPTIONS.dev
 
 authWin = null
-auth = (authType, showModal=true) ->
+login = (authType, showModal=true) ->
   authWin = new electron.BrowserWindow
     parent: mainWin
     modal: true
@@ -41,36 +42,49 @@ auth = (authType, showModal=true) ->
     devId: null
     win: authWin.loadURL.bind(authWin)
   daemon.start opts
-    .then -> console.log 'START DONE'
-    .then -> authWin.close()
-    .then -> process.exit 1
-    .then -> loadPage 'settings'
-    .catch (e) -> authWin.close()
+    .then ->
+      loadPage 'settings'
+      authWin.close()
+    .catch (e) ->
+      authWin.close()
+      logger.error(e)
+      process.exit(1)
+
+# TODO
+logout = ->
+  logger.debug('GUI: logout')
+  daemon.logout()
+
+# TODO
+restart = ->
+  logger.debug('GUI: restart')
+  daemon.restart()
 
 tray = null
 init = (p) ->
+  ready = true
   display = electron.screen.getPrimaryDisplay()
   view.tray.setContextMenu electron.Menu.buildFromTemplate [
     {label: 'Settings', click: -> loadPage 'settings'}
     {label: 'Statistics', click: -> loadPage 'stats'} #TODO
-    {label: 'Logout', click: -> daemon.logout()} #TODO
+    {label: 'Logout', click: -> logout()} #TODO
     {type: 'separator'}
-    {label: 'Restart', click: -> daemon.restart()} #TODO
+    {label: 'Restart', click: -> restart()} #TODO
     {label: 'Quit', click: -> app.quit()}
   ]
 
   authType = settings.getAuthType()
   if authType?
-    auth authType, false
+    login authType, false
   else
     loadPage()
 
 ipc.on 'auth', (ev, authType) ->
-  auth(authType, authType isnt 'developer')
+  login(authType, authType isnt 'developer')
     .then -> ev.sender.send 'auth', 'done'
     .catch -> ev.sender.send 'auth', 'done'
 
-ipc.on 'reload', (ev) -> # daemon.restart() #TODO
+ipc.on 'restart', (ev) -> restart()
 
 terminate = (err) ->
   console.error 'Fatal error:', err
@@ -82,8 +96,7 @@ process.on 'uncaughtException', terminate
 exports.run = (program) ->
   global.OPTIONS = program
   global.daemon = new StoreItClient
-  view.on 'ready', ->
-    init()
+  view.on 'ready', -> init()
   view.on 'after-create-window', ->
     init() unless mainWin?
     view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"

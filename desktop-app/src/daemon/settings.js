@@ -85,7 +85,6 @@ const setTokens = (type, tokens) => {
 }
 
 const resetTokens = () => setTokens(null, null)
-resetTokens() // TODO REMOVE !!!
 
 const getStoreDir = () => settings.folderPath
 
