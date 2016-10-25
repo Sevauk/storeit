@@ -4,10 +4,11 @@
   
   form(role="form")
     .form-group
-      label(for="storeit-dir") Change Directory Path:
-      span #{' '}
-      span#storeit-dir-curr
-      input#storeit-dir.form-control(type="file" webkitdirectory directory)
+      label(for="storeit-dir") Synchronized Directory Path
+      .input-group
+        input#storeit-dir.form-control(type="text" disabled)
+        .input-group-btn
+          button.btn.btn-default#storeit-dir-change Change
     .form-group
       label(for="storeit-space") Allocated space
       .input-group
@@ -18,5 +19,5 @@
       .input-group
         input#storeit-bandwidth.form-control(type="number")
         .input-group-addon kB/s
-    button#storeit-validate.btn.btn-primary(type="submit") Save
+    button#storeit-validate.btn.btn-primary Save
     button#storeit-reset.btn.btn-primary Restore defaults

@@ -47,7 +47,7 @@ auth = (authType) ->
     .then -> loadPage 'settings'
 
 tray = null
-init = ->
+init = (p) ->
   display = electron.screen.getPrimaryDisplay()
   view.tray.setContextMenu electron.Menu.buildFromTemplate [
     {label: 'Settings', click: -> loadPage 'settings'}
@@ -57,8 +57,6 @@ init = ->
     {label: 'Restart', click: -> daemon.restart()} #TODO
     {label: 'Quit', click: -> app.quit()}
   ]
-  view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"
-  view.window.openDevTools() if OPTIONS.dev
 
   authType = settings.getAuthType()
   if authType?
@@ -83,5 +81,10 @@ process.on 'uncaughtException', terminate
 exports.run = (program) ->
   global.OPTIONS = program
   global.daemon = new StoreItClient
-  view.on 'after-create-window', -> init()
+  view.on 'ready', ->
+    init()
+  view.on 'after-create-window', ->
+    init() unless mainWin?
+    view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"
+    view.window.openDevTools() if OPTIONS.dev
   app.on 'activate', -> init() unless mainWin?
