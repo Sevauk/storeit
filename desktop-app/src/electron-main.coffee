@@ -28,23 +28,24 @@ loadPage = (page) ->
   mainWin.openDevTools() if OPTIONS.dev
 
 authWin = null
-auth = (authType) ->
+auth = (authType, showModal=true) ->
   authWin = new electron.BrowserWindow
     parent: mainWin
     modal: true
-    show: settings.getAuthType() == null
+    show: showModal
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
   opts =
     type: authType
-    devId: null # TODO
-    authWin: authWin.loadURL.bind(authWin)
+    devId: null
+    win: authWin.loadURL.bind(authWin)
   daemon.start opts
+    .then -> console.log 'START DONE'
     .then -> authWin.close()
-    .catch (e) -> authWin.close()
-    .then -> daemon.start()
+    .then -> process.exit 1
     .then -> loadPage 'settings'
+    .catch (e) -> authWin.close()
 
 tray = null
 init = (p) ->
@@ -60,19 +61,19 @@ init = (p) ->
 
   authType = settings.getAuthType()
   if authType?
-    auth(authType)
+    auth authType, false
   else
     loadPage()
 
 ipc.on 'auth', (ev, authType) ->
-  # auth(authType)
-  #   .then -> ev.sender.send 'auth', 'done'
-  #   .catch -> ev.sender.send 'auth', 'done'
+  auth(authType, authType isnt 'developer')
+    .then -> ev.sender.send 'auth', 'done'
+    .catch -> ev.sender.send 'auth', 'done'
 
 ipc.on 'reload', (ev) -> # daemon.restart() #TODO
 
 terminate = (err) ->
-  console.error err
+  console.error 'Fatal error:', err
   process.exit 1
 
 process.on 'error', terminate
@@ -86,5 +87,5 @@ exports.run = (program) ->
   view.on 'after-create-window', ->
     init() unless mainWin?
     view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"
-    view.window.openDevTools() if OPTIONS.dev
+    # view.window.openDevTools() if OPTIONS.dev
   app.on 'activate', -> init() unless mainWin?

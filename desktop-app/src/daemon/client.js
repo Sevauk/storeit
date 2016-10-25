@@ -26,11 +26,15 @@ export default class DesktopClient extends StoreitClient {
       (ev) => this.getFsEvent(ev))
   }
 
-  start(authOpts) {
+  start(opts={}) {
+    this.authSettigns.type = opts.type || this.authSettigns.type
+    this.authSettigns.devId = opts.devId || this.authSettigns.devId || 0
+    this.authSettigns.win = opts.win || this.authSettigns.win
+
     return Promise.all([
       this.fsWatcher.start(),
       this.ipfs.connect(),
-      this.connect(authOpts)
+      this.connect()
     ])
   }
 
@@ -42,9 +46,9 @@ export default class DesktopClient extends StoreitClient {
     ])
   }
 
-  auth(opts={}) {
+  auth() {
     let service
-    switch (opts.type) {
+    switch (this.authSettigns.type) {
       case 'facebook':
         service = new FacebookService()
         break
@@ -57,9 +61,9 @@ export default class DesktopClient extends StoreitClient {
         return this.login()
     }
 
-    logger.info(`[AUTH] login with ${opts.type} OAuth`)
-    return service.oauth(opts.win)
-      .then(tokens => this.reqJoin(authTypes[opts.type], tokens.access_token))
+    logger.info(`[AUTH] login with ${this.authSettigns.type} OAuth`)
+    return service.oauth(this.authSettigns.win)
+      .then(tokens => this.reqJoin(authTypes[this.authSettigns.type], tokens.access_token))
   }
 
   developer(devId='') {
@@ -71,10 +75,7 @@ export default class DesktopClient extends StoreitClient {
     throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
   }
 
-  connect(opts={}) {
-    this.authSettigns.type = opts.type || this.authSettigns.type
-    this.authSettigns.devId = opts.devId || this.authSettigns.devId || 0
-    this.authSettigns.win = opts.win || this.authSettigns.win
+  connect() {
     return super.connect()
       .then(() => this.auth(this.authSettigns))
   }
@@ -86,7 +87,7 @@ export default class DesktopClient extends StoreitClient {
 
   addFilesUnknownByServ(home) {
     return userFile.getUnknownFiles(home)
-      // .each(filePath => this.sendFADD(filePath)) TODO
+      // .each(filePath => this.sendFADD(filePath)) // TODO
   }
 
   syncDir(file) {
