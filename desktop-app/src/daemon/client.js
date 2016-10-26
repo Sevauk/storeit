@@ -80,10 +80,7 @@ export default class DesktopClient extends StoreitClient {
   connect() {
     return super.connect()
       .then(() => this.auth(this.authSettigns))
-      .catch((e) => {
-        logger.error(e)
-        return this.reconnect()
-      })
+      .catch(() => this.reconnect())
   }
 
   reloadSettings() {
@@ -188,7 +185,8 @@ export default class DesktopClient extends StoreitClient {
   }
 
   sendFUPT(filePath) {
-    return userFile.generateTree(filePath)
+    const hashFunc = this.ipfs.getFileHash.bind(this.ipfs)
+    return userFile.generateTree(hashFunc, filePath)
       .then(file => this.request('FUPT', {files: [file]}))
       .catch(err => logger.error('FUPT: ' + err))
   }

@@ -4,6 +4,7 @@ require './downloads.css!'
 
 render = require '../render.coffee!'
 userFile = (require '../remote.coffee!') 'userFile'
+daemon = (require '../remote.coffee!') 'daemon'
 
 shell = (System._nodeRequire 'electron').shell
 md5 = require('md5')
@@ -81,12 +82,13 @@ module.exports =
   spawn: ->
     $('body').addClass('menu_box')
     render.template template
-    file = path: '/foo', size: 500
-    updateStatus 10, file
-    updateStatus 62, path: '/bar', size: 300
-    updateStatus 100, path: '/toto', size: 50
-    setTimeout((-> updateStatus(23, file)), 2000)
-    setTimeout((-> updateStatus(58, file)), 3000)
-    setTimeout((-> updateStatus(77, file)), 4000)
-    setTimeout((-> updateStatus(91, file)), 6000)
-    setTimeout((-> updateStatus(100, file)), 6500)
+    daemon.setProgressHandler(updateStatus)
+    # file = path: '/foo', size: 500
+    # updateStatus 10, file
+    # updateStatus 62, path: '/bar', size: 300
+    # updateStatus 100, path: '/toto', size: 50
+    # setTimeout((-> updateStatus(23, file)), 2000)
+    # setTimeout((-> updateStatus(58, file)), 3000)
+    # setTimeout((-> updateStatus(77, file)), 4000)
+    # setTimeout((-> updateStatus(91, file)), 6000)
+    # setTimeout((-> updateStatus(100, file)), 6500)

@@ -5,6 +5,7 @@ ipc = electron.ipcMain
 
 {logger} = (require '../lib/log')
 StoreItClient = (require '../build/daemon/client').default
+global.daemon = new StoreItClient
 global.settings = (require '../build/daemon/settings').default
 global.userFile = (require '../build/daemon/user-file').default
 
@@ -13,7 +14,8 @@ display = null
 mainWin = null
 
 view = menubar
-  # alwaysOnTop: true #TODO remove
+  alwaysOnTop: true #TODO remove
+  index: "file://#{__dirname}/../index.html?p=downloads"
   height: 500
   icon: "#{__dirname}/../assets/images/icon.png"
   tooltip: 'StoreIt'
@@ -24,9 +26,10 @@ loadPage = (page) ->
     mainWin = new electron.BrowserWindow
       width: display.size.width
       height: display.size.height
+      show: false # TODO remove
     mainWin.on 'closed', -> mainWin = null
   mainWin.loadURL "file://#{__dirname}/../index.html?p=#{page or ''}"
-  mainWin.openDevTools() if OPTIONS.dev
+  # mainWin.openDevTools() if OPTIONS.dev
 
 authWin = null
 login = (authType, showModal=true) ->
@@ -95,10 +98,7 @@ process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program
-  global.daemon = new StoreItClient
   view.on 'ready', -> init()
   view.on 'after-create-window', ->
-    # init() unless mainWin?
-    view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"
-    # view.window.openDevTools() if OPTIONS.dev
+    view.window.openDevTools() if OPTIONS.dev # TODO remove
   app.on 'activate', -> init() unless mainWin?
