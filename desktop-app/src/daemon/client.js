@@ -24,6 +24,8 @@ export default class DesktopClient extends StoreitClient {
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
+    this.progressHandler = (percent, file) =>
+      logger.info(`[DL] <${Math.floor(percent)}%> ${file.path}`)
   }
 
   start(opts={}) {
@@ -78,7 +80,10 @@ export default class DesktopClient extends StoreitClient {
   connect() {
     return super.connect()
       .then(() => this.auth(this.authSettigns))
-      .catch(() => this.reconnect())
+      .catch((e) => {
+        logger.error(e)
+        return this.reconnect()
+      })
   }
 
   reloadSettings() {
@@ -104,7 +109,8 @@ export default class DesktopClient extends StoreitClient {
       .catch(() => userFile.create(file.path, ''))
       .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
       .then(isInStore => {
-        if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path)
+        if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path,
+          this.progressHandler)
         logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
       })
   }
@@ -195,5 +201,9 @@ export default class DesktopClient extends StoreitClient {
   sendFMOV(src, dst) {
     return this.request('FMOV', {src, dst})
       .catch(err => logger.error('FMOV: ' + err))
+  }
+
+  setProgressHandler(progressHandler) {
+    this.progressHandler = progressHandler
   }
 }

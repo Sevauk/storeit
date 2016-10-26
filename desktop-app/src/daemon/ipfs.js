@@ -97,7 +97,7 @@ export default class IPFSNode {
       }))
   }
 
-  download(ipfsHash, filePath, progressCb=()=>{}) {
+  download(ipfsHash, filePath, progressCb) {
     let file = {
       ipfsHash,
       path: filePath || userFile.chunkPath(ipfsHash),
@@ -120,7 +120,7 @@ export default class IPFSNode {
 
   downloadStatusUpdate(file, downloadedSize, progressCb) {
     const percentage = downloadedSize / file.size || 0
-    if (progressCb) progressCb(percentage * 100, file)
+    if (progressCb != null) progressCb(percentage * 100, file)
   }
 
   getResourceSize(ipfsHash) {

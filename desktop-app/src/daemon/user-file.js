@@ -71,7 +71,12 @@ const generateTree = (hashFunc, filePath='') => {
     })
 }
 
-const getHostedChunks = () => fs.readdirAsync(settings.getHostDir())
+const getHostedChunks = () => {
+  const p = storePath(settings.getHostDir())
+  return fileExists(p)
+    .then(() => fs.readdirAsync(settings.getHostDir()))
+    .catch(() => [])
+}
 
 const addSubDir = (dir, fileName) => {
   const storeitPath = path.join(dir.path, fileName)

@@ -98,7 +98,7 @@ exports.run = (program) ->
   global.daemon = new StoreItClient
   view.on 'ready', -> init()
   view.on 'after-create-window', ->
-    init() unless mainWin?
+    # init() unless mainWin?
     view.window.loadURL "file://#{__dirname}/../index.html?p=downloads"
     # view.window.openDevTools() if OPTIONS.dev
   app.on 'activate', -> init() unless mainWin?
