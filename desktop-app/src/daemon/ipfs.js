@@ -112,7 +112,7 @@ export default class IPFSNode {
       .then(() => this.get(ipfsHash, file.path, (currSize) =>
         this.downloadStatusUpdate(file, currSize, progressCb)
       ))
-      .then(() => this.downloadStatusUpdate(file, file.size, progressCb)) // quickfix
+      .tap(() => this.downloadStatusUpdate(file, file.size, progressCb)) // quickfix
       .then(buf => userFile.create(file.path, buf))
       .then(() => this.add(file.path))
       .tap(() => log(`[SYNC:success] ${file.type}: ${file.path} [${ipfsHash}]`))
