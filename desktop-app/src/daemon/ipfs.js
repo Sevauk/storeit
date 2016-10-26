@@ -91,8 +91,7 @@ export default class IPFSNode {
         })
       }))
       .catch((e) => this.reconnect().then(() => {
-        console.error(`${e}. Retrying`)
-        logger.error(`${e}. Retrying`)
+        logger.error(`[IPFS] ${e}. Retrying`)
         return this.get(hash, id, notify)
       }))
   }
@@ -113,6 +112,7 @@ export default class IPFSNode {
       .then(() => this.get(ipfsHash, file.path, (currSize) =>
         this.downloadStatusUpdate(file, currSize, progressCb)
       ))
+      .then(() => this.downloadStatusUpdate(file, file.size, progressCb)) // quickfix
       .then(buf => userFile.create(file.path, buf))
       .then(() => this.add(file.path))
       .tap(() => log(`[SYNC:success] ${file.type}: ${file.path} [${ipfsHash}]`))
