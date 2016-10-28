@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "bootstrap.js",
   "scripts": {
-    "preinstall": "npm prune && npm --prefix ../lib/js install ../lib/js",
+    "preinstall": "npm prune && cd ../lib/js && npm install && cd ../../desktop-app",
     "postinstall": "jspm clean && jspm install && shx cp -n .env.sample .env && npm run init",
     "init": "ipfs init || exit 0",
     "start": "npm run build && concurrently -rk 'npm run ipfs' 'npm run daemon'",
