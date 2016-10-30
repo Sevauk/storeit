@@ -86,7 +86,7 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
             URL url;
             HttpURLConnection urlConnection = null;
             try {
-                url = new URL(nodeUrl + ":5001/api/v0/pin/rm&arg=" + hash);
+                url = new URL(nodeUrl + ":5001/api/v0/pin/rm?arg=" + hash);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setConnectTimeout(20000);
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());

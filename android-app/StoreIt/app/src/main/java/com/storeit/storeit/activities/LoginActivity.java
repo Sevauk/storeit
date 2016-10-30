@@ -88,6 +88,11 @@ public class LoginActivity extends Activity {
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 
+                        SharedPreferences sp = getSharedPreferences(getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sp.edit();
+                        editor.putString("profile_url", joinResponse.getParameters().getUserPicture());
+                        editor.apply();
+
                         // Stringify fileobject in order to pass it to other activity. It will be save on disk
                         // So passing as string is fine
                         Gson gson = new Gson();

@@ -304,4 +304,5 @@ public class SocketService extends Service {
     public boolean isConnected() {
         return mConnected;
     }
+
 }

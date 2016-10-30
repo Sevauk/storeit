@@ -161,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setHasFixedSize(true);
 
-        String profileUrl = getIntent().getExtras().getString("profile_url");
+        SharedPreferences sp = getSharedPreferences(getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+        String profileUrl = sp.getString("profile_url", "");
 
         mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, profileUrl, this);
         mRecyclerView.setAdapter(mAdapter);
@@ -310,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGalleryPicker() {
+        destroySocket = destroyIpfs = false;
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -317,6 +319,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startFilePickerIntent() {
+        destroySocket = destroyIpfs = false;
         Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
@@ -327,26 +330,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCameraIntent() {
+        destroySocket = destroyIpfs = false;
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (intent.resolveActivity(getPackageManager()) != null) {
             File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
             startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
         }
-
-
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onResume() {
+        super.onResume();
+        Log.v("MainActivity", "onResume!!");
+        destroySocket = destroyIpfs = true;
+    }
 
-        if (mSocketServiceBound) {
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        Log.v("MaiActivity", "destroy : " + destroyIpfs + " bound :" + mIpfsServiceBound);
+
+        if (mSocketServiceBound && destroySocket) {
+            Log.v("MainActivity", "Socket!!");
             unbindService(mSocketServiceConnection);
             mSocketServiceBound = false;
         }
 
-        if (mIpfsServiceBound) {
+        if (mIpfsServiceBound && destroyIpfs) {
+            Log.v("MainActivity", "Ipfs!!");
             unbindService(mIpfsServiceConnection);
             mIpfsServiceBound = false;
         }
@@ -370,6 +383,7 @@ public class MainActivity extends AppCompatActivity {
                     actionBar.setTitle("My Files");
                 break;
             case SETTINGS_FRAGMENT:
+                destroySocket = destroyIpfs = false;
                 Intent i = new Intent(this, StoreItPreferences.class);
                 startActivity(i);
                 break;
@@ -419,6 +433,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        destroySocket = destroyIpfs = true;
 
         Log.v("MainActivity", "Activity result : " + requestCode);
 

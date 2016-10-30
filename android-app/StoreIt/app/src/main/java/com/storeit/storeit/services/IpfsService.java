@@ -160,13 +160,10 @@ public class IpfsService extends Service {
     private void makeNotification(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(context,
-                99, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification.Builder builder = new Notification.Builder(context)
                 .setContentTitle("StoreIt")
                 .setContentText("You are an active ipfs node :)")
-                .setContentIntent(pendingIntent)
                 .setSmallIcon(R.drawable.ipfs_logo);
         Notification n;
 
