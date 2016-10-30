@@ -11,4 +11,5 @@ import Foundation
 enum ConnectionType: String {
     case google = "gg"
     case facebook = "fb"
+    case developer = "dev"
 }

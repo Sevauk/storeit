@@ -14,7 +14,7 @@ class NetworkManager {
     static let sharedInstance = NetworkManager()
 
     private let WSManager: WebSocketManager
-    private let _host = "localhost" // "158.69.196.83"
+    private let _host = "iglu.mobi"//"localhost" // "158.69.196.83"
     private let _port = 7641
     
     var host: String {
@@ -44,9 +44,19 @@ class NetworkManager {
         self.WSManager.eventsInitializer(loginFunction, logoutFunction: logoutFunction)
     }
     
+    func joinDeveloper(completion: (() -> ())?) {
+        let parameters: JoinParameters = JoinParameters(authType: "dev", accessToken: "developer")
+        let joinCommand = Command(uid: UidFactory.uid, command: cmdInfos.JOIN, parameters: parameters)
+        let jsonJoinCommand = Mapper().toJSONString(joinCommand)
+        
+        UidFactory.uid += 1
+        
+        self.WSManager.sendRequest(jsonJoinCommand!, completion: completion)
+
+    }
+    
     func join(_ authType: String, accessToken: String, completion: (() -> ())?) {
-        //let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: accessToken)
-        let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: "developer")
+        let parameters: JoinParameters = JoinParameters(authType: authType, accessToken: accessToken)
         let joinCommand = Command(uid: UidFactory.uid, command: cmdInfos.JOIN, parameters: parameters)
         let jsonJoinCommand = Mapper().toJSONString(joinCommand)
         
