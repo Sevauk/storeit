@@ -177,14 +177,14 @@ public class FileViewerFragment extends Fragment {
                                 mMoving = false;
 
                                 String oldPath = file.getPath();
-                                String movedPath = getCurrentFile().getPath() +File.separator + file.getFileName();
+                                String movedPath = getCurrentFile() +File.separator + file.getFileName();
                                 movedPath = movedPath.replace("//", "/");
 
                                 manager.removeFile(file.getPath());
 
                                 file.setPath(movedPath);
 
-                                manager.addFile(file, getCurrentFile());
+                                manager.addFile(file, manager.getFileByPath(getCurrentFile()));
                                 adapter.reloadFiles();
                                 service.sendFMOV(oldPath, movedPath);
                             }
@@ -243,7 +243,7 @@ public class FileViewerFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public StoreitFile getCurrentFile() {
+    public String getCurrentFile() {
         return adapter.getCurrentFile();
     }
 }

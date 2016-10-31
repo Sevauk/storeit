@@ -31,13 +31,13 @@ import java.util.Map;
 public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHolder> {
 
     private StoreitFile[] mFiles;
-    private Deque<StoreitFile> historyStack = new ArrayDeque<>();
+    private Deque<String> historyStack = new ArrayDeque<>();
     private Context context;
     private String storeitPath;
     private FilesManager manager;
     int position;
 
-    public StoreitFile getCurrentFile() {
+    public String getCurrentFile() {
         return historyStack.peek();
     }
 
@@ -82,7 +82,7 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
             files.add(entry.getValue());
         }
 
-        historyStack.push(rootFile);
+        historyStack.push(rootFile.getPath());
 
         mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
         this.context = passedContext;
@@ -96,12 +96,10 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
 
         ArrayList<StoreitFile> files = new ArrayList<>();
         historyStack.pop();
-        StoreitFile parentDir = historyStack.peek();
 
-        for (Map.Entry<String, StoreitFile> entry : parentDir.getFiles().entrySet()) { // list all files from current folder
-            files.add(entry.getValue());
-        }
-        mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
+        String parentPath = historyStack.peek();
+        mFiles = manager.getChildrens(parentPath);
+
         notifyDataSetChanged();
     }
 
@@ -141,19 +139,10 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
             return;
         }
 
-
         ArrayList<StoreitFile> files = new ArrayList<>();
 
-        historyStack.push(mFiles[position]);
-
-        if (mFiles[position].getFiles() != null) {
-            for (Map.Entry<String, StoreitFile> entry : mFiles[position].getFiles().entrySet()) { // list all files from current folder
-                files.add(entry.getValue());
-            }
-        }
-
-        mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
-
+        historyStack.push(mFiles[position].getPath());
+        mFiles = manager.getChildrens(mFiles[position].getPath());
         notifyDataSetChanged();
     }
 
@@ -191,7 +180,7 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
         super.onViewRecycled(holder);
     }
 
-    public void setPosition(int position) {
+    private void setPosition(int position) {
         this.position = position;
     }
 
@@ -211,16 +200,8 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
     }
 
     public void reloadFiles() {
-        StoreitFile currentFile = getCurrentFile();
-        StoreitFile newFile = manager.getFileByPath(currentFile.getPath(), manager.getRoot());
-
-        ArrayList<StoreitFile> files = new ArrayList<>();
-
-        for (Map.Entry<String, StoreitFile> entry : newFile.getFiles().entrySet()) { // list all files from current folder
-            files.add(entry.getValue());
-        }
-
-        mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
+        String currentPath = getCurrentFile();
+        mFiles = manager.getChildrens(currentPath);
         notifyDataSetChanged();
     }
 }

@@ -61,6 +61,8 @@ public class SocketService extends Service {
         @Override
         public void run() {
 
+            Log.v(LOGTAG, "Starting socket on thread : " + Thread.currentThread().getId());
+
             // Loop on connection
             mConnected = false;
 
@@ -153,13 +155,14 @@ public class SocketService extends Service {
                     if (mLoginHandler != null)
                     {
                         Log.v(LOGTAG, "call handleConnection()");
-                        mLoginHandler.handleConnection();
+                        mLoginHandler.handleConnection(true);
                     }
 
                 } catch (WebSocketException | IOException e) {
                     e.printStackTrace();
                     mConnected = false;
                     Log.e(LOGTAG, "Cannot connect to server... Retrying in 5 seconds");
+                    mLoginHandler.handleConnection(false);
                     SystemClock.sleep(5000);
                 }
             }
@@ -249,7 +252,7 @@ public class SocketService extends Service {
         if (mConnected)
         {
             Log.v(LOGTAG, "call handleConnection()");
-            mLoginHandler.handleConnection();
+            mLoginHandler.handleConnection(true);
         }
 
     }
@@ -278,7 +281,7 @@ public class SocketService extends Service {
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
 //        server = SP.getString("pref_key_server_url", "ws://192.168.1.24:7641");
 
-        server = "ws://192.168.1.24:7641";
+        server = "ws://137.74.161.134:7641";
 
         Thread t = new Thread(new SocketManager());
         t.start();
@@ -301,4 +304,5 @@ public class SocketService extends Service {
     public boolean isConnected() {
         return mConnected;
     }
+
 }

@@ -2,26 +2,21 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        android:title="Server"
-        android:key="pref_key_internet_settings">
-    <EditTextPreference android:title="Gateway url"
-        android:key="pref_key_gateway_url"
-        android:summary="Please enter the ips gateway url"/>
-    <EditTextPreference android:title="Server url"
-        android:key="pref_key_server_url"
-        android:summary="Please enter the storeit server adress"
-        android:defaultValue="ws://192.168.0.102:7641"/>
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="Storage"
-        android:key="pref_key_storage_setting">
+        android:key="pref_key_storage_setting"
+        android:title="Application settings">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_key_autologin"
+            android:title="Autologin" />
         <ListPreference
-            android:key="pref_key_storage_location"
-            android:title="Storage location"
-            android:dialogTitle="available storages"
-            android:summary="Select the storeit storage location"
             android:defaultValue="0"
-            />
+            android:dialogTitle="available storages"
+            android:key="pref_key_storage_location"
+            android:summary="Select the storeit storage location"
+            android:title="Storage location" />
+        <Preference
+            android:key="pref_key_erase_cache"
+            android:summary="Fetching cache size..."
+            android:title="Erase ipfs cache" />
     </PreferenceCategory>
 </PreferenceScreen>

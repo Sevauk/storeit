@@ -12,6 +12,10 @@ import com.storeit.storeit.protocol.command.FileStoreCommand;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,9 +23,10 @@ import java.util.Map;
  */
 public class FilesManager {
     private File mDataDir;
-    private StoreitFile mRootFile;
     private static final String LOGTAG = "FilesManager";
     private String storageLocation;
+
+    private Map<String, StoreitFile> mFileMap = new HashMap<>();
 
     public FilesManager(Context ctx, StoreitFile rootFile) {
 
@@ -34,52 +39,20 @@ public class FilesManager {
         }
 
         mDataDir = new File(storageLocation);
+        createFilesMap(rootFile);
+    }
 
+    void createFilesMap(StoreitFile root) {
+        if (!mFileMap.containsKey(root.getPath())) {
+            mFileMap.put(root.getPath(), root);
+        }
 
-
-/*
-        File jsonFile = new File(storageLocation + "/storeit.json");
-        if (!jsonFile.exists()) {
-            Log.d(LOGTAG, "Creating root json file");
-            try {
-                if (!jsonFile.createNewFile()) {
-                    Log.v(LOGTAG, "Error creating .storeit");
-                }
-                FileWriter fw = new FileWriter(jsonFile);
-                Gson gson = new Gson();
-                fw.write(gson.toJson(rootFile, StoreitFile.class));
-                fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        } else {
-            StoreitFile currentRoot;
-            StringBuilder text = new StringBuilder();
-            String line;
-
-            try {
-                BufferedReader br;
-                br = new BufferedReader(new FileReader(jsonFile));
-                while ((line = br.readLine()) != null) {
-                    text.append(line);
-                    text.append('\n');
-                }
-
-                Gson gson = new Gson();
-                currentRoot = gson.fromJson(text.toString(), StoreitFile.class);
-                compareRoot(currentRoot, rootFile);
-
-                FileWriter fw = new FileWriter(jsonFile, false);
-                fw.write(gson.toJson(rootFile, StoreitFile.class));
-                fw.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
+        for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
+            mFileMap.put(entry.getValue().getPath(), entry.getValue());
+            if (entry.getValue().isDirectory()) {
+                createFilesMap(entry.getValue());
             }
         }
-*/
-        mRootFile = rootFile;
     }
 
     // Delete a directory and its content
@@ -102,7 +75,7 @@ public class FilesManager {
 
     // Recursively compare new tree with existing tree
     public void recursiveCmp(StoreitFile existingFile, StoreitFile newRoot) {
-
+/*
         if (!existingFile.getPath().equals("/")) { // Don't delete root
             StoreitFile f = getFileByPath(existingFile.getPath(), newRoot); // Look for the actual file
             if (f == null) { // If the file doesn't exist anymore
@@ -124,10 +97,7 @@ public class FilesManager {
                 recursiveCmp(entry.getValue(), newRoot);
             }
         }
-    }
-
-    public void compareRoot(StoreitFile currentRoot, StoreitFile newRoot) {
-        recursiveCmp(currentRoot, newRoot);
+        */
     }
 
     public boolean exist(StoreitFile file) {
@@ -137,113 +107,64 @@ public class FilesManager {
     }
 
     public StoreitFile getRoot() {
-        return mRootFile;
+        return mFileMap.get("/");
     }
 
     public String getFolderPath() {
         return mDataDir.getPath();
     }
 
-    public StoreitFile getFileByPath(String path, StoreitFile root) {
-        if (root.getPath().equals(path)) {
-            return root;
-        }
-
-        for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            if (entry.getValue().getPath().equals(path)) {
-                return entry.getValue();
-            }
-            if (entry.getValue().isDirectory()) {
-                getFileByPath(path, entry.getValue());
-            }
-        }
-
-        return null;
+    public StoreitFile getFileByPath(String path) {
+        return mFileMap.get(path);
     }
 
-    private StoreitFile getParentFile(StoreitFile root, String parentPath) {
+    private StoreitFile getParentFile(StoreitFile file) {
 
-        if (root.getPath().equals(parentPath)) {
-            return root;
-        }
+        if (file.getPath().equals("/"))
+            return file;
 
-        for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            if (entry.getValue().isDirectory()) {
-                return getParentFile(entry.getValue(), parentPath);
-            }
-        }
-
-        return null;
-    }
-
-    public void saveJson() {
-        File jsonFile = new File(storageLocation + "/storeit.json");
-
-        try {
-            if (!jsonFile.exists()) {
-                if (!jsonFile.createNewFile()) {
-                    Log.v(LOGTAG, "Error creating .storeit");
-                }
-            }
-            FileWriter fw = new FileWriter(jsonFile, false);
-            Gson gson = new Gson();
-            fw.write(gson.toJson(mRootFile, StoreitFile.class));
-            fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String parentPath = file.getPath().substring(0, file.getPath().lastIndexOf("/"));
+        return getFileByPath(parentPath);
     }
 
     public void removeFile(String path) {
-        File parentFile = new File(path);
-        String parentPath = parentFile.getParentFile().getAbsolutePath();
-        StoreitFile parent = getParentFile(mRootFile, parentPath);
+        Log.v(LOGTAG, "Deleting : " + path);
 
-        StoreitFile stFileToDelete = getFileByPath(path, mRootFile); // get storeitfile for hash
-        if (stFileToDelete != null && !stFileToDelete.isDirectory() && stFileToDelete.getIPFSHash() != null) {
-            File fileToDelete = new File(mDataDir.getAbsolutePath() + File.separator + stFileToDelete.getIPFSHash());
-            if (fileToDelete.exists()) {
-                if (!fileToDelete.delete()) {
-                    Log.e(LOGTAG, "Error while deleting " + fileToDelete);
+        List<String> toDelete = new ArrayList<>();
+
+        for (Iterator<Map.Entry<String, StoreitFile>> it = mFileMap.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String, StoreitFile> entry = it.next();
+            if (isChildren(path, entry.getKey())) {
+                Log.v(LOGTAG, entry.getKey() + " is a children!");
+                StoreitFile parent = getFileByPath(path);
+                if (parent != null) {
+                    parent.getFiles().remove(path);
+                    toDelete.add(path);
                 }
+
+                it.remove();
             }
         }
-
-        if (parent != null) {
-            parent.getFiles().remove(StoreitFile.getFileName(path));
-
-            saveJson();
-        }
-
+        mFileMap.remove(path);
     }
 
     public void addFile(StoreitFile file, StoreitFile parent) {
-        StoreitFile p = getFileByPath(parent.getPath(), mRootFile);
+        StoreitFile p = getFileByPath(parent.getPath());
         if (p != null) {
             p.addFile(file);
-            saveJson();
         }
+        mFileMap.put(file.getPath(), file);
     }
 
     public void addFile(StoreitFile file) {
-
-        File parentFile = new File(file.getPath());
-        String parentPath;
-        if (parentFile.getParent() == null) {
-            parentPath = "/";
-        } else {
-            parentPath = parentFile.getParentFile().getAbsolutePath();
-        }
-
-        StoreitFile parent = getParentFile(mRootFile, parentPath);
-        if (parent != null) {
-            parent.addFile(file);
-            saveJson();
-        }
+        StoreitFile parent = getParentFile(file);
+        parent.addFile(file);
+        mFileMap.put(file.getPath(), file);
     }
 
+
     public void updateFile(StoreitFile file) {
-        StoreitFile toUpdate = getFileByPath(file.getPath(), mRootFile);
+        StoreitFile toUpdate = getFileByPath(file.getPath());
 
         if (toUpdate != null) {
             toUpdate.setIPFSHash(file.getIPFSHash());
@@ -254,26 +175,72 @@ public class FilesManager {
     }
 
     public void moveFile(String src, String dst) {
-        StoreitFile storeitFile = getFileByPath(src, mRootFile);
 
-        if (storeitFile != null) {
-            File srcParent = new File(src);
-            File dstParent = new File(dst);
+        for (Map.Entry<String, StoreitFile> entry : mFileMap.entrySet()) {
+            if (isChildren(src, entry.getKey())) {
 
-            if (srcParent.getParent() != null && dstParent.getParent() != null // Rename file
-                    && srcParent.getParent().equals(dstParent.getParent())) {
-                removeFile(storeitFile.getPath());
-                storeitFile.setPath(dst);
-                addFile(storeitFile);
-            } else { // Move File
-                StoreitFile newFile = new StoreitFile(dst, storeitFile.getIPFSHash(), // copy
-                        storeitFile.isDirectory());
-                StoreitFile parentFile = getParentFile(mRootFile, dstParent.getParent());
-                removeFile(src); // Remove the old file
-                if (parentFile != null)
-                    parentFile.addFile(newFile); // Add the new renamed file
+
             }
-            saveJson();
+
         }
+        /*
+            Recupere le path du parent
+
+            Pour tous les fichiers dans le map:
+                Si c'est un enfant
+                    On creer un nouveau fichier a partir de l'ancien
+                    On delete l'enfant
+                    On insere le nouveau fichier
+         */
+    }
+
+    private boolean isChildren(String parentPath, String childPath) {
+        if (childPath.length() < parentPath.length()) { // A child cannot have a shorter name than its parent
+            return false;
+        }
+
+        for (int i = 0; i < parentPath.length() - 1; i++) {
+            if (parentPath.charAt(i) != childPath.charAt(i))
+                return false;
+        }
+
+        return true;
+    }
+
+    public StoreitFile[] getChildrens(String path) {
+        List<StoreitFile> files = new ArrayList<>();
+
+        int numSlashes = countOccurrences(path, '/');
+
+        for (Map.Entry<String, StoreitFile> entry : mFileMap.entrySet()) {
+            if (entry.getKey().equals(path))
+                continue;
+
+            // Root case
+            if (path.equals("/")
+                    && (countOccurrences(entry.getKey(), '/') - numSlashes == 0)
+                    && isChildren(path, entry.getKey())) {
+                files.add(entry.getValue());
+            } else if (!path.equals("/") // Other folders case
+                    && (countOccurrences(entry.getKey(), '/') - numSlashes == 1)
+                    && isChildren(path, entry.getKey())) {
+                files.add(entry.getValue());
+            }
+        }
+
+        StoreitFile[] filesArray = new StoreitFile[files.size()];
+        filesArray = files.toArray(filesArray);
+
+        return filesArray;
+    }
+
+    public static int countOccurrences(String haystack, char needle) {
+        int count = 0;
+        for (int i = 0; i < haystack.length(); i++) {
+            if (haystack.charAt(i) == needle) {
+                count++;
+            }
+        }
+        return count;
     }
 }

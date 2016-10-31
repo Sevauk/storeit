@@ -70,6 +70,7 @@ public class LoginActivity extends Activity {
     private String m_token = "";
     private String m_method = "";
 
+
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
         public void handleJoin(final JoinResponse joinResponse) {
@@ -83,8 +84,14 @@ public class LoginActivity extends Activity {
 
                         // The service will be handled by MainActivity;
                         destroySocketService = false;
+                        destroyIpfsService = false;
 
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+
+                        SharedPreferences sp = getSharedPreferences(getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sp.edit();
+                        editor.putString("profile_url", joinResponse.getParameters().getUserPicture());
+                        editor.apply();
 
                         // Stringify fileobject in order to pass it to other activity. It will be save on disk
                         // So passing as string is fine
@@ -118,18 +125,20 @@ public class LoginActivity extends Activity {
         }
 
         @Override
-        public void handleConnection() {
+        public void handleConnection(final boolean success) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.v("MainActivity", "handleConnection");
-                    if (autologin)
-                    {
-                        if (!mSocketService.sendJOIN(m_method, m_token))
-                        {
-                            progessDialog.dismiss();
-                            Toast.makeText(LoginActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+                    if (success) {
+                        if (autologin) {
+                            if (!mSocketService.sendJOIN(m_method, m_token)) {
+                                progessDialog.dismiss();
+                                Toast.makeText(LoginActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+                            }
                         }
+                    } else if (autologin && progessDialog.isShowing()) {
+                        progessDialog.dismiss();
                     }
                 }
             });
