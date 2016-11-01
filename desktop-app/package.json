@@ -13,7 +13,7 @@
     "build": "npm run build:lib && npm run build:daemon && npm run build:gui",
     "build:lib": "babel ../lib/js/src -s -d ./lib",
     "build:daemon": "babel ./src -s -d ./build",
-    "build:gui": "coffee -m -o ./build -c ./src/electron-main.coffee && jspm bundle './src/gui/app.coffee!' ./build/gui/app.js",
+    "build:gui": "coffee -m -o ./build -c ./src/electron-main.coffee && jspm bundle \"./src/gui/app.coffee!\" ./build/gui/app.js",
     "clean": "shx rm -rf ./lib ./build && shx mkdir ./lib ./build",
     "rebuild": "npm run clean && npm run build",
     "watch": "gulp watch",
