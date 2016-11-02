@@ -132,8 +132,6 @@ export default class IPFSNode {
     return this.ready()
       // .then(() => this.cancelPending(id, hash))
       .then(() => this.node.cat(hash))
-      // .then(() => console.log('get resource'))
-      // .catch(() => console.error('err: get resource'))
       .tap(res => {
         if (id != null) this.resources[id] = res
       })

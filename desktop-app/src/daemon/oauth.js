@@ -19,15 +19,26 @@ class OAuthProvider {
   }
 
   oauth(opener=open) {
+    let userIntent = null
     let url = this.generateAuthUrl()
-    let authorized = Promise.resolve(url ? this.waitAuthorized() : true)
-    if (url) opener(url)
 
-    return authorized
+    if (url) {
+      userIntent = this.waitAuthorized()
+      opener(url)
+    }
+    else {
+      userIntent = Promise.resolve()
+    }
+
+    return userIntent
       .then(code => this.getToken(code))
       .tap(tokens => this.setCredentials(tokens))
       .then(tokens => this.extendAccesToken(tokens))
       .tap(tokens => this.saveTokens(tokens))
+      .catch(e => {
+        logger.error(`[OAUTH] ${this.type} authorization failed: ${e}`)
+        throw new Error(e)
+      })
   }
 
   waitAuthorized() {
@@ -49,7 +60,7 @@ class OAuthProvider {
     logger.debug('[OAUTH] Access granted, Http server stopped')
 
     let code = req.query.code
-    if (code == null) throw new Error('oauth: could not get code')
+    if (code == null) throw new Error('[OAUTH] could not get code')
     return code
   }
 
@@ -74,11 +85,13 @@ export class GoogleService extends OAuthProvider {
       GAPI_CLIENT_SECRET, REDIRECT_URI)
 
     this.client = Promise.promisifyAll(this.client)
-    if (this.hasTokens()) this.client.setCredentials(this.tokens)
+    // FIXME
+    // if (this.hasTokens()) this.client.setCredentials(this.tokens)
   }
 
   generateAuthUrl() {
-    if (this.hasTokens()) return null
+    // FIXME
+    // if (this.hasTokens()) return null
 
     return this.client.generateAuthUrl({
       scope: 'email',
@@ -88,12 +101,11 @@ export class GoogleService extends OAuthProvider {
 
   getToken(code) {
     if (code != null) {
-      logger.info('[OAUTH:gg] exchanging code against access token')
+      logger.info(`[OAUTH:gg] exchanging code ${code} against access token`)
       return this.client.getTokenAsync(code)
     }
     else {
-      logger.info('[OAUTH:gg] refreshing token')
-      return this.client.refreshAccessTokenAsync()
+      return Promise.resolve(this.tokens)
     }
   }
 

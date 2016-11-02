@@ -66,6 +66,10 @@ export default class DesktopClient extends StoreitClient {
     logger.info(`[AUTH] login with ${this.authSettigns.type} OAuth`)
     return service.oauth(this.authSettigns.win)
       .then(tokens => this.reqJoin(authTypes[this.authSettigns.type], tokens.access_token))
+      .catch(e => {
+        logger.error(`[AUTH] login failed ${e}`)
+        throw new Error(e)
+      })
   }
 
   developer(devId='') {

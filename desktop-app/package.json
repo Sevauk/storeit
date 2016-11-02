@@ -37,7 +37,7 @@
     "commander": "^2.9.0",
     "del": "^2.2.2",
     "dotenv": "^2.0.0",
-    "electron": "^1.4.4",
+    "electron": "^1.4.5",
     "express": "^4.14.0",
     "fbgraph": "^1.2.0",
     "googleapis": "^7.1.0",
