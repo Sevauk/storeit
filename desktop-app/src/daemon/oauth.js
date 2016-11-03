@@ -20,8 +20,13 @@ class OAuthProvider {
 
   oauth(opener=open) {
     let userIntent = null
-    let url = this.generateAuthUrl()
-
+    let url
+    try {
+      url = this.generateAuthUrl()
+    }
+    catch (e) {
+      logger.error('error while generating url', e)
+    }
     if (url) {
       userIntent = this.waitAuthorized()
       opener(url)

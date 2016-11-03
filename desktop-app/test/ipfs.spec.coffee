@@ -53,7 +53,7 @@ describe 'IPFS', ->
 
   describe '#get()', ->
     it 'should resolve to the file buffer', ->
-      @timeout 5000
+      @timeout 2000
       ipfs.get(fileHash).should.eventually.eql Buffer(fileData)
 
   describe '#download()', ->

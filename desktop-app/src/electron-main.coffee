@@ -28,7 +28,7 @@ loadPage = (page) ->
       # show: false # TODO remove
     mainWin.on 'closed', -> mainWin = null
   mainWin.loadURL "file://#{__dirname}/../index.html?p=#{page or ''}"
-  mainWin.openDevTools() if OPTIONS.dev
+  # mainWin.openDevTools() if OPTIONS.dev
 
 authWin = null
 createAuthWin = (url, showModal=true) ->
@@ -49,11 +49,10 @@ login = (authType, showModal=true) ->
     win: (url) -> createAuthWin(url, showModal)
   daemon.start opts
     .then ->
-      logger.debug 'done'
       loadPage 'settings'
-      authWin.close()
+      authWin.close() if authWin?
     .catch (e) ->
-      authWin.close()
+      authWin.close() if authWin?
       terminate e
 
 # TODO
@@ -69,7 +68,7 @@ restart = ->
 tray = null
 init = (p) ->
   display = electron.screen.getPrimaryDisplay()
-  view.tray.setContextMenu electron.Menu.buildFromTemplate [
+  menu = electron.Menu.buildFromTemplate [
     {label: 'Settings', click: -> loadPage 'settings'}
     {label: 'Statistics', click: -> loadPage 'stats'} #TODO
     {label: 'Logout', click: -> logout()} #TODO
@@ -77,6 +76,10 @@ init = (p) ->
     {label: 'Restart', click: -> restart()} #TODO
     {label: 'Quit', click: -> app.quit()}
   ]
+  view.tray.setContextMenu menu
+  # tray = new electron.Tray "#{__dirname}/../assets/images/icon.png"
+  # tray.setToolTip 'StoreIt'
+  # tray.setContextMenu menu
 
   authType = settings.getAuthType()
   if authType?
@@ -92,7 +95,7 @@ ipc.on 'auth', (ev, authType) ->
 ipc.on 'restart', (ev) -> restart()
 
 terminate = (err) ->
-  console.error 'Fatal error:', err
+  logger.error 'Fatal error:', err
   process.exit 1
 
 process.on 'error', terminate
@@ -100,8 +103,15 @@ process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program
+  app.on 'ready', -> init()
+  # app.on 'ready', ->
+  #   login('google')
   # view.on 'ready', -> init()
-  view.on 'ready', -> init()
-  view.on 'after-create-window', ->
-    # view.window.openDevTools() if OPTIONS.dev # TODO remove
-  app.on 'activate', -> init() unless mainWin?
+  # view.on 'after-create-window', ->
+  #   view.window.openDevTools() if OPTIONS.dev # TODO remove
+
+  # I have no idea what's the point of this
+  # app.on 'activate', -> init() unless mainWin?
+
+  # this prevent default: quit on when all windows are closed
+  app.on 'window-all-closed', ->
