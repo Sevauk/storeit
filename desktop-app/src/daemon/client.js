@@ -33,11 +33,10 @@ export default class DesktopClient extends StoreitClient {
     this.authSettigns.devId = opts.devId || this.authSettigns.devId || 0
     this.authSettigns.win = opts.win || this.authSettigns.win
 
-    return Promise.all([
-      this.fsWatcher.start(),
-      this.ipfs.connect(),
-      this.connect()
-    ]).then(() => logger.info('[STATUS] Client is ready'))
+    return this.ipfs.connect()
+    .then(() => this.connect())
+    .then(() => this.fsWatcher.start())
+    .then(() => logger.info('[STATUS] Client is ready'))
   }
 
   stop() {

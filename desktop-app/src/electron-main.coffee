@@ -12,35 +12,43 @@ global.userFile = (require '../build/daemon/user-file').default
 display = null
 mainWin = null
 
+APP_NAME = 'StoreIt'
+APP_ICON = "#{__dirname}/../assets/images/icon.png"
+APP_INDEX = "file://#{__dirname}/../index.html"
+
 view = menubar
   alwaysOnTop: true #TODO remove
-  index: "file://#{__dirname}/../index.html?p=downloads"
+  index: APP_INDEX
   height: 500
-  icon: "#{__dirname}/../assets/images/icon.png"
+  icon: APP_ICON
+  preloadWindow: true
   tooltip: 'StoreIt'
   width: 300
 
 loadPage = (page) ->
   unless mainWin?
-    mainWin = new BrowserWindow
-      width: display.size.width
-      height: display.size.height
-      # show: false # TODO remove
+    mainWin = view.window
+    # mainWin = new BrowserWindow
+      # width: display.size.width
+      # height: display.size.height
     mainWin.on 'closed', -> mainWin = null
-  mainWin.loadURL "file://#{__dirname}/../index.html?p=#{page or ''}"
+  mainWin.loadURL "#{APP_INDEX}?p=#{page or ''}"
   # mainWin.openDevTools() if OPTIONS.dev
 
 authWin = null
 createAuthWin = (url, showModal=true) ->
-  logger.debug('create auth win')
   authWin = new BrowserWindow
+    icon: APP_ICON
     parent: mainWin
     modal: true
-    show: showModal
+    show: false
+    title: "#{APP_NAME} - Authentication"
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
   authWin.loadURL(url)
+  authWin.once 'ready-to-show', ->
+    authWin.show() #if showModal
 
 login = (authType, showModal=true) ->
   opts =
@@ -67,8 +75,9 @@ restart = ->
 
 tray = null
 init = (p) ->
-  display = electron.screen.getPrimaryDisplay()
+  # display = electron.screen.getPrimaryDisplay()
   menu = electron.Menu.buildFromTemplate [
+    {label: 'Downloads', click: -> loadPage 'downloads'}
     {label: 'Settings', click: -> loadPage 'settings'}
     {label: 'Statistics', click: -> loadPage 'stats'} #TODO
     {label: 'Logout', click: -> logout()} #TODO
@@ -104,11 +113,9 @@ process.on 'uncaughtException', terminate
 exports.run = (program) ->
   global.OPTIONS = program
   app.on 'ready', -> init()
-  # app.on 'ready', ->
-  #   login('google')
-  # view.on 'ready', -> init()
-  # view.on 'after-create-window', ->
-  #   view.window.openDevTools() if OPTIONS.dev # TODO remove
+  view.on 'after-create-window', ->
+    view.window.setSkipTaskbar(true)
+    # view.window.openDevTools() if OPTIONS.dev # TODO remove
 
   # I have no idea what's the point of this
   # app.on 'activate', -> init() unless mainWin?
