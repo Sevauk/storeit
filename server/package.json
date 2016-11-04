@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npm run build && node build/main.js",
     "lint": "eslint src/*.js",
-    "build": "babel src -d build -s && babel ../lib/js/src -d build -s",
+    "build": "babel src -d build -s && babel ../lib/js/src -d build/lib -s",
     "dev": "babel-watch src/main.js",
     "test": "mocha --compilers js:babel-core/register src/test.js",
     "postinstall": "cd ../lib/js/; npm install; ../../server"
