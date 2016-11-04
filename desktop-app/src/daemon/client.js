@@ -108,15 +108,10 @@ export default class DesktopClient extends StoreitClient {
   }
 
   syncFile(file) {
-    // I know the logger debug [UNLOCK IPFS] stuff looks silly,
-    // but man it's the only way it worked with the GUI
-    // Yes I know, WTF !!
     logger.info(`[SYNC:start] ${file.path}`)
     return userFile.exists(file.path)
       .catch(() => userFile.create(file.path, ''))
-      .tap(() => logger.debug('[UNLOCK IPFS]'))
       .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
-      .tap(() => logger.debug('[UNLOCK IPFS]'))
       .then(isInStore => {
         if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path,
           this.progressHandler)

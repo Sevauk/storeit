@@ -148,14 +148,9 @@ export default class IPFSNode {
   }
 
   getResource(hash, id) {
-    // I know the logger debug [UNLOCK IPFS] stuff looks silly,
-    // but man it's the only way it worked
-    // Yes I know, WTF !!
     return this.ready()
       // .then(() => this.cancelPending(id, hash))
-      .tap(() => logger.debug('[UNLOCK IPFS]'))
       .then(() => this.node.cat(hash))
-      .tap(() => logger.debug('[UNLOCK IPFS]'))
       .tap(res => {
         if (id != null) this.resources[id] = res
       })
