@@ -20,7 +20,7 @@ export default class DesktopClient extends StoreitClient {
     super((...args) => new WebSocket(...args))
 
     this.ipfs = new IPFSNode()
-    this.authSettigns = {}
+    this.authSettings = {}
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
@@ -30,9 +30,9 @@ export default class DesktopClient extends StoreitClient {
 
   start(opts={}) {
     logger.info('[STATUS] starting up daemon')
-    this.authSettigns.type = opts.type || this.authSettigns.type
-    this.authSettigns.devId = opts.devId || this.authSettigns.devId || 0
-    this.authSettigns.win = opts.win || this.authSettigns.win
+    this.authSettings.type = opts.type || this.authSettings.type
+    this.authSettings.devId = opts.devId || this.authSettings.devId || 0
+    this.authSettings.win = opts.win || this.authSettings.win
 
     return this.ipfs.connect()
       .then(() => this.connect())
@@ -50,7 +50,7 @@ export default class DesktopClient extends StoreitClient {
 
   auth() {
     let service
-    switch (this.authSettigns.type) {
+    switch (this.authSettings.type) {
       case 'facebook':
         service = new FacebookService()
         break
@@ -63,9 +63,9 @@ export default class DesktopClient extends StoreitClient {
         return this.login()
     }
 
-    logger.info(`[AUTH] login with ${this.authSettigns.type} OAuth`)
-    return service.oauth(this.authSettigns.win)
-      .then(tokens => this.reqJoin(authTypes[this.authSettigns.type], tokens.access_token))
+    logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
+    return service.oauth(this.authSettings.win)
+      .then(tokens => this.reqJoin(authTypes[this.authSettings.type], tokens.access_token))
       .catch(e => {
         logger.error(`[AUTH] login failed ${e}`)
         throw new Error(e)
@@ -83,7 +83,7 @@ export default class DesktopClient extends StoreitClient {
 
   connect() {
     return super.connect()
-      .then(() => this.auth(this.authSettigns))
+      .then(() => this.auth(this.authSettings))
       .catch((e) => {
         logger.debug(`connect error: ${logger.toJson(e)}`)
         return this.reconnect()
