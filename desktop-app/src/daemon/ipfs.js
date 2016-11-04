@@ -1,3 +1,4 @@
+import * as childProcess from 'child_process'
 import ipfs from 'ipfs-api'
 
 import logger from '../../lib/log'
@@ -7,6 +8,7 @@ const MAX_RECO_TIME = 4
 
 export default class IPFSNode {
   constructor(opts={}) {
+    this.ipfsProcess = null
     this.connecting = false
     this.recoTime = 1
     this.resources = {}
@@ -15,6 +17,9 @@ export default class IPFSNode {
 
   connect() {
     const {IPFS_ADDR, IPFS_PORT} = process.env
+    if (this.ipfsProcess == null && IPFS_ADDR === '127.0.0.1') {
+      this.start()
+    }
     this.node = ipfs(`/ip4/${IPFS_ADDR}/tcp/${IPFS_PORT}`)
 
     return this.ready()
@@ -26,17 +31,31 @@ export default class IPFSNode {
   reconnect() {
     const sec = this.recoTime * this.recoUnit / 1000
     logger.error(`[IPFS] attempting to reconnect in ${sec} seconds`)
-    let done = Promise.delay(this.recoTime * this.recoUnit)
-      .then(() => this.connect())
+    const delay = this.recoTime * this.recoUnit
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
-    return done
+    return Promise.delay(delay).then(() => this.connect())
+  }
+
+  start() {
+    // TODO manage port
+    this.ipfsProcess = childProcess.spawn('ipfs', ['daemon'])
+    this.ipfsProcess.on('error', (err) => logger.error('IPFS Error:', err))
+  }
+
+  stop() {
+    this.ipfsProcess.kill()
+    this.ipfsProcess = null
   }
 
   close() {
     this.node = null
+    this.stop()
   }
 
   ready() {
+    if (this.node == null) {
+      return Promise.reject(new Error('[IPFS] not connected'))
+    }
     return this.node.id()
   }
 

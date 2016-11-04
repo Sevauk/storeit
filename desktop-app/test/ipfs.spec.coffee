@@ -4,8 +4,8 @@ IPFSNode = importDfl 'ipfs'
 host = importDfl('settings').getHostDir()
 spawn = require('child_process').spawn
 
-child = spawn 'ipfs', ['daemon']
-child.on 'error', (err) -> log.error 'IPFS Error:', err
+# child = spawn 'ipfs', ['daemon']
+# child.on 'error', (err) -> log.error 'IPFS Error:', err
 fs = Promise.promisifyAll(require 'fs')
 
 ipfs = new IPFSNode()
@@ -23,7 +23,7 @@ describe 'IPFS', ->
 
   after ->
     userFile.clear()
-    child.kill()
+    ipfs.close()
 
   describe '#ready()', ->
     it 'should resolve when node is ready', (done) ->

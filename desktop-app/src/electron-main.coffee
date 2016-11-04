@@ -51,7 +51,7 @@ createAuthWin = (url, showModal=true) ->
     authWin.show() if authWin? # and showModal
 
 login = (authType, showModal=true) ->
-  logger.debug('GUI: login!')
+  logger.debug('[GUI] trigger login')
   opts =
     type: authType
     devId: null
