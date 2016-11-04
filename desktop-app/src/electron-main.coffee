@@ -47,8 +47,7 @@ createAuthWin = (url, showModal=true) ->
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
   authWin.loadURL(url)
-  authWin.once 'ready-to-show', ->
-    authWin.show() if authWin? # and showModal
+  authWin.once 'ready-to-show', -> authWin.show() if authWin? # and showModal
 
 login = (authType, showModal=true) ->
   logger.debug('[GUI] trigger login')
@@ -95,7 +94,7 @@ init = (p) ->
   if authType?
     login authType, false
   else
-    loadPage()
+    loadPage('oauth')
 
 ipc.on 'auth', (ev, authType) ->
   login(authType, authType isnt 'developer')
@@ -113,9 +112,10 @@ process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program
-  view.on 'ready', -> init()
+  app.on 'ready', -> init()
   view.on 'after-create-window', ->
-    view.window.setSkipTaskbar(true)
+    view.window.setTitle APP_NAME
+    view.window.setSkipTaskbar true
     # view.window.openDevTools() if OPTIONS.dev # TODO remove
 
   # I have no idea what's the point of this
