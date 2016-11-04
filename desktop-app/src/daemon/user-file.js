@@ -8,7 +8,9 @@ import settings from './settings'
 
 Promise.promisifyAll(fs)
 
-const storePath = p => '/' + path.relative(settings.getStoreDir(), p)
+const storePath = p => '/' + path
+  .relative(settings.getStoreDir(), p)
+  .replace(/\\/g, '/')
 const absolutePath = (p='') => path.join(settings.getStoreDir(), p)
 
 const dirCreate = (dirPath) => {
@@ -46,6 +48,7 @@ const fileExists = (filePath) =>
   fs.accessAsync(absolutePath(filePath), fs.constants.F_OK)
 
 const chunkPath = hash => storePath(path.join(settings.getHostDir(), hash))
+  .replace(/\\/g, '/')
 const chunkCreate = (ipfsHash, data) => fileCreate(chunkPath(ipfsHash), data)
 const chunkDelete = hash => fileDelete(chunkPath(hash))
 
@@ -63,7 +66,7 @@ const generateTree = (hashFunc, filePath='') => {
     .then(stat => {
       if (stat.isDirectory()) {
         return fs.readdirAsync(absPath)
-          .map(file => generateTree(hashFunc, path.join(filePath, file)))
+          .map(file => generateTree(hashFunc, path.join(filePath, file).replace(/\\/g, '/')))
           .then(files => new FileObj(filePath, null, files))
       }
       return Promise.resolve(hashFunc(filePath))

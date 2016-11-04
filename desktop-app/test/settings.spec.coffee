@@ -63,7 +63,9 @@ describe 'Settings', ->
     it 'should return the path to the user\'s hosting folder', ->
       p = '/tmp/foo'
       settings.setStoreDir p
-      settings.getHostDir().should.equal path.join(p, '.storeit')
+      hostDir = settings.getHostDir()
+      hostDir = hostDir.substr(2) if process.platform is 'win32'
+      hostDir.should.equal path.join(p, '.storeit')
 
   describe '#getBandwidth()', ->
     it 'should return the user\'s max allocated bandwidth', ->
@@ -92,7 +94,9 @@ describe 'Settings', ->
       settings.setStoreDir '/some/other/path'
       settings.setBandwidth -b
       settings.reload()
-      settings.getStoreDir().should.equal p
+      storeDir = settings.getStoreDir()
+      storeDir = storeDir.substr(2) if process.platform is 'win32'
+      storeDir.should.equal path.normalize(p)
       settings.getBandwidth().should.equal b
 
   describe '#reset()', ->
