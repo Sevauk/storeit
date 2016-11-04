@@ -34,9 +34,9 @@ export default class DesktopClient extends StoreitClient {
     this.authSettigns.win = opts.win || this.authSettigns.win
 
     return this.ipfs.connect()
-    .then(() => this.connect())
-    .then(() => this.fsWatcher.start())
-    .then(() => logger.info('[STATUS] Client is ready'))
+      .then(() => this.connect())
+      .then(() => this.fsWatcher.start())
+      .then(() => logger.info('[STATUS] Client is ready'))
   }
 
   stop() {
@@ -84,8 +84,8 @@ export default class DesktopClient extends StoreitClient {
     return super.connect()
       .then(() => this.auth(this.authSettigns))
       .catch((e) => {
-        logger.debug(`connect error: ${e}`)
-        this.reconnect()
+        logger.debug(`connect error: ${logger.toJson(e)}`)
+        return this.reconnect()
       })
   }
 
