@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+
 import com.google.gson.Gson;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
@@ -77,7 +79,10 @@ public class MainActivity extends AppCompatActivity {
     ActionBar mActionBar;
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
-    
+
+    private boolean destroyIpfs = true;
+    private boolean destroySocket = true;
+
     public FloatingActionButton getFloatingButton() {
         return fbtn;
     }
@@ -156,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
         mRecyclerView.setHasFixedSize(true);
 
-        String profileUrl = getIntent().getExtras().getString("profile_url");
+        SharedPreferences sp = getSharedPreferences(getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+        String profileUrl = sp.getString("profile_url", "");
 
         mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, profileUrl, this);
         mRecyclerView.setAdapter(mAdapter);
@@ -285,12 +291,12 @@ public class MainActivity extends AppCompatActivity {
                     // Create new folder
                     StoreitFile folder;
 
-                    if (fragment.getCurrentFile().getPath().equals("/")) {
-                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + fileName, null, true);
+                    if (fragment.getCurrentFile().equals("/")) {
+                        folder = new StoreitFile(fragment.getCurrentFile() + fileName, null, true);
                     } else {
-                        folder = new StoreitFile(fragment.getCurrentFile().getPath() + File.separator + fileName, null, true);
+                        folder = new StoreitFile(fragment.getCurrentFile() + File.separator + fileName, null, true);
                     }
-                    filesManager.addFile(folder, fragment.getCurrentFile());
+                    filesManager.addFile(folder, filesManager.getFileByPath(fragment.getCurrentFile()));
                     refreshFileExplorer();
                     mSocketService.sendFADD(folder);
                 }
@@ -305,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGalleryPicker() {
+        destroySocket = destroyIpfs = false;
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -312,6 +319,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startFilePickerIntent() {
+        destroySocket = destroyIpfs = false;
         Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
@@ -322,26 +330,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCameraIntent() {
+        destroySocket = destroyIpfs = false;
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (intent.resolveActivity(getPackageManager()) != null) {
             File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
             startActivityForResult(intent, CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE);
         }
+    }
 
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.v("MainActivity", "onResume!!");
+        destroySocket = destroyIpfs = true;
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        if (mSocketServiceBound) {
+        Log.v("MaiActivity", "destroy : " + destroyIpfs + " bound :" + mIpfsServiceBound);
+
+        if (mSocketServiceBound && destroySocket) {
+            Log.v("MainActivity", "Socket!!");
             unbindService(mSocketServiceConnection);
             mSocketServiceBound = false;
         }
 
-        if (mIpfsServiceBound) {
+        if (mIpfsServiceBound && destroyIpfs) {
+            Log.v("MainActivity", "Ipfs!!");
             unbindService(mIpfsServiceConnection);
             mIpfsServiceBound = false;
         }
@@ -365,6 +383,7 @@ public class MainActivity extends AppCompatActivity {
                     actionBar.setTitle("My Files");
                 break;
             case SETTINGS_FRAGMENT:
+                destroySocket = destroyIpfs = false;
                 Intent i = new Intent(this, StoreItPreferences.class);
                 startActivity(i);
                 break;
@@ -387,11 +406,24 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    private void logout() {
+        SharedPreferences sharedPrefs = getSharedPreferences(
+                getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("oauth_token", "");
+        editor.putString("oauth_method", "");
+        editor.apply();
+
+        // Add restart first activity
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_settings:
+            case R.id.action_logout:
+
                 break;
             case android.R.id.home:
                 break;
@@ -401,6 +433,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        destroySocket = destroyIpfs = true;
+
+        Log.v("MainActivity", "Activity result : " + requestCode);
+
         if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
             Uri uri = data.getData();
             fbtn.setVisibility(View.VISIBLE);
