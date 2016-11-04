@@ -17,7 +17,7 @@
     "rebuild": "npm run clean && npm run build",
     "watch": "gulp watch",
     "debugger": "node-inspector --web-port 8081",
-    "dev:init": "run-p ipfs debugger",
+    "dev:init": "run-p debugger",
     "dev:daemon": "npm run dev:init \"nodemon node\"",
     "dev:gui": "npm run dev:init \"nodemon electron -- --gui\"",
     "nodemon": "nodemon --config .nodemon.json --debug -r dotenv/config -r source-map-support/register bootstrap.js --dev -x",
