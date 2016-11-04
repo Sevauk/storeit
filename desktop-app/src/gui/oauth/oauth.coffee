@@ -28,4 +28,3 @@ module.exports =
     authType = userSettings.getAuthType()
     render.template template unless authType?
     listen()
-    auth(authType) if authType?

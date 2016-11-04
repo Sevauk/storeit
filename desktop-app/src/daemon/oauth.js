@@ -25,7 +25,7 @@ class OAuthProvider {
       url = this.generateAuthUrl()
     }
     catch (e) {
-      logger.error('error while generating url', e)
+      throw new Error(`error while generating url ${logger.toJson(e)}`)
     }
     if (url) {
       userIntent = this.waitAuthorized()

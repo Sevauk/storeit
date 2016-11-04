@@ -48,9 +48,10 @@ createAuthWin = (url, showModal=true) ->
   authWin.on 'closed', -> authWin = null
   authWin.loadURL(url)
   authWin.once 'ready-to-show', ->
-    authWin.show() #if showModal
+    authWin.show() if authWin? # and showModal
 
 login = (authType, showModal=true) ->
+  logger.debug('GUI: login!')
   opts =
     type: authType
     devId: null
@@ -112,7 +113,7 @@ process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program
-  app.on 'ready', -> init()
+  view.on 'ready', -> init()
   view.on 'after-create-window', ->
     view.window.setSkipTaskbar(true)
     # view.window.openDevTools() if OPTIONS.dev # TODO remove

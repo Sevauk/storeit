@@ -29,6 +29,7 @@ export default class DesktopClient extends StoreitClient {
   }
 
   start(opts={}) {
+    logger.info('[STATUS] starting up daemon')
     this.authSettigns.type = opts.type || this.authSettigns.type
     this.authSettigns.devId = opts.devId || this.authSettigns.devId || 0
     this.authSettigns.win = opts.win || this.authSettigns.win
@@ -36,15 +37,15 @@ export default class DesktopClient extends StoreitClient {
     return this.ipfs.connect()
       .then(() => this.connect())
       .then(() => this.fsWatcher.start())
-      .then(() => logger.info('[STATUS] Client is ready'))
+      .then(() => logger.info('[STATUS] daemon is ready'))
   }
 
   stop() {
-    return Promise.all([
-      this.fsWatcher.stop(),
-      this.ipfs.close(),
-      this.close()
-    ])
+    logger.info('[STATUS] attempting to gracefully shut down daemon')
+    return this.fsWatcher.stop()
+      .then(() => this.close())
+      .then(() => this.ipfs.close())
+      .then(() => logger.info('[STATUS] daemon stopped'))
   }
 
   auth() {
