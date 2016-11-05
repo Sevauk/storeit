@@ -1,7 +1,9 @@
 {
-  "name": "server",
+  "name": "storeit-server",
   "version": "0.0.1",
   "main": "src/main.js",
+  "repository": "Sevauk/storeit",
+  "license": "Apache-2.0",
   "scripts": {
     "start": "npm run build && node build/main.js",
     "lint": "eslint src/*.js",
