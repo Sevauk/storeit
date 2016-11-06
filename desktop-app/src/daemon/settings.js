@@ -86,6 +86,8 @@ const setTokens = (type, tokens) => {
 
 const resetTokens = () => setTokens(null, null)
 
+resetTokens()
+
 const getStoreDir = () => settings.folderPath
 
 const setStoreDir = folderPath => {

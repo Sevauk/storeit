@@ -1,28 +1,27 @@
 $ = require 'bootstrap'
+Page = require '../page.coffee!'
+
+ipc = electron.ipcRenderer
+
 template = require './oauth.jade!'
 require './oauth.css!'
+TITLE = 'Login'
 
-ipc = (System._nodeRequire 'electron').ipcRenderer
-userSettings = (require '../remote.coffee!') 'settings'
+module.exports = class OAuthView extends Page
+  constructor: ->
+    super TITLE, template
 
-render = require '../render.coffee!'
-settings = require '../settings/settings.coffee!'
+  auth: (type) ->
+    ipc.send 'auth', type
 
-auth = (type) ->
-  ipc.send 'auth', type
+  listen: ->
+    $('.login-buttons button').click (ev) =>
+      @auth(ev.target.id)
+      @wait()
 
-listen = ->
-  ipc.on 'auth', (ev, arg) -> settings.spawn()
-  $('.login-buttons button').click ->
-    target = $(this).get(0).id
-    auth(target)
-    wait()
+  wait: ->
+    $('.login-buttons button').click ->
 
-wait = ->
-  $('.login-buttons button').click ->
-
-module.exports =
-  spawn: ->
-    authType = userSettings.getAuthType()
-    render.template template unless authType?
-    listen()
+  render: ->
+    super
+    @listen()

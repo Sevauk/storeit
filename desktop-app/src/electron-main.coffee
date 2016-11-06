@@ -72,6 +72,7 @@ init = (p) ->
   menu = electron.Menu.buildFromTemplate [
     {label: 'Downloads', click: -> loadPage 'downloads'}
     {label: 'Settings', click: -> loadPage 'settings'}
+    {label: 'OAuth', click: -> loadPage 'oauth'} #TODO
     {label: 'Statistics', click: -> loadPage 'stats'} #TODO
     {label: 'Logout', click: -> logout()} #TODO
     {type: 'separator'}

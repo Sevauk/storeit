@@ -1,77 +1,24 @@
-body.menu_box.container-fluid {
-	padding-left: 0;
-	padding-right: 0;
-}
-
-.menu_box #header {
-	height: 40px;
-	background-color: #9bbccc;
-	width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.menu_box #header .logo {
-	height: 80%;
-}
-
-.menu_box #container {
-	width: 100%;
-}
-
-.menu_box #list .item{
-	width: 100%;
-	margin: 0;
-	border-bottom: 1px solid #aeb2b3;
+#downloads .item {
 	background: #dde3e6;
+	border: 1px solid #aeb2b3;
+	margin: 0;
+	margin-bottom: 6px;
 	padding-top: 10px;
 	padding-bottom: 10px;
+	width: 100%;
 }
 
-.menu_box #list .progress {
+#downloads .progress {
 	margin-bottom: 0;
 }
 
-#list .buttons {
+#downloads .buttons {
 	margin-top: 5px;
 	text-align: center;
 }
 
-#list .buttons button {
+#downloads .buttons button {
 	color: #5b8498;
 	border-color: #5b8498;
 	width: 135px;
-}
-
-.menu_box #list .media-body {
-  padding-right: 10px;
-}
-
-.menu_box {
-	background: #ebf0f3;
-	border: 2px solid #aeb2b3;
-}
-
-.menu_box:after, .menu_box:before {
-	bottom: 100%;
-	left: 50%;
-	border: solid transparent;
-	content: " ";
-	height: 0;
-	width: 0;
-	position: absolute;
-	pointer-events: none;
-}
-
-.menu_box:after {
-	border-color: rgba(136, 183, 213, 0);
-	border-bottom-color: #88b7d5;
-	border-width: 30px;
-	margin-left: -30px;
-}
-.menu_box:before {
-	border-color: rgba(194, 225, 245, 0);
-	border-bottom-color: #c2e1f5;
-	border-width: 36px;
-	margin-left: -36px;
 }

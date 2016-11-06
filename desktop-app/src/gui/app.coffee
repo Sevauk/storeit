@@ -1,3 +1,5 @@
+window.electron = (System._nodeRequire 'electron')
+
 $ = require 'bootstrap'
 require 'bootstrap/css/bootstrap.css!'
 queryString = require 'query-string'
@@ -10,12 +12,14 @@ pages =
  oauth: require './oauth/oauth.coffee!'
  settings: require './settings/settings.coffee!'
 
-console.log('app loaded')
 $ ->
   ($ template.html).appendTo($ document.body)
   params = queryString.parse location.search
   if params.p?
-    pages[params.p].spawn()
+    page = new pages[params.p]
+    page.render()
+
+    # load dynamically
     # page = params.p
     # System.import("./src/gui/#{params.p}/#{params.p}.coffee!")
     #   .then (page) -> page.spawn()
