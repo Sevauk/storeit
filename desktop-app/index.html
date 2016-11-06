@@ -8,13 +8,12 @@
     <script src="http://localhost:35729/livereload.js"></script>
     <script src="jspm_packages/system.js"></script>
     <script src="jspm.config.js"></script>
+    <!-- this will be a 404 during development -->
+    <script src="./build/gui/bundle.js"></script>
   </head>
   <body class="container-fluid">
   </body>
   <script>
-    const app = process.env.NODE_ENV === 'development' ?
-      './src/gui/app.coffee!' : './build/gui/app.js'
-    console.log('loading app:', app)
-    SystemJS.import(app)
+    SystemJS.import('./src/gui/app.coffee!')
   </script>
 </html>

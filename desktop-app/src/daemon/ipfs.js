@@ -8,6 +8,11 @@ const MAX_RECO_TIME = 4
 
 export default class IPFSNode {
   constructor(opts={}) {
+    this.IPFS_ADDR = process.env.IPFS_ADDR
+    this.IPFS_PORT = process.env.IPFS_PORT
+    if (this.ipfsProcess == null && this.IPFS_ADDR === '127.0.0.1') {
+      this.start()
+    }
     this.ipfsProcess = null
     this.connecting = false
     this.recoTime = 1
@@ -16,12 +21,7 @@ export default class IPFSNode {
   }
 
   connect() {
-    const {IPFS_ADDR, IPFS_PORT} = process.env
-    if (this.ipfsProcess == null && IPFS_ADDR === '127.0.0.1') {
-      this.start()
-    }
-    this.node = ipfs(`/ip4/${IPFS_ADDR}/tcp/${IPFS_PORT}`)
-
+    this.node = ipfs(`/ip4/${this.IPFS_ADDR}/tcp/${this.IPFS_PORT}`)
     return this.ready()
       .tap(() => logger.info('[IPFS] node connected'))
       .then(() => this.recoTime = 1)
@@ -40,7 +40,11 @@ export default class IPFSNode {
     // TODO manage port
     logger.info('[IPFS] starting daemon')
     this.ipfsProcess = childProcess.spawn('ipfs', ['daemon'])
-    this.ipfsProcess.on('error', (err) => logger.error('IPFS Error:', err))
+    this.ipfsProcess.on('close',
+      (code) => logger.debug('[IPFS] exited with code', code))
+    this.ipfsProcess.on('error', (err) => logger.error('[IPFS] Error:', err))
+    this.ipfsProcess.stdout.on('data', (data) => logger.debug(data.toString()))
+    this.ipfsProcess.stderr.on('data', (data) => logger.debug(data.toString()))
   }
 
   stop() {

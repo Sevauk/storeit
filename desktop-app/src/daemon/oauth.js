@@ -23,18 +23,17 @@ class OAuthProvider {
     let url
     try {
       url = this.generateAuthUrl()
+      if (url) {
+        userIntent = this.waitAuthorized()
+        opener(url)
+      }
+      else {
+        userIntent = Promise.resolve()
+      }
     }
     catch (e) {
-      throw new Error(`error while generating url ${logger.toJson(e)}`)
+      return Promise.reject(new Error(e))
     }
-    if (url) {
-      userIntent = this.waitAuthorized()
-      opener(url)
-    }
-    else {
-      userIntent = Promise.resolve()
-    }
-
     return userIntent
       .then(code => this.getToken(code))
       .tap(tokens => this.setCredentials(tokens))
