@@ -12,6 +12,10 @@
 	margin-bottom: 0;
 }
 
+#downloads .media-body {
+	padding-right: 5px;
+}
+
 #downloads .buttons {
 	margin-top: 5px;
 	text-align: center;

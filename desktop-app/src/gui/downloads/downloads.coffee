@@ -52,14 +52,14 @@ module.exports = class DownloadsView extends Page
   finishDownload: (id, file) ->
     $("##{id} .progress-bar").removeClass 'active'
     $("##{id} .progress-bar").removeClass 'progress-bar-striped'
-    $("##{id} .media-body .buttons")
+    $("##{id} .buttons")
       .append("""
         <button class="btn btn-default show-in">Show in folder</button>
         <button class="btn btn-default remove">Remove from list</button>
       """)
-    $("##{id} .media-body .show-in").click(-> showInFolder(file.path))
-    show = -> $("##{id} .media-body .buttons").show()
-    hide = -> $("##{id} .media-body .buttons").hide()
+    $("##{id} .show-in").click(-> showInFolder(file.path))
+    show = -> $("##{id} .buttons").show()
+    hide = -> $("##{id} .buttons").hide()
     remove = -> $("##{id}").parent().remove()
     $("##{id}").hover(show, hide)
     $("##{id} .remove").click(remove)
@@ -87,8 +87,8 @@ module.exports = class DownloadsView extends Page
               0%
             </div>
           </div>
-          <div class="buttons" style="display: none"></div>
         </div>
+        <div class="buttons" style="display: none"></div>
       </div>
     </div>
   """

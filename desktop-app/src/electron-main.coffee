@@ -70,8 +70,8 @@ restart = ->
 
 init = (p) ->
   menu = electron.Menu.buildFromTemplate [
+    {label: 'Preferences', click: -> loadPage 'settings'}
     {label: 'Downloads', click: -> loadPage 'downloads'}
-    {label: 'Settings', click: -> loadPage 'settings'}
     # {label: 'OAuth', click: -> loadPage 'oauth'} # only for debug
     {label: 'Statistics', click: -> loadPage 'stats'} #TODO
     {label: 'Logout', click: -> logout()} #TODO
