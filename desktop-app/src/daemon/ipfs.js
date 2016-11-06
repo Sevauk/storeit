@@ -38,13 +38,17 @@ export default class IPFSNode {
 
   start() {
     // TODO manage port
+    logger.info('[IPFS] starting daemon')
     this.ipfsProcess = childProcess.spawn('ipfs', ['daemon'])
     this.ipfsProcess.on('error', (err) => logger.error('IPFS Error:', err))
   }
 
   stop() {
-    this.ipfsProcess.kill()
-    this.ipfsProcess = null
+    logger.info('[IPFS] stopping daemon')
+    if (this.ipfsProcess != null) {
+      this.ipfsProcess.kill()
+      this.ipfsProcess = null
+    }
   }
 
   close() {
