@@ -54,7 +54,6 @@ export default class DesktopClient extends StoreitClient {
         service = new GoogleService()
         break
       case 'st':
-        logger.debug('logging st ! :)')
         return this.login('john.doe@gmail.com', 'physics') // TODO: use tokens returned by our backend
       case 'developer':
         return this.developer()
@@ -72,8 +71,13 @@ export default class DesktopClient extends StoreitClient {
   }
 
   login(email, password) {
-    logger.info(`logining with ${'StoreIt'} (${email})`)
-    return this.reqJoin({type: 'st', email, password})
+    logger.info(`logining with ${'StoreIt'}`)
+    this.request('AUTH', {email, password})
+      .then(resp => {
+        logger.debug(`got token ${resp.accessToken}`)
+        return this.reqJoin({type: 'st', accessToken: resp.accessToken})
+      })
+
   }
 
   connect(type, devid, opener) {

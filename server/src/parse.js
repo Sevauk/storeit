@@ -1,7 +1,7 @@
 import {logger} from './lib/log.js'
 import * as user from './user.js'
 import * as protoObjs from './lib/protocol-objects'
-import * as auth from './auth.js'
+import * as authentication from './auth.js'
 import * as store from './store.js'
 
 const sendWelcome = (socket, usr, commandUid, usrProfile, handlerFn) => {
@@ -17,7 +17,7 @@ const join = function(command, arg, socket, handlerFn) {
   if (!arg.auth || !arg.auth.type) // TODO: add more cases
     return handlerFn(protoObjs.ApiError.BADREQUEST)
 
-  auth.doAuthentication(arg.auth, (err, email, profilePic) => {
+  authentication.doAuthentication(arg.auth, (err, email, profilePic) => {
 
     if (err) {
       return handlerFn(err)
@@ -96,6 +96,11 @@ const del = (command, arg, client) => {
   recast(command, client)
 }
 
+const auth = (command, arg, client) => {
+  console.log('authenticating user with ' + arg.email + ' ' + arg.password)
+  client.answerSuccess(command.uid, {accessToken: 'abcdefg12345'})
+}
+
 const resp = (command, arg, client) => {
 
   if (!command.commandUid) {
@@ -121,9 +126,10 @@ export const parse = function(msg, client) {
     'FMOV': mov,
     'FDEL': del,
     'RESP': resp,
+    'AUTH': auth,
   }
 
-  if (command.command !== 'JOIN' && !client.getUser())
+  if (command.command !== 'JOIN' && command.command !== 'AUTH' && !client.getUser())
     return client.answerFailure(command.uid, protoObjs.ApiError.BADREQUEST)
 
   if (!(command.command in hmap)) {
