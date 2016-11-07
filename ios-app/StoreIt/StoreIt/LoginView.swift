@@ -79,7 +79,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         
         login.logIn(withReadPermissions: ["public_profile", "email"], from: self) { (result, error) in
             guard let result = result else {
-                print(error)
+                print(error ?? "")
                 self.logout()
                 return
             }

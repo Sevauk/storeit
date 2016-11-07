@@ -9,29 +9,55 @@
 import Foundation
 import ObjectMapper
 
-class JoinParameters: Mappable {
+class Auth: Mappable {
     
-    var authType: String
+    var type: String
     var accessToken: String
     
     init() {
-        authType = ""
+        type = ""
         accessToken = ""
     }
     
-    init(authType: String, accessToken: String) {
-        self.authType = authType
+    init(type: String, accessToken: String) {
+        self.type = type
         self.accessToken = accessToken
     }
     
     required init?(map: Map) {
-        authType = ""
+        type = ""
         accessToken = ""
     }
     
     func mapping(map: Map) {
-        authType <- map["authType"]
+        type <- map["type"]
         accessToken <- map["accessToken"]
+    }
+}
+
+class JoinParameters: Mappable {
+    
+    var hosting: [String]
+    var auth: Auth
+    
+    init() {
+        hosting = []
+        auth = Auth()
+    }
+    
+    init(authType: String, accessToken: String) {
+        auth = Auth(type: authType, accessToken: accessToken)
+        hosting = []
+    }
+    
+    required init?(map: Map) {
+        hosting = []
+        auth = Auth()
+    }
+    
+    func mapping(map: Map) {
+        auth <- map["auth"]
+        hosting <- map["hosting"]
     }
     
 }

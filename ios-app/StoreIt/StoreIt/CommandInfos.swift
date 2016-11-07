@@ -38,4 +38,5 @@ struct CommandInfos {
     let UNKNOWN_REQUEST = (8, "The request is unknown")
     let ENOENT = (9, "No such file or directory")
     let NOT_IMPLEMENTED = (10, "Not implemented")
+    
 }

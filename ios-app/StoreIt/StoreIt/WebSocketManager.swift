@@ -148,7 +148,7 @@ class WebSocketManager {
                     if let response: Response = Mapper<Response>().map(JSONString: request) {
                         
                         // JOIN RESPONSE
-                        if (response.text == cmdInfos.JOIN_RESPONSE_TEXT) {
+                        if (response.text == cmdInfos.JOIN_RESPONSE_TEXT && response.code == cmdInfos.SUCCESS_CODE) {
                             if let params = response.parameters {
                                 let home: File? = params["home"]
                                 
@@ -160,7 +160,7 @@ class WebSocketManager {
                         }
                             
                         // SUCCESS CMD RESPONSE
-                        else if (response.text == cmdInfos.SUCCESS_TEXT) {
+                        else if (response.text == cmdInfos.SUCCESS_TEXT && response.code == cmdInfos.SUCCESS_CODE) {
                             let uid = response.commandUid
 
                             if (UidFactory.isWaitingForReponse(uid)) {
