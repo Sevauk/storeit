@@ -1,4 +1,4 @@
-StoreIt Protocol v0.4
+StoreIt Protocol v0.5
 =====================
 ---
 
@@ -54,9 +54,42 @@ Create a new StoreIt account. In case of success, a call to this will send a con
 }
 ```
 Errors can be:
-  
+
 * BADPASSWORD: {code: 11, msg: 'Invalid password'},
 * EXISTINGUSER: {code: 12, msg: 'Users already exists'},
+
+###### AUTH
+
+Use when the user is attempting to login with its StoreIt credentials. This returns a token to use with JOIN (see next command).
+
+```javascript
+{
+	"uid": 8763,
+	"command": "AUTH"
+	"parameters": {
+      "email": "john.doe@happy.com",
+      "password": "H7&fû_fh47p(J0",
+	}
+}
+```
+
+Errors can be:
+
+* BADCREDENTIALS: ‘CODE: 1, MSG: 'Invalid credentials'}
+
+The response will looks like this:
+
+```javascript
+{
+	"code": 0,
+	"text": "success",
+	"commandUid": 42,
+	"command": "RESP",
+	"parameters": {
+		"accessToken": "34j8b4jhb343hbKJH54"
+	}
+}
+```
 
 ###### JOIN
 
@@ -70,9 +103,7 @@ This is the first request to make whenever a client wants to get online.
   "parameters": {
     "auth": {
       "type": "fb", // fb for facebook, gg for google, and si for StoreIt login
-      "accessToken": "34j8b4jhb343hbKJH54", // (only for OAuth)
-      "email": "john.doe@happy.com", // (only for StoreIt login)
-      "password": "H7&fû_fh47p(J0", // (only for StoreIt login)
+      "accessToken": "34j8b4jhb343hbKJH54", // get it from OAuth requests or AUTH request
     },
     "hosting": [
       'QmNMNRCgNBvkdXyXuVa2cHwTJJ9wtJQht1Njx1pqNBC9cV',
