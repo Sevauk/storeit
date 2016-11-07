@@ -61,6 +61,8 @@ export default class DesktopClient extends StoreitClient {
         return this.login('john.doe@gmail.com', 'physics') // TODO: use tokens returned by our backend
       case 'developer':
         return this.developer()
+      default:
+        throw new Error('invalid authentication type')
     }
 
     logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
