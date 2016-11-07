@@ -75,18 +75,14 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
 
     public ExplorerAdapter(FilesManager manager, Context passedContext) {
         StoreitFile rootFile = manager.getRoot();
-        ArrayList<StoreitFile> files = new ArrayList<>();
-        this.manager = manager;
-
-        for (Map.Entry<String, StoreitFile> entry : rootFile.getFiles().entrySet()) { // list all files from current folder
-            files.add(entry.getValue());
-        }
-
         historyStack.push(rootFile.getPath());
 
-        mFiles = files.toArray(new StoreitFile[files.size()]); // Store file list
+        this.manager = manager;
+        mFiles =  manager.getChildrens(rootFile.getPath());
         this.context = passedContext;
         storeitPath = manager.getFolderPath();
+
+        notifyDataSetChanged();
     }
 
     public void backPressed() {

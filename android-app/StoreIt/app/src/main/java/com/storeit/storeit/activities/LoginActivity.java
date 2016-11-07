@@ -100,12 +100,14 @@ public class LoginActivity extends Activity {
 
                         intent.putExtra("home", homeJson);
                         intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
 
                         if (progessDialog != null)
                             progessDialog.dismiss();
 
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
+
                     } else {
                         if (progessDialog != null)
                             progessDialog.dismiss();
@@ -149,9 +151,12 @@ public class LoginActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    if (progessDialog != null)
+                        progessDialog.dismiss();
+
                     Toast.makeText(LoginActivity.this, "Connection lost...", Toast.LENGTH_LONG).show();
-                    stopService(new Intent(LoginActivity.this, SocketService.class));
-                    startService(new Intent(LoginActivity.this, SocketService.class));
+                    getApplicationContext().stopService(new Intent(LoginActivity.this, SocketService.class));
+                    getApplicationContext().startService(new Intent(LoginActivity.this, SocketService.class));
                 }
             });
         }
@@ -263,10 +268,10 @@ public class LoginActivity extends Activity {
         super.onStart();
 
         Intent socketService = new Intent(this, SocketService.class);
-        bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
+        getApplicationContext().bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
 
         Intent ipfsService = new Intent(this, IpfsService.class);
-        bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
+        getApplicationContext().bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -274,12 +279,12 @@ public class LoginActivity extends Activity {
         super.onStop();
 
         if (mSocketServiceBound && destroySocketService) {
-            unbindService(mSocketServiceConnection);
+            getApplicationContext().unbindService(mSocketServiceConnection);
             mSocketServiceBound = false;
         }
 
         if (mIpfsServiceBound && destroyIpfsService) {
-            unbindService(mIpfsServiceConnection);
+            getApplicationContext().unbindService(mIpfsServiceConnection);
             mIpfsServiceBound = false;
         }
     }
@@ -297,6 +302,21 @@ public class LoginActivity extends Activity {
 
         SharedPreferences sharedPrefs = getSharedPreferences(
                 getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
+
+        m_token = sharedPrefs.getString("oauth_token", "");
+        m_method = sharedPrefs.getString("oauth_method", "");
+
+        if (!m_token.isEmpty() && !m_method.isEmpty()) {
+            autologin = true;
+
+            progessDialog = new ProgressDialog(LoginActivity.this);
+            progessDialog.setMessage("Connecting...");
+            progessDialog.setIndeterminate(true);
+            progessDialog.setCancelable(false);
+            progessDialog.show();
+
+        }
+
 
         final SharedPreferences.Editor editor = sharedPrefs.edit();
 
@@ -377,23 +397,10 @@ public class LoginActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(LoginActivity.this, StoreItPreferences.class);
-                startActivity(i);
+                 startActivity(i);
             }
         });
 
-        m_token = sharedPrefs.getString("oauth_token", "");
-        m_method = sharedPrefs.getString("oauth_method", "");
-
-        if (!m_token.isEmpty() && !m_method.isEmpty()) {
-            autologin = true;
-
-            progessDialog = new ProgressDialog(LoginActivity.this);
-            progessDialog.setMessage("Connecting...");
-            progessDialog.setIndeterminate(true);
-            progessDialog.setCancelable(false);
-            progessDialog.show();
-
-        }
 
     }
 

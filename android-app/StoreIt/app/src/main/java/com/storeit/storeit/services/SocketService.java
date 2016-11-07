@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -263,13 +264,24 @@ public class SocketService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.v(LOGTAG, "OnBind :)");
+        Log.v(LOGTAG, "Socket service binded.....");
         return myBinder;
     }
 
     public class LocalBinder extends Binder {
         public SocketService getService() {
             return SocketService.this;
+        }
+    }
+
+    private Thread socketThread;
+
+    public void stopSocketThread(){
+        if (socketThread != null){
+            webSocket.disconnect();
+            socketThread.interrupt();
+            socketThread = null;
+            Log.v(LOGTAG, "stopSocketThread");
         }
     }
 
@@ -283,15 +295,15 @@ public class SocketService extends Service {
 
         server = "ws://137.74.161.134:7641";
 
-        Thread t = new Thread(new SocketManager());
-        t.start();
+        socketThread = new Thread(new SocketManager());
+        socketThread.start();
 
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
 
@@ -301,8 +313,23 @@ public class SocketService extends Service {
         Log.v(LOGTAG, "On destroy :o");
     }
 
+    @Override
+    public void onRebind(Intent intent){
+        Log.v(LOGTAG, "putain");
+
+        super.onRebind(intent);
+
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent){
+        Log.v(LOGTAG, "Socket unbinded!");
+        return true;
+    }
+
     public boolean isConnected() {
         return mConnected;
     }
+
 
 }

@@ -136,8 +136,8 @@ public class FilesManager {
             Map.Entry<String, StoreitFile> entry = it.next();
             if (isChildren(path, entry.getKey())) {
                 Log.v(LOGTAG, entry.getKey() + " is a children!");
-                StoreitFile parent = getFileByPath(path);
-                if (parent != null) {
+                StoreitFile parent = getParentFile(getFileByPath(entry.getKey()));
+                if (parent != null && parent.getFiles() != null) {
                     parent.getFiles().remove(path);
                     toDelete.add(path);
                 }

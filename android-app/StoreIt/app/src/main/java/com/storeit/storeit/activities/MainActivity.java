@@ -1,6 +1,7 @@
 package com.storeit.storeit.activities;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -96,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
     private SocketService mSocketService = null;
     private IpfsService mIpfsService = null;
 
+    private boolean willRestart = false;
+
     // Should be the same class as LoginActivity ServiceConnection
     private ServiceConnection mSocketServiceConnection = new ServiceConnection() {
         @Override
@@ -132,15 +135,18 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         Intent socketService = new Intent(this, SocketService.class);
-        bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
+        getApplicationContext().bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
 
         Intent ipfsService = new Intent(this, IpfsService.class);
-        bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
+        getApplicationContext().bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
@@ -258,11 +264,19 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String homeJson = intent.getStringExtra("home");
 
+        if (homeJson == null) { // App resumed relogin
+            Intent i = new Intent(MainActivity.this, LoginActivity.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(i);
+
+            willRestart = true;
+            return;
+        }
+
         Gson gson = new Gson();
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
-
     }
 
 
@@ -331,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startCameraIntent() {
         destroySocket = destroyIpfs = false;
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         if (intent.resolveActivity(getPackageManager()) != null) {
             File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
@@ -350,18 +364,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        Log.v("MaiActivity", "destroy : " + destroyIpfs + " bound :" + mIpfsServiceBound);
+        destroySocket = destroyIpfs = true;
 
-        if (mSocketServiceBound && destroySocket) {
-            Log.v("MainActivity", "Socket!!");
-            unbindService(mSocketServiceConnection);
-            mSocketServiceBound = false;
-        }
+        if (destroyIpfs && destroySocket) {
+            Log.v("MaiActivity", "unbind service!");
+            getApplicationContext().unbindService(mSocketServiceConnection);
+            getApplicationContext().unbindService(mIpfsServiceConnection);
 
-        if (mIpfsServiceBound && destroyIpfs) {
-            Log.v("MainActivity", "Ipfs!!");
-            unbindService(mIpfsServiceConnection);
-            mIpfsServiceBound = false;
+         /*   if (!willRestart) {
+                Log.v("MaiActivity", "unbind service!");
+                getApplicationContext().stopService(new Intent(MainActivity.this, IpfsService.class));
+                getApplicationContext().stopService(new Intent(MainActivity.this, SocketService.class));
+            }*/
         }
     }
 
