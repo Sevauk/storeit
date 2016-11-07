@@ -46,8 +46,8 @@ class Client {
     this.responseHandlers[command.uid] = handlerResponse
   }
 
-  answerSuccess(commandUid) {
-    this.sendObj(new protoObjs.Response(0, 'success', commandUid))
+  answerSuccess(commandUid, args) {
+    this.sendObj(new protoObjs.Response(0, 'success', commandUid, args))
   }
 
   answerFailure(commandUid, err) {
