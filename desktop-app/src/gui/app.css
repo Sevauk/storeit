@@ -15,7 +15,9 @@ html, body {
 }
 
 #header .logo {
-  height: 80%;
+  height: 75%;
+  margin-bottom: 5px;
+  margin-top: 5px;
 }
 
 #title {
