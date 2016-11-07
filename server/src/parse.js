@@ -14,7 +14,10 @@ const sendWelcome = (socket, usr, commandUid, usrProfile, handlerFn) => {
 const join = function(command, arg, socket, handlerFn) {
 
   // TODO: error checking on JSON
-  auth.verifyUserToken(arg.authType, arg.accessToken, (err, email, profilePic) => {
+  if (!arg.auth || !arg.auth.type) // TODO: add more cases
+    return handlerFn(protoObjs.ApiError.BADREQUEST)
+
+  auth.doAuthentication(arg.auth, (err, email, profilePic) => {
 
     if (err) {
       return handlerFn(err)
