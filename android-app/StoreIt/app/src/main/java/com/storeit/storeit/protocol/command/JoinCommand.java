@@ -8,18 +8,29 @@ public class JoinCommand {
     String command;
     Parameters parameters;
 
-    public JoinCommand(int uid, String authType, String accessToken){
+
+    public JoinCommand(int uid, String type, String accessToken){
         this.uid = uid;
         this.command = "JOIN";
-        this.parameters = new Parameters(authType, accessToken);
+        this.parameters = new Parameters(type, accessToken);
     }
 
     class Parameters{
-        String authType;
+        Auth auth;
+        String[] hosting;
+
+        public Parameters(String type, String accessToken){
+            this.hosting = new String[0];
+            auth = new Auth(type, accessToken);
+        }
+    }
+
+    class Auth{
+        String type;
         String accessToken;
 
-        public Parameters(String authType, String accessToken){
-            this.authType = authType;
+        public  Auth(String type, String accessToken){
+            this.type = type;
             this.accessToken = accessToken;
         }
     }
