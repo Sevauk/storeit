@@ -73,6 +73,24 @@ Use when the user is attempting to login with its StoreIt credentials. This retu
 }
 ```
 
+Errors can be:
+
+* BADCREDENTIALS: ‘CODE: 1, MSG: 'Invalid credentials'}
+
+The response will looks like this:
+
+```javascript
+{
+	"code": 0,
+	"text": "success",
+	"commandUid": 42,
+	"command": "RESP",
+	"parameters": {
+		"accessToken": "34j8b4jhb343hbKJH54"
+	}
+}
+```
+
 ###### JOIN
 
 From a client to the server.
