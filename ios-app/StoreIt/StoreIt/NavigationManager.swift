@@ -51,7 +51,7 @@ class NavigationManager {
         storeItSynchDir = items
         currentDirectory = items
         self.items = Array(items.keys)
-        updateCurrentHashes()
+        //updateCurrentHashes()
     }
     
     // MARK: NAVIGATION FUNCTIONS
@@ -62,7 +62,7 @@ class NavigationManager {
         indexes.append(targetName)
         currentDirectory = getCurrentFiles()
         items = Array(nextDir.files.keys)
-        updateCurrentHashes()
+        //updateCurrentHashes()
         
         return targetName
     }
@@ -71,7 +71,7 @@ class NavigationManager {
         _ = indexes.popLast()
         currentDirectory = getCurrentFiles()
         items = Array(currentDirectory.keys)
-        updateCurrentHashes()
+        //updateCurrentHashes()
     }
     
     // MARK: UPDATE TREE FUNCTIONS
@@ -221,7 +221,7 @@ class NavigationManager {
     
     // MARK: UTIL FUNCTIONS
     
-    private func updateCurrentHashes() {
+    func updateCurrentHashes() {
         currentOfflineHashes = OfflineManager.shared.getHashes(at: buildCurrentDirectoryPath())
         print("Current offline hashes updated : \(currentOfflineHashes)")
     }

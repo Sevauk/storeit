@@ -13,3 +13,5 @@ let LIGHT_GREY = UIColor(red: 167/255, green: 170/255, blue: 172/255, alpha: 1)
 
 let FILE_IMG = UIImage(named: "ic_insert_drive_file")
 let DIR_IMG = UIImage(named: "ic_folder")
+
+let IS_OFFLINE_ACTIVATED = "isOfflineActivated"

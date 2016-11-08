@@ -63,6 +63,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         navigationItem.title = ( currentPath == "/" ?
             navigationManager.rootDirTitle : currentPath.components(separatedBy: "/").last!)
         
+        navigationManager.updateCurrentHashes()
+        
         list.reloadData()
     }
     
@@ -127,7 +129,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         
         let synchedImage = navigationManager.isOfflineActivated(for: file.IPFSHash) ?
             UIImage(named: "ic_offline_pin") : nil
-        
+                
         let fileImage = file.isDir ?
             DIR_IMG : FILE_IMG
         
@@ -174,20 +176,24 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         
         var offline: UIAlertAction?
         
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
-                
-                if (!selectedFile.isDir) {
-                    let offlineActivated = navigationManager.isOfflineActivated(for: selectedFile.IPFSHash)
-                    
-                    if (offlineActivated) {
-                        offline = buildAction(title: "Désactiver le mode hors ligne pour ce fichier",
-                                              style: .default,
-                                              handler: deactivateOfflineForFile)
-                    } else {
-                        offline = buildAction(title: "Activer le mode hors ligne pour ce fichier",
-                                              style: .default,
-                                              handler: activateOfflineForFile)
+        if let isOfflineActivated = UserDefaults.standard.value(forKey: IS_OFFLINE_ACTIVATED) as? Bool {
+            if isOfflineActivated {
+                if let index = selectedIndex {
+                    if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+                        
+                        if (!selectedFile.isDir) {
+                            let offlineActivated = navigationManager.isOfflineActivated(for: selectedFile.IPFSHash)
+                            
+                            if (offlineActivated) {
+                                offline = buildAction(title: "Désactiver le mode hors ligne pour ce fichier",
+                                                      style: .default,
+                                                      handler: deactivateOfflineForFile)
+                            } else {
+                                offline = buildAction(title: "Activer le mode hors ligne pour ce fichier",
+                                                      style: .default,
+                                                      handler: activateOfflineForFile)
+                            }
+                        }
                     }
                 }
             }

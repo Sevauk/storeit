@@ -15,7 +15,7 @@ class OfflineManager {
     private let fileManager = FileManager.default
     private let documents = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     private let offlineDirectoryUrl: URL
-    
+        
     private init() {
 		offlineDirectoryUrl = URL(fileURLWithPath: documents + "/offline_data")
 		createDirectory(at: offlineDirectoryUrl)

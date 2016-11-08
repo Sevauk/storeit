@@ -18,6 +18,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         /*let navigationController = self.window?.rootViewController as! UINavigationController
         let loginView = navigationController.viewControllers[0] as! LoginView*/
         
+        if UserDefaults.standard.value(forKey: IS_OFFLINE_ACTIVATED) == nil {
+            UserDefaults.standard.set(true, forKey: IS_OFFLINE_ACTIVATED)
+        }
+        
         var configureError: NSError?
         GGLContext.sharedInstance().configureWithError(&configureError)
         assert(configureError == nil, "[AppDelegate] Error configuring Google services: \(configureError)")
