@@ -11,9 +11,12 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -28,12 +31,16 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.gson.Gson;
 import com.storeit.storeit.R;
 import com.storeit.storeit.oauth.GetUsernameTask;
@@ -70,6 +77,13 @@ public class LoginActivity extends Activity {
     private String m_token = "";
     private String m_method = "";
 
+    LoginButton fbButton;
+    private CallbackManager callbackManager;
+
+    private static final int PERMISSIONS_REQUEST_WRITE_EXTERNAL = 1;
+
+    private boolean sharingIntentReceived = false;
+    private Uri sharingIntentUri = null;
 
     private LoginHandler mLoginHandler = new LoginHandler() {
         @Override
@@ -101,9 +115,14 @@ public class LoginActivity extends Activity {
                         intent.putExtra("home", homeJson);
                         intent.putExtra("profile_url", joinResponse.getParameters().getUserPicture());
 
-
                         if (progessDialog != null)
                             progessDialog.dismiss();
+
+                        if (sharingIntentReceived) {
+                            intent.putExtra("newFile", getRealPathFromURI(sharingIntentUri));
+                        } else {
+                            intent.putExtra("newFile", "");
+                        }
 
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
@@ -161,6 +180,11 @@ public class LoginActivity extends Activity {
             });
         }
     };
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     private void pickUserAccount() {
         String[] accountTypes = new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE};
@@ -265,18 +289,25 @@ public class LoginActivity extends Activity {
 
     @Override
     protected void onStart() {
-        super.onStart();
+        super.onStart();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
 
         Intent socketService = new Intent(this, SocketService.class);
         getApplicationContext().bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
 
         Intent ipfsService = new Intent(this, IpfsService.class);
         getApplicationContext().bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
     }
 
     @Override
     protected void onStop() {
-        super.onStop();
+        super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
 
         if (mSocketServiceBound && destroySocketService) {
             getApplicationContext().unbindService(mSocketServiceConnection);
@@ -287,18 +318,27 @@ public class LoginActivity extends Activity {
             getApplicationContext().unbindService(mIpfsServiceConnection);
             mIpfsServiceBound = false;
         }
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.disconnect();
     }
 
-    LoginButton fbButton;
-    private CallbackManager callbackManager;
-
-    private static final int PERMISSIONS_REQUEST_WRITE_EXTERNAL = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
+
+        Intent intent = getIntent();
+
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            sharingIntentReceived = true;
+            sharingIntentUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        }
 
         SharedPreferences sharedPrefs = getSharedPreferences(
                 getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
@@ -397,11 +437,22 @@ public class LoginActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent i = new Intent(LoginActivity.this, StoreItPreferences.class);
-                 startActivity(i);
+                startActivity(i);
             }
         });
 
 
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+    }
+
+    public String getRealPathFromURI(Uri contentUri) {
+        String[] proj = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
     }
 
     @Override
@@ -417,4 +468,19 @@ public class LoginActivity extends Activity {
         }
     }
 
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Login Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
 }

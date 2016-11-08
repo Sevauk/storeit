@@ -264,6 +264,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String homeJson = intent.getStringExtra("home");
 
+
         if (homeJson == null) { // App resumed relogin
             Intent i = new Intent(MainActivity.this, LoginActivity.class);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -277,6 +278,12 @@ public class MainActivity extends AppCompatActivity {
         StoreitFile rootFile = gson.fromJson(homeJson, StoreitFile.class);
 
         filesManager = new FilesManager(this, rootFile);
+
+        String newFile = intent.getStringExtra("newFile");
+        Log.v("MainActivity", "received " + newFile);
+        if (!newFile.equals("")) {
+            openFragment(FileViewerFragment.newInstance(newFile));
+        }
     }
 
 
@@ -392,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case FILES_FRAGMENT:
                 fbtn.setVisibility(View.VISIBLE);
-                openFragment(new FileViewerFragment());
+                openFragment(FileViewerFragment.newInstance(""));
                 if (actionBar != null)
                     actionBar.setTitle("My Files");
                 break;
