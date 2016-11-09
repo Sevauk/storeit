@@ -1,13 +1,5 @@
 import fs from 'fs'
-import logger from '../../lib/log'
 
-export let settings = undefined
+let sets = JSON.parse(fs.readFileSync('server.conf'))
 
-fs.read('server.conf', (err, res) => {
-  if (err) {
-    logger.error(`error when reading configuration file (${err})`)
-    return
-  }
-
-  settings = JSON.parse(res)
-})
+export const settings = f => sets[f]

@@ -1,37 +1,50 @@
 //const stormpath = require('stormpath')
 import stormpath from 'stormpath'
-import settings from './settings.js'
+import {settings} from './settings.js'
+import bluebird from 'bluebird'
 
-const apiKey = new stormpath.ApiKey(
-  settings['STORMPATH_CLIENT_APIKEY_ID'],
-  settings['STORMPATH_CLIENT_APIKEY_SECRET']
-)
+let appli = undefined
 
-const client = new stormpath.Client({apiKey})
+const getApp = () => new Promise((resolve, reject) => {
 
-const applicationHref = settings['STORMPATH_APPLICATION_HREF']
+  if (appli) return resolve(appli)
 
-client.getApplication(applicationHref, (err, application) => {
+  const apiKey = new stormpath.ApiKey(
+    settings('STORMPATH_CLIENT_APIKEY_ID'),
+    settings('STORMPATH_CLIENT_APIKEY_SECRET')
+  )
 
-  console.log('Application:', application)
+  const client = new stormpath.Client({apiKey})
+  const appHref = settings('STORMPATH_APPLICATION_HREF')
 
-  const createAccount = (email, password) => {
+  client.getApplication(appHref, (err, app) => {
+    if (err) reject(err)
+    appli = app
+    bluebird.promisifyAll(appli)
+    resolve(appli)
+  })
+})
 
-    const account = {
+export const createAccount = (email, password) =>
+  getApp()
+    .then(app => app.createAccountAsync({
       email,
-      givenName: 'Adri',
-      middleName: 'Dridri',
+      givenName: 'null',
+      middleName: 'null',
       password,
       customData: {
         dataLimit: 5
       }
-    }
+    }))
+    .then(createdAccount => console.log('account :' + createdAccount))
 
-    application.createAccount(account, (err, createdAccount) => {
-      console.log(err)
-      console.log('Account:', createdAccount)
-    })
-  }
 
-  createAccount('adrien.morel@me.com', 'K776xdxd')
-})
+export const authenticateAccount = (email, password) =>
+  getApp()
+    .then(app => app.authenticateAccountAsync({username: email, password}))
+    .then(result => new Promise((resolve, reject) => {
+      result.getAccount((err, account) => {
+        if (err) return reject(err)
+        resolve(account)
+      })
+    }))
