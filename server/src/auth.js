@@ -1,6 +1,7 @@
 import {oauth2} from 'googleapis'
 import request from 'request'
 import * as protocol from './lib/protocol-objects.js'
+import storm from './stormpath.js'
 
 const oauth = oauth2('v2')
 
