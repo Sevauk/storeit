@@ -163,7 +163,8 @@ public class SocketService extends Service {
                     e.printStackTrace();
                     mConnected = false;
                     Log.e(LOGTAG, "Cannot connect to server... Retrying in 5 seconds");
-                    mLoginHandler.handleConnection(false);
+                    if (mLoginHandler != null)
+                        mLoginHandler.handleConnection(false);
                     SystemClock.sleep(5000);
                 }
             }

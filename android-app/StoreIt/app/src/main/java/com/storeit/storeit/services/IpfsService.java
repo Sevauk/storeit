@@ -46,34 +46,36 @@ public class IpfsService extends Service {
         }
     }
 
+    private boolean mBound = false;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         makeNotification(getApplicationContext());
+
         Log.v(LOGTAG, "onCreate!");
-        copyIpfs();
-
-        mDaemonThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(LOGTAG, "Launching ipfs daemon");
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                 launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
-            }
-        });
-        mDaemonThread.start();
-
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         Log.v(LOGTAG, "OnBind :)");
+
+        if (!mBound){
+            copyIpfs();
+            mDaemonThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v(LOGTAG, "Launching ipfs daemon");
+                    launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
+                }
+            });
+            mDaemonThread.start();
+
+            mBound = true;
+        }
+
         return myBinder;
     }
 
@@ -174,10 +176,10 @@ public class IpfsService extends Service {
         Notification.Builder builder = new Notification.Builder(context)
                 .setContentTitle("StoreIt")
                 .setContentText("You are an active ipfs node :)")
-                .setSmallIcon(R.drawable.ipfs_logo);
+                .setSmallIcon(R.drawable.ipfs_logo)
+                .setAutoCancel(true);
+
         Notification n;
-
-
         n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
         notificationManager.notify(99, n);
@@ -194,7 +196,7 @@ public class IpfsService extends Service {
     @Override
     public boolean onUnbind(Intent intent){
         Log.v(LOGTAG, "Ipfs unbinded!");
-        notificationManager.cancelAll();
+        notificationManager.cancel(99);
         return true;
     }
 }

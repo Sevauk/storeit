@@ -125,6 +125,7 @@ public class LoginActivity extends Activity {
                         }
 
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+
                         startActivity(intent);
 
                     } else {
@@ -174,8 +175,8 @@ public class LoginActivity extends Activity {
                         progessDialog.dismiss();
 
                     Toast.makeText(LoginActivity.this, "Connection lost...", Toast.LENGTH_LONG).show();
-                    getApplicationContext().stopService(new Intent(LoginActivity.this, SocketService.class));
-                    getApplicationContext().startService(new Intent(LoginActivity.this, SocketService.class));
+ //                   getApplicationContext().stopService(new Intent(LoginActivity.this, SocketService.class));
+//                    getApplicationContext().startService(new Intent(LoginActivity.this, SocketService.class));
                 }
             });
         }
@@ -305,21 +306,16 @@ public class LoginActivity extends Activity {
 
     @Override
     protected void onStop() {
-        super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
-// See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        super.onStop();
 
-        if (mSocketServiceBound && destroySocketService) {
-            getApplicationContext().unbindService(mSocketServiceConnection);
-            mSocketServiceBound = false;
-        }
+        Log.v("LoginActivity", "onStop()");
 
-        if (mIpfsServiceBound && destroyIpfsService) {
+        if (mIpfsServiceBound)
             getApplicationContext().unbindService(mIpfsServiceConnection);
-            mIpfsServiceBound = false;
-        }
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        if (mSocketServiceBound)
+            getApplicationContext().unbindService(mSocketServiceConnection);
+
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
         client.disconnect();
     }
 

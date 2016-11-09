@@ -368,22 +368,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy(){
+
+        Log.v("MaiActivity", "unbind service!");
+
+        if (mIpfsServiceBound)
+            getApplicationContext().stopService(new Intent(MainActivity.this, IpfsService.class));
+        if (mSocketServiceBound)
+            getApplicationContext().stopService(new Intent(MainActivity.this, SocketService.class));
+
+        super.onDestroy();
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
 
-        destroySocket = destroyIpfs = true;
 
-        if (destroyIpfs && destroySocket) {
-            Log.v("MaiActivity", "unbind service!");
-            getApplicationContext().unbindService(mSocketServiceConnection);
-            getApplicationContext().unbindService(mIpfsServiceConnection);
 
          /*   if (!willRestart) {
                 Log.v("MaiActivity", "unbind service!");
                 getApplicationContext().stopService(new Intent(MainActivity.this, IpfsService.class));
                 getApplicationContext().stopService(new Intent(MainActivity.this, SocketService.class));
             }*/
-        }
     }
 
     public void onTouchDrawer(final int position) {
@@ -436,6 +443,9 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("oauth_method", "");
         editor.apply();
 
+        Intent i = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(i);
+
         // Add restart first activity
     }
 
@@ -444,7 +454,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch (id) {
             case R.id.action_logout:
-
+                logout();
                 break;
             case android.R.id.home:
                 break;
