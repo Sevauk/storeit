@@ -5,7 +5,7 @@ import * as log from './lib/log.js'
 import fs from 'fs'
 import * as stormpath from './stormpath.js'
 
-stormpath.authenticateAccount('juju@gmail2.com', 'K776xdxd')
+stormpath.sendPasswordReset('adrien.morel@me.com')
   .then(() => console.log('all good !'))
   .catch(err => console.log(err))
 

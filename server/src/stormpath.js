@@ -48,3 +48,8 @@ export const authenticateAccount = (email, password) =>
         resolve(account)
       })
     }))
+
+export const sendPasswordReset = (email) =>
+  getApp()
+    .then(app => app.sendPasswordResetEmailAsync({email}))
+    .then(token => console.log(token.href.split('/').pop()))
