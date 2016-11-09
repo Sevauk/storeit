@@ -1,32 +1,50 @@
 $ = require 'bootstrap'
+Page = require '../page.coffee!'
+remote = electron.remote
+
+{dialog} = remote
+win = remote.getCurrentWindow()
+
+userSettings = remote.getGlobal 'settings'
+
 template = require './settings.jade!'
 require './settings.css!'
+TITLE = 'Preferences'
 
-ipc = (System._nodeRequire 'electron').ipcRenderer
-userSettings = (require '../remote.coffee!') 'settings'
+module.exports = class SettingsView extends Page
+  constructor: ->
+    super TITLE, template
 
-render = require '../render.coffee!'
+  render: ->
+    super
+    @init()
 
-save = ->
-  userSettings.setFolderPath $('#storeit-dir').val()
-  userSettings.setAllocated $('storeit-space').val()
-  userSettings.setBandwidth $('storeit-bandwidth').val()
-  userSettings.save()
-  ipc.send 'reload'
+  save: ->
+    userSettings.setStoreDir $('#storeit-dir').val()
+    userSettings.setAllocated $('storeit-space').val()
+    userSettings.setBandwidth $('storeit-bandwidth').val()
+    userSettings.save()
+    ipc.send 'reload'
 
-reset = ->
-  userSettings.reset()
-  ipc.send 'reload'
+  reset: ->
+    userSettings.reset()
+    ipc.send 'reload'
 
-init = ->
-  $('#storeit-dir').val userSettings.getFolderPath()
-  $('#storeit-space').val userSettings.getAllocated()
-  $('#storeit-bandwidth').val userSettings.getBandwidth()
+  init: ->
+    $('#storeit-dir').val userSettings.getStoreDir()
+    $('#storeit-space').val userSettings.getAllocated()
+    $('#storeit-bandwidth').val userSettings.getBandwidth()
 
+    $('#storeit-dir-change').click (ev) ->
+      ev.preventDefault()
+      dialog.showOpenDialog win, properties: ['openDirectory'], (path) ->
+        $('#storeit-dir').val(path) if path?
 
-module.exports =
-  spawn: ->
-    render.template template
-    do init
-    $('#storeit-validate').click -> save()
-    $('#storeit-reset').click -> reset()
+    $('#storeit-validate').click (ev) ->
+      ev.preventDefault()
+      @save()
+
+    $('#storeit-reset').click (ev) ->
+      ev.preventDefault()
+      @reset()
+    return

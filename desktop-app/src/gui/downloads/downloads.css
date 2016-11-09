@@ -1,0 +1,28 @@
+#downloads .item {
+	background: #dde3e6;
+	border: 1px solid #aeb2b3;
+	margin: 0;
+	margin-bottom: 6px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+}
+
+#downloads .progress {
+	margin-bottom: 0;
+}
+
+#downloads .media-body {
+	padding-right: 5px;
+}
+
+#downloads .buttons {
+	margin-top: 5px;
+	text-align: center;
+}
+
+#downloads .buttons button {
+	color: #5b8498;
+	border-color: #5b8498;
+	width: 135px;
+}

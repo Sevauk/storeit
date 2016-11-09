@@ -1,6 +1,9 @@
 {
-  "name": "common",
+  "name": "storeit-jslib",
   "version": "0.0.1",
+  "description": "Shared code between StoreIt artifacts (server, desktop, web)",
+  "repository": "Sevauk/storeit",
+  "license": "Apache-2.0",
   "scripts": {
     "test": "echo 'todo' && exit 1"
   },

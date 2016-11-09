@@ -3,9 +3,6 @@ import WebSocket from 'ws'
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
 
-import fs from 'fs'
-Promise.promisifyAll(fs)
-
 import StoreitClient from '../../lib/client'
 import logger from '../../lib/log'
 import Watcher from './watcher'
@@ -20,33 +17,40 @@ const authTypes = {
 export default class DesktopClient extends StoreitClient {
 
   constructor() {
-    super((...args) => WebSocket(...args))
+    super((...args) => new WebSocket(...args))
 
     this.ipfs = new IPFSNode()
+    this.authSettings = {}
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
+    this.progressHandler = (percent, file) =>
+      logger.info(`[DL] <${Math.floor(percent)}%> ${file.path}`)
   }
 
-  start() {
-    return Promise.all([
-      this.fsWatcher.start(),
-      this.ipfs.connect(),
-      this.connect()
-    ])
+  start(opts={}) {
+    logger.info('[STATUS] starting up daemon')
+    this.authSettings.type = opts.type || this.authSettings.type
+    this.authSettings.devId = opts.devId || this.authSettings.devId || 0
+    this.authSettings.win = opts.win || this.authSettings.win
+
+    return this.ipfs.connect()
+      .then(() => this.connect())
+      .then(() => this.fsWatcher.start())
+      .then(() => logger.info('[STATUS] daemon is ready'))
   }
 
   stop() {
-    return Promise.all([
-      this.fsWatcher.stop(),
-      this.ipfs.close(),
-      this.close()
-    ])
+    logger.info('[STATUS] attempting to gracefully shut down daemon')
+    return this.fsWatcher.stop()
+      .then(() => this.close())
+      .then(() => this.ipfs.close())
+      .then(() => logger.info('[STATUS] daemon stopped'))
   }
 
-  auth(type, devId, opener) {
+  auth() {
     let service
-    switch (type) {
+    switch (this.authSettings.type) {
       case 'facebook':
         service = new FacebookService()
         break
@@ -59,9 +63,13 @@ export default class DesktopClient extends StoreitClient {
         return this.login()
     }
 
-    logger.info(`[AUTH] login with ${type} OAuth`)
-    return service.oauth(opener)
-      .then(tokens => this.reqJoin(authTypes[type], tokens.access_token))
+    logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
+    return service.oauth(this.authSettings.win)
+      .then(tokens => this.reqJoin(authTypes[this.authSettings.type], tokens.access_token))
+      .catch(e => {
+        logger.error(`[AUTH] login failed ${e}`)
+        throw new Error(e)
+      })
   }
 
   developer(devId='') {
@@ -73,17 +81,42 @@ export default class DesktopClient extends StoreitClient {
     throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
   }
 
-  connect(type, devid, opener) {
-    type = type || this.authSettigns.type
-    devid = devid || this.authSettigns.devid
-    opener = opener || this.authSettigns.opener
+  connect() {
     return super.connect()
-      .then(() => this.auth(type, devid, opener))
+      .then(() => this.auth(this.authSettings))
+      .catch((e) => {
+        logger.debug(`connect error: ${logger.toJson(e)}`)
+        return this.reconnect()
+      })
   }
 
   reloadSettings() {
     // TODO
     settings.reload()
+  }
+
+  addFilesUnknownByServ(home) {
+    return userFile.getUnknownFiles(home)
+      // .each(filePath => this.sendFADD(filePath)) // TODO
+  }
+
+  syncDir(file) {
+    return userFile.dirCreate(file.path)
+      .tap(() => logger.info(`[DIR-SYNC] ${file.path}`))
+      .then(() => this.recvFADD({parameters: {files: file.files}}, false))
+      .tap(() => logger.info(`[DIR-SYNC:end] ${file.path} `))
+  }
+
+  syncFile(file) {
+    logger.info(`[SYNC:start] ${file.path}`)
+    return userFile.exists(file.path)
+      .catch(() => userFile.create(file.path, ''))
+      .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
+      .then(isInStore => {
+        if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path,
+          this.progressHandler)
+        logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
+      })
   }
 
   reqJoin(authType, accessToken) {
@@ -100,62 +133,19 @@ export default class DesktopClient extends StoreitClient {
       })
       .then(() => this.addFilesUnknownByServ(home))
       .tap(() => logger.info('[JOIN] home synchronized'))
-      .tap(() => this.fsWatcher.start())
-  }
-
-  addFilesUnknownByServ(dir) {
-    /*
-    * files that were added when the daemon wasn't running
-    * should be sent now to the server.
-    */
-
-    if (!dir || !dir.files || !dir.isDir)
-      return Promise.resolve()
-
-    return fs.readdirAsync(userFile.absolutePath(dir.path))
-      .map(fileName => {
-        if (!(fileName in dir.files)) {
-          this.sendFADD(dir.path + fileName)
-        }
-      })
-      .then(() =>
-        Promise.map(Object.keys(dir.files), (file) => {
-          if (file)
-            this.addFilesUnknownByServ(file)
-        }))
-      .catch((e) => logger.warn(e))
   }
 
   recvFADD(req, print=true) {
-    const params = req.parameters
-    if (print) logger.debug(`[RECV:FADD] ${logger.toJson(params)}`)
+    if (print) logger.debug(`[RECV:FADD] ${logger.toJson(req.parameters)}`)
 
-    if (!params.files) return Promise.resolve(params)
+    let files = req.parameters.files
+    if (!Array.isArray(files))
+      files = Object.keys(files).map(key => files[key])
 
-    if (!Array.isArray(params.files)) {
-      params.files = Object.keys(params.files).map(key => params.files[key])
-    }
-
-    return Promise.map(params.files, (file) => {
+    return Promise.map(files, (file) => {
       this.fsWatcher.ignore(file.path)
-      if (file.isDir) {
-        return userFile.dirCreate(file.path)
-          .tap(() => logger.info(`[DIR-SYNC] ${file.path}`))
-          .then(() => this.recvFADD({parameters: {files: file.files}}, false))
-          .tap(() => logger.info(`[DIR-SYNC:end] ${file.path} `))
-      }
-      else {
-        logger.info(`[SYNC:start] ${file.path}`)
-        return userFile.exists(file.path)
-          .catch(() => userFile.create(file.path, ''))
-          .then(() => this.ipfs.hashMatch(file.path, file.IPFSHash))
-          .then(isInStore => {
-            if (!isInStore) return this.ipfs.download(file.IPFSHash, file.path)
-            logger.info(`[SYNC:done] ${file.path}: the file is up to date`)
-          })
-          .catch(logger.error)
-          .then(() => this.fsWatcher.unignore(file.path))
-      }
+      return (file.isDir ? this.syncDir(file) : this.syncFile(file))
+        .then(() => this.fsWatcher.unignore(file.path))
     })
   }
 
@@ -202,7 +192,8 @@ export default class DesktopClient extends StoreitClient {
   }
 
   sendFUPT(filePath) {
-    return userFile.generateTree(filePath)
+    const hashFunc = this.ipfs.getFileHash.bind(this.ipfs)
+    return userFile.generateTree(hashFunc, filePath)
       .then(file => this.request('FUPT', {files: [file]}))
       .catch(err => logger.error('FUPT: ' + err))
   }
@@ -215,5 +206,9 @@ export default class DesktopClient extends StoreitClient {
   sendFMOV(src, dst) {
     return this.request('FMOV', {src, dst})
       .catch(err => logger.error('FMOV: ' + err))
+  }
+
+  setProgressHandler(progressHandler) {
+    this.progressHandler = progressHandler
   }
 }

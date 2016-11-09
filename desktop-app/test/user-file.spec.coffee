@@ -5,6 +5,8 @@ settings = importDfl 'settings'
 store = settings.getStoreDir()
 host = settings.getHostDir()
 
+{FileObj} = (require '../lib/protocol-objects')
+
 path = require('path')
 spawn = require('child_process').spawn
 fs = Promise.promisifyAll(require 'fs')
@@ -131,6 +133,26 @@ describe 'User File', ->
       expected = fs.readFileSync './test/resources/generateTree.expected.json'
       userFile.generateTree((p) -> "####{p}###")
         .should.eventually.eql JSON.parse(expected)
+
+  # FIXME
+  # describe '#getUnknownFiles()', ->
+  #
+  #   beforeEach ->
+  #     touch "#{store}/foo"
+  #     touch "#{store}/bar"
+  #     mkdir "#{store}/foobar"
+  #     touch "#{store}/foobar/bar"
+  #
+  #   it 'should resolve to the unknown files list', (done) ->
+  #     files = {
+  #       foo: new FileObj('/foo', true),
+  #       foobar: new FileObj('/foobar', null)
+  #     }
+  #     dir = new FileObj('/', null, files)
+  #     expected = ['/bar', '/foobar/bar']
+  #     userFile.getUnknownFiles(dir)
+  #       .should.eventually.eql expected
+  #       .and.notify done
 
   describe '#clear()', ->
     beforeEach ->
