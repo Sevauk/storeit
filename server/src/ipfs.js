@@ -16,7 +16,7 @@ const readAll = stream => new Promise((resolve, reject) => {
 })
 
 // list every chunk (every link if the file is big) of an ipfs object
-const listChunks = (multihash) =>
+export const listChunks = (multihash) =>
   node.id()
     .then(() => node.object.get(multihash))
     .then((res) => {
@@ -27,13 +27,3 @@ const listChunks = (multihash) =>
         return [multihash]
       }
     })
-
-// store the root of a big file (so a client can build a file from its chunks)
-export const hostMerkleIfNecessary = (multihash) =>
-  node.id()
-    .then(() => listChunks(multihash))
-     // TODO: think about removing the DAG when the file associated to it is deleted
-    .then(chunks => chunks.length > 1 ? node.block.get(multihash) : Promise.resolve())
-
-//hostMerkleIfNecessary('QmRw2K8DwWzYw5p4fktLkm8qxv6DX3oipjGNyLZ3j1hNxn')
-//  .catch((err) => console.log(err))

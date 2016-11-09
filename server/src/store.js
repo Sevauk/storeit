@@ -1,8 +1,8 @@
 import * as tool from './tool.js'
-import * as store from './store.js'
 import * as user from './user.js'
 import * as api from './lib/protocol-objects.js'
 import * as tree from './lib/tree.js'
+import * as ipfs from './ipfs.js'
 import {logger} from './lib/log.js'
 
 export const storeTable = new tool.TwoHashMap()
@@ -22,7 +22,7 @@ export const processHash = (socket, arg) => {
 
 const targetCount = 5
 
-export const keepChunkAlive = (hash) => {
+const keepChunkAlive = (hash) => {
   let instances = storeTable.count(hash)
 
   if (instances >= targetCount)
@@ -60,9 +60,27 @@ export const removeSocket = (socket) => {
   }
 }
 
+const keepFileAlive = (multihash) =>
+  ipfs.listChunks(multihash)
+    .then(list => {
+      if (list.length > 1) {
+        for (const hash of list) {
+          keepChunkAlive(hash)
+        }
+      }
+      else {
+        keepChunkAlive(multihash)
+        /* TODO: in order to list the chunks of our file, we made an ipfs object get.
+         * when the file is small, the command downloads the entire chunk of data. In
+         * this case we have to delete it because the server does not host user files.
+         * If the file is big, we must keep the object which is the list of hash (links)
+         * to the chunks composing the file (but dont forget to delete it when the file
+         * is removed by the user) */
+      }
+    })
 
-export const keepTreeAlive = (treeCurrent) => {
+
+export const keepTreeAlive = (treeCurrent) =>
   tree.forEachHash(treeCurrent, (hash) => {
-    store.keepChunkAlive(hash)
+    keepFileAlive(hash)
   })
-}

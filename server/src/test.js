@@ -1,6 +1,6 @@
 import {logger} from './lib/log.js'
 
-logger.transports.console.level = 'error'
+logger.setLevel('error')
 
 import {expect} from 'chai'
 import WebSocket from 'ws'
