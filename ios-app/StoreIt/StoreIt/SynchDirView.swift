@@ -296,7 +296,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                             
                             let file = self.navigationManager.createFile(path: relativePath, metadata: "", IPFSHash: ipfsAddResponse!.hash)
                             
-                            self.networkManager.fadd([file], completion: nil)
+                            self.networkManager.fadd(files: [file], completion: nil)
                         }
                     }
                 })
@@ -318,7 +318,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             let relativePath = self.navigationManager.buildPath(for: input.text!)
             let newDirectory: File = self.navigationManager.createDir(path: relativePath, metadata: "", IPFSHash: "")
 
-            self.networkManager.fadd([newDirectory], completion: nil)
+            self.networkManager.fadd(files: [newDirectory], completion: nil)
             
         }))
         
@@ -366,7 +366,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     func deleteFile(action: UIAlertAction) -> Void {
         selectedFile { file in
-            networkManager.fdel([file.path]) { _ in
+            networkManager.fdel(files: [file.path]) { _ in
                 self.selectedIndex = nil
             }
         }
@@ -399,7 +399,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                     self.navigationManager.movingOptions.src = file.path
                     self.navigationManager.movingOptions.dest = newPath
                     
-                    self.networkManager.fmove(self.navigationManager.movingOptions) { _ in
+                    self.networkManager.fmove(movingOptions: self.navigationManager.movingOptions) { _ in
                         self.selectedIndex = nil
                     }
                 }
@@ -496,7 +496,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             navigationManager.movingOptions.file?.path = dest
             navigationManager.movingOptions.dest = dest
             
-            networkManager.fmove((navigationManager.movingOptions), completion: nil)
+            networkManager.fmove(movingOptions: (navigationManager.movingOptions), completion: nil)
         }
     }
     

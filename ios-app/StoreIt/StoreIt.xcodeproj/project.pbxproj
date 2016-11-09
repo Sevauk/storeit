@@ -47,7 +47,6 @@
 		858B096E1D23D9D400CB1190 /* IpfsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 858B096D1D23D9D400CB1190 /* IpfsResponse.swift */; };
 		85A553861D96A19F009AFC1B /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A553851D96A19F009AFC1B /* SessionManager.swift */; };
 		85A6662E1DB0002100B369A0 /* OfflineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A6662D1DB0002100B369A0 /* OfflineManager.swift */; };
-		85B154121D140D18003B62FE /* PListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B154111D140D18003B62FE /* PListManager.swift */; };
 		85B196891D9A9333008B620B /* 2017_logo_storeit.png in Resources */ = {isa = PBXBuildFile; fileRef = 85B196881D9A9333008B620B /* 2017_logo_storeit.png */; };
 		85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B5A8F21D2C09AE00529533 /* UidFactory.swift */; };
 		85BA025B1CEDBD7200A8FC6F /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */; };
@@ -126,7 +125,6 @@
 		858B096D1D23D9D400CB1190 /* IpfsResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IpfsResponse.swift; sourceTree = "<group>"; };
 		85A553851D96A19F009AFC1B /* SessionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		85A6662D1DB0002100B369A0 /* OfflineManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OfflineManager.swift; sourceTree = "<group>"; };
-		85B154111D140D18003B62FE /* PListManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PListManager.swift; sourceTree = "<group>"; };
 		85B196881D9A9333008B620B /* 2017_logo_storeit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2017_logo_storeit.png; sourceTree = "<group>"; };
 		85B5A8F21D2C09AE00529533 /* UidFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UidFactory.swift; sourceTree = "<group>"; };
 		85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
@@ -284,7 +282,6 @@
 		853AD0481C99A7E30036A7FF /* FileManagement */ = {
 			isa = PBXGroup;
 			children = (
-				85B154111D140D18003B62FE /* PListManager.swift */,
 				8500F70B1C97103E00C69875 /* File.swift */,
 				85BA025A1CEDBD7200A8FC6F /* NavigationManager.swift */,
 				85D0E60F1D1D985E00C564C3 /* IpfsManager.swift */,
@@ -419,7 +416,7 @@
 					0,
 				);
 				LastSwiftUpdateCheck = 0720;
-				LastUpgradeCheck = 0800;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Romain Gjura";
 				TargetAttributes = {
 					8500F6D91C970F1C00C69875 = {
@@ -642,7 +639,6 @@
 				8500F70C1C97103E00C69875 /* File.swift in Sources */,
 				85BA025B1CEDBD7200A8FC6F /* NavigationManager.swift in Sources */,
 				8531C2921CE670F50009B26A /* SynchDirView.swift in Sources */,
-				85B154121D140D18003B62FE /* PListManager.swift in Sources */,
 				8500F6DE1C970F1C00C69875 /* AppDelegate.swift in Sources */,
 				857D8ED01D1A90D100166738 /* ConnectionType.swift in Sources */,
 				85A553861D96A19F009AFC1B /* SessionManager.swift in Sources */,

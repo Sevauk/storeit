@@ -157,7 +157,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     func loginFunction() {
         if let token = SessionManager.getToken() {
             if let connectionType = SessionManager.getConnectionType() {
-                	networkManager.join(connectionType.rawValue, accessToken: token) { _ in
+                	networkManager.join(authType: connectionType.rawValue, accessToken: token) { _ in
                     print("[LoginView] JOIN succeeded")
                 }
             }

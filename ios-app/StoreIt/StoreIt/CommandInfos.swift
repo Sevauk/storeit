@@ -10,33 +10,33 @@ import Foundation
 
 struct CommandInfos {
     
-    let RESP = "RESP"
+    static let RESP = "RESP"
     
-    let JOIN = "JOIN"
-    let FDEL = "FDEL"
-    let FADD = "FADD"
-    let FUPT = "FUPT"
-    let FMOV = "FMOV"
-    let FSTR = "FSTR"
+    static let JOIN = "JOIN"
+    static let FDEL = "FDEL"
+    static let FADD = "FADD"
+    static let FUPT = "FUPT"
+    static let FMOV = "FMOV"
+    static let FSTR = "FSTR"
 
-    var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV, FSTR] }
+    static var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV, FSTR] }
     
-    let JOIN_RESPONSE_TEXT = "welcome"
-    let SUCCESS_TEXT = "success"
+    static let JOIN_RESPONSE_TEXT = "welcome"
+    static let SUCCESS_TEXT = "success"
     
-    let SUCCESS_CODE = 0
+    static let SUCCESS_CODE = 0
     
     // SERVER ERRORS
     
-    let BAD_CREDENTIALS = (1, "Invalid credentials")
-    let BAD_SCOPE = (2, "Bad OAuth scope")
-    let UNKNOWN_AUTH_TYPE = (3, "Unknown authentication method")
-    let SERVER_ERROR = (4, "The server failed")
-    let BAD_TREE = (5, "The tree does not match server reprensentation. Login again")
-    let BAD_REQUEST = (6, "The request structure is invalid")
-    let BAD_PARAMETERS = (7, "The request parameters are invalid")
-    let UNKNOWN_REQUEST = (8, "The request is unknown")
-    let ENOENT = (9, "No such file or directory")
-    let NOT_IMPLEMENTED = (10, "Not implemented")
+    static let BAD_CREDENTIALS = (1, "Invalid credentials")
+    static let BAD_SCOPE = (2, "Bad OAuth scope")
+    static let UNKNOWN_AUTH_TYPE = (3, "Unknown authentication method")
+    static let SERVER_ERROR = (4, "The server failed")
+    static let BAD_TREE = (5, "The tree does not match server reprensentation. Login again")
+    static let BAD_REQUEST = (6, "The request structure is invalid")
+    static let BAD_PARAMETERS = (7, "The request parameters are invalid")
+    static let UNKNOWN_REQUEST = (8, "The request is unknown")
+    static let ENOENT = (9, "No such file or directory")
+    static let NOT_IMPLEMENTED = (10, "Not implemented")
     
 }

@@ -138,17 +138,15 @@ class WebSocketManager {
 
         ws.onText = { (request: String) in
             print("[Client.WebSocketManager] Client recieved a request : \(request)")
-
-            let cmdInfos = CommandInfos()
             
             if let command: ResponseResolver = Mapper<ResponseResolver>().map(JSONString: request) {
-                if (command.command == cmdInfos.RESP) {
+                if (command.command == CommandInfos.RESP) {
                     
                     // SEREVR HAS RESPONDED
                     if let response: Response = Mapper<Response>().map(JSONString: request) {
                         
                         // JOIN RESPONSE
-                        if (response.text == cmdInfos.JOIN_RESPONSE_TEXT && response.code == cmdInfos.SUCCESS_CODE) {
+                        if (response.text == CommandInfos.JOIN_RESPONSE_TEXT && response.code == CommandInfos.SUCCESS_CODE) {
                             if let params = response.parameters {
                                 let home: File? = params["home"]
                                 
@@ -160,7 +158,7 @@ class WebSocketManager {
                         }
                             
                         // SUCCESS CMD RESPONSE
-                        else if (response.text == cmdInfos.SUCCESS_TEXT && response.code == cmdInfos.SUCCESS_CODE) {
+                        else if (response.text == CommandInfos.SUCCESS_TEXT && response.code == CommandInfos.SUCCESS_CODE) {
                             let uid = response.commandUid
 
                             if (UidFactory.isWaitingForReponse(uid)) {
@@ -168,20 +166,20 @@ class WebSocketManager {
                                 let commandType = UidFactory.getCommandNameForUid(uid)
 
                                 // FADD
-                                if (commandType == cmdInfos.FADD) {
+                                if (commandType == CommandInfos.FADD) {
                                     let files = UidFactory.getObjectForUid(uid) as! [File]
                                     
                                     self.add(files: files)
                                 }
                                 // FDEL
-                                else if (commandType == cmdInfos.FDEL) {
+                                else if (commandType == CommandInfos.FDEL) {
                                 	let paths = UidFactory.getObjectForUid(uid) as! [String]
                                     
                                     self.delete(paths: paths)
                                 }
                                 
                                 // FMOVE
-                                else if (commandType == cmdInfos.FMOV) {
+                                else if (commandType == CommandInfos.FMOV) {
                                 	let movingOptions = UidFactory.getObjectForUid(uid) as! MovingOptions
 
                                     if (movingOptions.isMoving) {
@@ -199,10 +197,10 @@ class WebSocketManager {
                 }
                     
                 // Server has sent a command (FADD, FUPT, FDEL, FUPT)
-                else if (cmdInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
+                else if (CommandInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
                     
                     // FDEL
-                    if (command.command == cmdInfos.FDEL) {
+                    if (command.command == CommandInfos.FDEL) {
                         let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(JSONString: request)
                         
                         if let cmd = fdelCmd {
@@ -213,7 +211,7 @@ class WebSocketManager {
                     }
                     
                     // FMOV
-                    else if (command.command == cmdInfos.FMOV) {
+                    else if (command.command == CommandInfos.FMOV) {
                         let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(JSONString: request)
 
                         if let cmd = fmovCmd {
@@ -230,7 +228,7 @@ class WebSocketManager {
                         }
                     }
                         
-                    else if (command.command == cmdInfos.FSTR) {
+                    else if (command.command == CommandInfos.FSTR) {
                         // TODO
                     }
                     
@@ -239,9 +237,9 @@ class WebSocketManager {
                         let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(JSONString: request)
                         
                         if let files = defaultCmd?.parameters?.files {
-                            if (command.command == cmdInfos.FADD) {
+                            if (command.command == CommandInfos.FADD) {
                                 self.add(files: files)
-                            } else if (command.command == cmdInfos.FUPT) {
+                            } else if (command.command == CommandInfos.FUPT) {
                                 self.update(files: files)
                             }
                         }
@@ -251,8 +249,8 @@ class WebSocketManager {
                     var response: Response?
                     var jsonResponse: String?
                     
-                    if (command.command == cmdInfos.FSTR) {
-                        response = ErrorResponse(code: cmdInfos.NOT_IMPLEMENTED.0, text: cmdInfos.NOT_IMPLEMENTED.1, commandUid: command.uid)
+                    if (command.command == CommandInfos.FSTR) {
+                        response = ErrorResponse(code: CommandInfos.NOT_IMPLEMENTED.0, text: CommandInfos.NOT_IMPLEMENTED.1, commandUid: command.uid)
                     } else {
                         response = SuccessResponse(commandUid: command.uid)
                     }
