@@ -2,8 +2,6 @@ import * as path from 'path'
 
 import storage from 'node-persist'
 
-import logger from '../../lib/log'
-
 const storeItData = 'user-settings'
 
 let USER_HOME = process.env[
@@ -29,7 +27,6 @@ const clone = (obj) => JSON.parse(JSON.stringify(obj))
 
 const load = () => {
   let loaded = storage.getItemSync(storeItData)
-  logger.debug(`[SETTINGS] ${logger.toJson(loaded)}`)
   return loaded
 }
 

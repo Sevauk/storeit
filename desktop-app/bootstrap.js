@@ -29,6 +29,7 @@ else {
 const main = program.gui ? 'electron' : 'cli'
 
 settings.reset() // TODO
+log.debug(`[SETTINGS] ${log.toJson(settings.get())}`)
 if (program.store) settings.setStoreDir(program.store)
 
 const {run} = require(`./build/${main}-main`)
