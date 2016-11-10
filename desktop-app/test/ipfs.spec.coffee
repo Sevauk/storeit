@@ -12,19 +12,18 @@ fileData = 'bar'
 
 describe 'IPFS', ->
 
-  before (done) ->
+  before ->
     @timeout 60000
     ipfs.connect()
       .then -> userFile.clear()
-      .then -> done()
 
   after ->
     userFile.clear()
     ipfs.close()
 
   describe '#ready()', ->
-    it 'should resolve when node is ready', (done) ->
-      ipfs.ready().should.be.fulfilled.and.notify(done)
+    it 'should resolve when node is ready', ->
+      ipfs.ready().should.be.fulfilled
 
   describe '#add()', ->
     it 'should resolve to an array of chunks', ->
@@ -36,8 +35,8 @@ describe 'IPFS', ->
           chunk.should.have.ownProperty 'Hash'
 
   describe '#rm()', ->
-    it 'should return a promise fulfilled when operation is done', (done) ->
-      ipfs.rm('test').should.be.fulfilled.and.notify(done)
+    it 'should return a promise fulfilled when operation is done', ->
+      ipfs.rm('test').should.be.fulfilled
 
   describe '#getFileHash()', ->
     it 'should return the file hash', ->

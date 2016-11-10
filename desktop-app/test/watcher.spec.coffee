@@ -20,6 +20,7 @@ describe 'Watcher', ->
     it 'should startup watcher', (done) ->
       notifier = -> done()
       watcher.start().then -> touch "#{store}/foo"
+      return
 
   describe '#stop()', ->
     it 'should prevent watcher from emitting events', ->
@@ -37,6 +38,7 @@ describe 'Watcher', ->
         ev.path.should.equal "/#{p}"
         done() if p is 'bar'
       watcher.start().then -> userFile.create p
+      return
 
     it 'should not emit events on host dir', ->
       notifier = should.fail
@@ -49,12 +51,14 @@ describe 'Watcher', ->
         ev.type.should.equal 'FADD'
         done()
       watcher.start().then -> userFile.create 'foo'
+      return
 
     it 'should emit FADD events on directory creation', (done) ->
       notifier = (ev) ->
         ev.type.should.equal 'FADD'
         done()
       watcher.start().then -> userFile.dirCreate 'foo'
+      return
 
     it 'should emit FDEL events on file deletion', (done) ->
       notifier = (ev) ->
@@ -63,6 +67,7 @@ describe 'Watcher', ->
       userFile.create 'foo'
         .then -> watcher.start()
         .then -> userFile.del 'foo'
+      return
 
     it 'should emit FDEL events on directory deletion', (done) ->
       notifier = (ev) ->
@@ -71,6 +76,7 @@ describe 'Watcher', ->
       userFile.dirCreate 'foo'
         .then -> watcher.start()
         .then -> userFile.del 'foo'
+      return
 
     it 'should emit FUPT events on file update', (done) ->
       notifier = (ev) ->
@@ -79,6 +85,7 @@ describe 'Watcher', ->
       userFile.create 'foo'
         .then -> watcher.start()
         .then -> touch userFile.absolutePath 'foo'
+      return
 
   describe '#ignore()', ->
     it 'should make a file path ignored by the watcher', ->
@@ -93,6 +100,7 @@ describe 'Watcher', ->
       notifier = -> done()
       watcher.start()
         .then -> userFile.create 'foo'
+      return
 
   describe '#isIgnored()', ->
     it 'should tell wether some file is ignored by the watcher', ->

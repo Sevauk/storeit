@@ -86,12 +86,12 @@ describe 'User File', ->
         fs.readFileSync("#{store}/#{dst}", 'utf8').should.equal txt
 
   describe '#exists()', ->
-    it 'should be fulfilled if file exists in user store', (done) ->
+    it 'should be fulfilled if file exists in user store', ->
       p = '/foo'
       touch "#{store}/#{p}"
-      userFile.exists(p).should.be.fulfilled.and.notify done
-    it 'should be rejected if file does not exist in user store', (done) ->
-      userFile.exists('/bar').should.be.rejected.and.notify done
+      userFile.exists(p).should.be.fulfilled
+    it 'should be rejected if file does not exist in user store', ->
+      userFile.exists('/bar').should.be.rejected
 
   describe '#chunkPath()', ->
     it 'should resolve storeit path from ipfs hash', ->
