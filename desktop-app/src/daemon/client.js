@@ -62,7 +62,7 @@ export default class DesktopClient extends StoreitClient {
       case 'developer':
         return this.developer()
       default:
-        throw new Error('invalid authentication type')
+        return Promise.reject('invalid authentication type')
     }
 
     logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
