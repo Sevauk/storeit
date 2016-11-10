@@ -16,6 +16,8 @@ class WebSocketManager {
     private let ws: WebSocket
     private let navigationManager = NavigationManager.shared
 
+    var manualLogout = false
+    
     init(host: String, port: Int) {
         url = URL(string: "ws://\(host):\(port)/")!
         ws = WebSocket(url: url)
@@ -125,15 +127,27 @@ class WebSocketManager {
         }
     }
     
-    func eventsInitializer(_ loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
+    func eventsInitializer(loginHandler: @escaping (Bool, String) -> ()) {
         ws.onConnect = {
         	print("[Client.WebSocketManager] WebSocket is connected to \(self.url)")
-            loginFunction()
+            
+            if let token = SessionManager.getToken() {
+                if let connectionType = SessionManager.getConnectionType() {
+                    NetworkManager.shared.join(authType: connectionType.rawValue, accessToken: token) { _ in
+                        print("[WebSocketManager] JOIN request succeeded.")
+                    }
+                }
+            }
         }
 
         ws.onDisconnect = { (error: NSError?) in
         	print("[Client.WebSocketManager] Websocket is disconnected from \(self.url) with error: \(error?.localizedDescription)")
-            logoutFunction()
+            
+            if !self.manualLogout {
+                loginHandler(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.")
+            }
+            
+            self.manualLogout = false
         }
 
         ws.onText = { (request: String) in
@@ -153,6 +167,8 @@ class WebSocketManager {
                                 if let files = home?.files {
                                     self.navigationManager.set(with: files)
                                     self.updateList()
+                                    
+                                    loginHandler(true, "Connection succeeded")
                                 }
                             }
                         }

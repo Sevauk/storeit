@@ -14,7 +14,7 @@ class NetworkManager {
     static let shared = NetworkManager()
 
     private let WSManager: WebSocketManager
-    private let _host = "localhost"//"iglu.mobi" // "158.69.196.83"
+    private let _host = "localhost"//"louismondesir.me"//"localhost"//"iglu.mobi" // "158.69.196.83"
     private let _port = 7641
     
     var host: String {
@@ -37,8 +37,17 @@ class NetworkManager {
         return WSManager.isConnected()
     }
     
-    func initConnection(loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
-        WSManager.eventsInitializer(loginFunction, logoutFunction: logoutFunction)
+    func initConnection(loginHandler: @escaping (Bool, String) -> ()) {
+        WSManager.eventsInitializer(loginHandler: loginHandler)
+    }
+    
+    var manualLogout: Bool {
+        set {
+            WSManager.manualLogout = newValue
+        }
+        get {
+            return WSManager.manualLogout
+        }
     }
     
     func joinDeveloper(completion: (() -> ())?) {

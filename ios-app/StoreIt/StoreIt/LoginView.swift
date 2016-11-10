@@ -61,17 +61,20 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         // Dispose of any resources that can be recreated.
     }
     
-    // MARK: FACEBOOK
 
-    func processFacebookLogin() {
-        
-    	// refresh token here
-        
-        networkManager.initConnection(loginFunction: loginFunction, logoutFunction: logoutToLoginView)
-        
-        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+    func processDeveloperLogin() {
+        SessionManager.set(connectionType: ConnectionType.developer)
+        _ = SessionManager.set(token: "developer")
+        networkManager.initConnection(loginHandler: loginCallback)
     }
     
+    func processFacebookLogin() {
+        // refresh token here
+        networkManager.initConnection(loginHandler: loginCallback)
+    }
+    
+    // MARK: FACEBOOK
+  
     @IBAction func fbLogin(_ sender: AnyObject) {
         let login: FBSDKLoginManager = FBSDKLoginManager()
         
@@ -107,13 +110,13 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     func sign(_ signIn: GIDSignIn!,
               present viewController: UIViewController!) {
         SessionManager.set(connectionType: ConnectionType.google)
-        self.present(viewController, animated: true, completion: nil)
+        present(viewController, animated: true, completion: nil)
     }
     
     func sign(_ signIn: GIDSignIn!,
               dismiss viewController: UIViewController!) {
         SessionManager.removeConnectionType()
-        self.dismiss(animated: true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
     
     func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
@@ -126,10 +129,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         
         _ = SessionManager.set(token: user.authentication.accessToken)
         SessionManager.set(connectionType: ConnectionType.google)
-        
-        networkManager.initConnection(loginFunction: loginFunction, logoutFunction: logoutToLoginView)
-        
-        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+        networkManager.initConnection(loginHandler: loginCallback)
     }
     
     func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
@@ -138,30 +138,20 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
 
     // MARK: Utils
     
-    func processDeveloperLogin() {
-        networkManager.initConnection(loginFunction: loginDeveloperFunction, logoutFunction: logoutToLoginView)
-        SessionManager.set(connectionType: ConnectionType.developer)
-        self.performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+    func loginCallback(success: Bool, message: String) {
+        print("[LoginView] logginCallback -> success \(success) with message \(message)")
+        
+        if success {
+            performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
+        } else {
+            logoutToLoginView()
+            displayAlert(withMessage: message)
+        }
     }
-    
+
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
+        networkManager.manualLogout = true
         logout()
-    }
-    
-    func loginDeveloperFunction() {
-        networkManager.joinDeveloper { _ in
-            print("[LoginView] JOIN as developer succeeded")
-        }
-    }
-    
-    func loginFunction() {
-        if let token = SessionManager.getToken() {
-            if let connectionType = SessionManager.getConnectionType() {
-                	networkManager.join(authType: connectionType.rawValue, accessToken: token) { _ in
-                    print("[LoginView] JOIN succeeded")
-                }
-            }
-        }
     }
     
     func logout() {
@@ -180,7 +170,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     func logoutToLoginView() {
-        _ = self.navigationController?.popToRootViewController(animated: true)
+        _ = navigationController?.popToRootViewController(animated: true)
         logout()
     }
 
