@@ -8,7 +8,7 @@
     "preinstall": "npm prune && cd ../lib/js && npm install && cd ../../desktop-app",
     "postinstall": "jspm clean && jspm install && shx cp -n .env.sample .env && npm run init",
     "init": "ipfs init || exit 0",
-    "start": "npm run build && run-p ipfs daemon",
+    "start": "npm run build && run-p daemon",
     "daemon": "node -r dotenv/config bootstrap.js",
     "gui": "electron -r dotenv/config bootstrap.js --gui",
     "build": "npm run build:lib && npm run build:daemon && npm run build:gui",
