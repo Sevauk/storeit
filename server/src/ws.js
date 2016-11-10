@@ -61,7 +61,7 @@ export const listen = () => {
   logger.info(`listening on ${cmd.port}`)
 
   wss.on('connection', (ws) => {
-    logger.debug('client connects')
+    logger.debug('a socket connects')
     new Client(ws)
   })
 }

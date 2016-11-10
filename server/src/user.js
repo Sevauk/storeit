@@ -6,6 +6,9 @@ import * as store from './store.js'
 import {logger} from './lib/log.js'
 import cmd from './main.js'
 
+export const users = {}
+export const sockets = {}
+
 export const makeBasicHome = () => {
 
   const readmeHash = 'Qmco5NmRNMit3V2u3whKmMAFaH4tVX4jPnkwZFRdsb4dtT'
@@ -24,6 +27,12 @@ export const createUser = (email, handlerFn) => {
 }
 
 const readHome = (email, handlerFn) => {
+
+  const u = users[email] // TODO: improve code, use promise
+  if (u.home) {
+    return handlerFn(null, u.home)
+  }
+
   fs.readFile(cmd.usrdir + email, 'utf8', (err, data) => {
 
     if (err) {
@@ -96,8 +105,8 @@ export class User {
   renameFile(src, dest) {
 
     let takenTree = tree.setTree(this.home, src, (treeParent, name) => {
-	if (!treeParent.files)
-		return
+      if (!treeParent.files)
+        return
       const tree = treeParent.files[name]
       delete treeParent.files[name]
       return tree
@@ -162,6 +171,7 @@ export class User {
   }
 
   loadHome(handlerFn) {
+
     readHome(this.email, (err, obj) => {
       this.home = obj
       handlerFn(err, obj)
@@ -172,9 +182,6 @@ export class User {
     fs.writeFile(cmd.usrdir + this.email, JSON.stringify(this.home, null, 2))
   }
 }
-
-export const users = {}
-export const sockets = {}
 
 export const getUserCount = () => {
   return Object.keys(users).length
@@ -231,6 +238,7 @@ export const connectUser = (email, client, handlerFn) => {
   user.loadHome((err) => {
 
     if (err) {
+      logger.error(err)
       disconnectSocket(client)
     }
     else {
