@@ -5,11 +5,6 @@ import * as log from './lib/log.js'
 import fs from 'fs'
 import * as stormpath from './stormpath.js'
 
-stormpath.sendPasswordReset('adrien.morel@me.com')
-  .then(() => console.log('all good !'))
-  .catch(err => console.log(err))
-
-/*
 commander.version('0.0.1')
   .option('-p, --port <port>', 'set the port to listen to')
   .option('-a, --addr <ip>', 'set the address to listen on')
@@ -43,4 +38,3 @@ const cmd = commander
 export default cmd
 
 ws.listen()
-*/

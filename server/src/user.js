@@ -25,11 +25,18 @@ export const createUser = (email, handlerFn) => {
 
 const readHome = (email, handlerFn) => {
   fs.readFile(cmd.usrdir + email, 'utf8', (err, data) => {
+
     if (err) {
       return handlerFn(err)
     }
 
-    handlerFn(err, JSON.parse(data))
+    try {
+      handlerFn(err, JSON.parse(data))
+    }
+    catch (err) {
+      logger.error(`user file for ${email} seems corrupt !`)
+      handlerFn(err)
+    }
   })
 }
 
