@@ -57,15 +57,16 @@ export default class DesktopClient extends StoreitClient {
       case 'google':
         service = new GoogleService()
         break
+      case 'st':
+        logger.debug('logging st ! :)')
+        return this.login('john.doe@gmail.com', 'physics') // TODO: use tokens returned by our backend
       case 'developer':
         return this.developer()
-      default:
-        return this.login()
     }
 
     logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
     return service.oauth(this.authSettings.win)
-      .then(tokens => this.reqJoin(authTypes[this.authSettings.type], tokens.access_token))
+      .then(tokens => this.reqJoin({type: authTypes[this.authSettings.type], accessToken: tokens.access_token}))
       .catch(e => {
         logger.error(`[AUTH] login failed ${e}`)
         throw new Error(e)
@@ -77,11 +78,13 @@ export default class DesktopClient extends StoreitClient {
     return this.reqJoin('gg', `developer${devId}`)
   }
 
-  login() {
-    throw new Error('[AUTH] StoreIt auth not implemented yet') // TODO
+  login(email, password) {
+    logger.info(`logining with ${'StoreIt'} (${email})`)
+    return this.reqJoin({type: 'st', email, password})
   }
 
   connect() {
+
     return super.connect()
       .then(() => this.auth(this.authSettings))
       .catch((e) => {
@@ -119,12 +122,12 @@ export default class DesktopClient extends StoreitClient {
       })
   }
 
-  reqJoin(authType, accessToken) {
+  reqJoin(authAPIObject) {
 
     let home = null
 
     return userFile.getHostedChunks()
-      .then(hashes => ({authType, accessToken, hosting: hashes}))
+      .then(hashes => ({auth: authAPIObject, hosting: hashes}))
       .then(data => this.request('JOIN', data))
       .tap(() => logger.info('[JOIN] Logged in'))
       .then(params => {

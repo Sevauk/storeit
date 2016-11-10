@@ -4,7 +4,37 @@ import * as protocol from './lib/protocol-objects.js'
 
 const oauth = oauth2('v2')
 
-export const verifyUserToken = (authService, accessToken, handlerFn) => {
+const authGoogle = (accessToken, handlerFn) => {
+
+  oauth.userinfo.get({'access_token': accessToken}, (err, response) => {
+    if (err) {
+      return handlerFn(protocol.ApiError.BADCREDENTIALS)
+    }
+
+    if (response.email === undefined) {
+      return handlerFn(protocol.ApiError.BADSCOPE)
+    }
+    return handlerFn(null, response.email, response.picture)
+  })
+}
+
+const authFacebook = (accessToken, handlerFn) => {
+
+  return request('https://graph.facebook.com/me?access_token=' + accessToken + '&fields=email', (err, response, body) => {
+
+    if (response.statusCode !== 200) {
+      return handlerFn(protocol.ApiError.SERVERERROR)
+    }
+
+    const parsed = JSON.parse(body)
+    if (parsed.email === undefined) {
+      return handlerFn(protocol.ApiError.BADSCOPE)
+    }
+    handlerFn(null, parsed.email, parsed.picture)
+  })
+}
+
+const verifyUserToken = (authService, accessToken, handlerFn) => {
 
   const devlpr = 'developer'
   if (accessToken.substr(0, devlpr.length) === 'developer') {
@@ -15,32 +45,24 @@ export const verifyUserToken = (authService, accessToken, handlerFn) => {
   }
 
   if (authService === 'gg') {
-    return oauth.userinfo.get({'access_token': accessToken}, (err, response) => {
-      if (err) {
-        return handlerFn(protocol.ApiError.BADCREDENTIALS)
-      }
-
-      if (response.email === undefined) {
-        return handlerFn(protocol.ApiError.BADSCOPE)
-      }
-      return handlerFn(null, response.email, response.picture)
-    })
+    return authGoogle(accessToken, handlerFn)
   }
   else if (authService === 'fb') {
-    return request('https://graph.facebook.com/me?access_token=' + accessToken + '&fields=email', (err, response, body) => {
-
-      if (response.statusCode !== 200) {
-        return handlerFn(protocol.ApiError.SERVERERROR)
-      }
-
-      const parsed = JSON.parse(body)
-      if (parsed.email === undefined) {
-        return handlerFn(protocol.ApiError.BADSCOPE)
-      }
-      handlerFn(null, parsed.email, parsed.picture)
-    })
+    return authFacebook(accessToken, handlerFn)
   }
   else {
     handlerFn(protocol.ApiError.UNKNOWNAUTHTYPE)
   }
+}
+
+const inHouseAuth = (authParams, handlerFn) => {
+  console.log('authenticate ' + JSON.stringify(authParams))
+}
+
+export const doAuthentication = (authParams, handlerFn) => {
+  if (authParams.type === 'st') {
+    return inHouseAuth(authParams, handlerFn)
+  }
+
+  return verifyUserToken(authParams.type, authParams.accessToken, handlerFn)
 }
