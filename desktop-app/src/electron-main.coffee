@@ -47,7 +47,8 @@ createAuthWin = (url, showModal=true) ->
 login = (authType, showModal=true) ->
   logger.debug('[GUI] trigger login')
   opts =
-    type: authType
+    type: 'developer'
+    # type: authType
     devId: null
     win: (url) -> createAuthWin(url, showModal)
   daemon.start opts

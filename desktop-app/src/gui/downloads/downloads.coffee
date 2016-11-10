@@ -5,7 +5,7 @@ userFile = electron.remote.getGlobal 'userFile'
 daemon = electron.remote.getGlobal 'daemon'
 
 shell = electron.shell
-md5 = require('md5')
+md5 = require 'md5'
 
 template = require './downloads.jade!'
 require './downloads.css!'
@@ -29,8 +29,8 @@ module.exports = class DownloadsView extends Page
 
   render: ->
     super template
-    daemon.setProgressHandler(=> @updateStatus())
-    @mock()
+    daemon.setProgressHandler (percent, file) => @updateStatus(percent, file)
+    # @mock()
 
   showInFolder: (filePath) ->
     shell.showItemInFolder userFile.absolutePath(filePath)
@@ -42,6 +42,7 @@ module.exports = class DownloadsView extends Page
       item = @createItem(id, file)
       ($ item).prependTo($('#downloads'))
 
+    percent = Math.floor percent
     $("##{id} .progress-bar").width("#{percent}%")
     $("##{id} .progress-bar").text("#{percent}%")
     currSize = file.size * (percent / 100)
@@ -52,6 +53,7 @@ module.exports = class DownloadsView extends Page
   finishDownload: (id, file) ->
     $("##{id} .progress-bar").removeClass 'active'
     $("##{id} .progress-bar").removeClass 'progress-bar-striped'
+    $("##{id} .buttons").empty()
     $("##{id} .buttons")
       .append("""
         <button class="btn btn-default show-in">Show in folder</button>
