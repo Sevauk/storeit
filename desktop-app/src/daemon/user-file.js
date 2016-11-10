@@ -22,8 +22,8 @@ const dirCreate = (dirPath) => {
         if (err.code !== 'EEXIST') throw err
       })
       .then(() => {
-        if (i >= subdirs.length) return Promise.resolve()
-        return makeSubdirs(path.join(currPath, subdirs[i]), i + 1)
+        if (i < subdirs.length)
+          return makeSubdirs(path.join(currPath, subdirs[i]), i + 1)
       })
   }
   return makeSubdirs(settings.getStoreDir())
