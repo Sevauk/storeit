@@ -188,6 +188,8 @@ public class SocketService extends Service {
         if (!mConnected)
             return false;
 
+        Log.v(LOGTAG, "Adding : " + newFile.getFileName());
+
         Gson gson = new Gson();
         FileCommand cmd = new FileCommand(uid, "FADD", newFile);
         webSocket.sendText(gson.toJson(cmd));
@@ -294,7 +296,9 @@ public class SocketService extends Service {
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
 //        server = SP.getString("pref_key_server_url", "ws://192.168.1.24:7641");
 
-        server = "ws://137.74.161.134:7641";
+       // server = "ws://louismondesir.me:7641";
+        server ="ws://10.38.165.62:7641";
+
 
         socketThread = new Thread(new SocketManager());
         socketThread.start();

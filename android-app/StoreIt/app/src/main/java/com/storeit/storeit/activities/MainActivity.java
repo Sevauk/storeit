@@ -582,13 +582,14 @@ public class MainActivity extends AppCompatActivity {
         public void handleFADD(FileCommand command) {
             Log.v("MainActivity", "FADD");
             filesManager.addFile(command.getFiles());
-            mSocketService.sendRSPONSE();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.v("MainActivity", "refresh");
                     refreshFileExplorer();
                 }
             });
+            mSocketService.sendRSPONSE();
         }
 
         @Override
@@ -621,13 +622,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleFSTR(final FileStoreCommand command) {
             boolean shouldKeep = command.shouldKeep();
-            String hash = command.getHash();
+            final String hash = command.getHash();
 
             if (!shouldKeep) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mIpfsService.removeFile(command.getHash());
+                        mIpfsService.removeFile(hash);
                         mSocketService.sendRSPONSE();
                     }
                 });
@@ -636,7 +637,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mIpfsService.addFile(command.getHash());
+                    mIpfsService.addFile(hash);
                     mSocketService.sendRSPONSE();
                 }
             });

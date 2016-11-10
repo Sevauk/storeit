@@ -39,6 +39,7 @@ public class IpfsService extends Service {
     private final IBinder myBinder = new LocalBinder();
 
     private  Thread mDaemonThread;
+    private static final int NOTIFICATION = 666;
 
     public class LocalBinder extends Binder {
         public IpfsService getService() {
@@ -89,7 +90,7 @@ public class IpfsService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        notificationManager.cancel(99);
+        notificationManager.cancel(NOTIFICATION);
         Log.v(LOGTAG, "On destroy :o");
     }
 
@@ -124,7 +125,6 @@ public class IpfsService extends Service {
         ProcessBuilder pb = new ProcessBuilder(args);
         Map<String, String> env = pb.environment();
         env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
-
         try {
             Process process = pb.start();
 
@@ -133,9 +133,7 @@ public class IpfsService extends Service {
                     new InputStreamReader(process.getInputStream()));
             int read;
             char[] buffer = new char[4096];
-//            StringBuffer output = new StringBuffer();
             while ((read = reader.read(buffer)) > 0) {
-//                output.append(buffer, 0, read);
                 Log.v("BINARY", String.valueOf(buffer, 0, read));
             }
             reader.close();
@@ -172,7 +170,6 @@ public class IpfsService extends Service {
     private void makeNotification(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
 
-
         Notification.Builder builder = new Notification.Builder(context)
                 .setContentTitle("StoreIt")
                 .setContentText("You are an active ipfs node :)")
@@ -182,7 +179,14 @@ public class IpfsService extends Service {
         Notification n;
         n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
-        notificationManager.notify(99, n);
+        notificationManager.notify(NOTIFICATION, n);
+    }
+
+    @Override
+    public void onTaskRemoved(Intent intent){
+        Log.v(LOGTAG, "Wesh");
+        notificationManager.cancel(NOTIFICATION);
+        super.onTaskRemoved(intent);
     }
 
     public void stopDaemon(){
@@ -190,13 +194,12 @@ public class IpfsService extends Service {
             mDaemonThread.interrupt();
             mDaemonThread = null;
         }
-
     }
 
     @Override
     public boolean onUnbind(Intent intent){
         Log.v(LOGTAG, "Ipfs unbinded!");
-        notificationManager.cancel(99);
+        notificationManager.cancel(NOTIFICATION);
         return true;
     }
 }

@@ -153,12 +153,15 @@ public class FilesManager {
         if (p != null) {
             p.addFile(file);
         }
+        Log.v(LOGTAG, "addFile");
         mFileMap.put(file.getPath(), file);
     }
 
     public void addFile(StoreitFile file) {
         StoreitFile parent = getParentFile(file);
-        parent.addFile(file);
+        if (parent != null)
+            parent.addFile(file);
+        Log.v(LOGTAG, "addFile");
         mFileMap.put(file.getPath(), file);
     }
 
