@@ -10,7 +10,7 @@
     "build": "babel src -d build -s && babel ../lib/js/src -d build/lib -s",
     "dev": "babel-watch src/main.js",
     "test": "mocha --compilers js:babel-core/register src/test.js",
-    "postinstall": "cd ../lib/js/; npm install; cd ../../server"
+    "postinstall": "cd ../lib/js/; npm install; cd ../../server; cp .server-conf-sample.conf server.conf"
   },
   "dependencies": {
     "babel-cli": "^6.7.7",

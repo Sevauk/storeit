@@ -1,9 +1,9 @@
 import commander from 'commander'
 import * as ws from './ws.js'
 import * as path from 'path'
-import * as log from './lib/log.js'
+import {logger} from './lib/log.js'
 import fs from 'fs'
-import * as stormpath from './stormpath.js'
+import {settings} from './settings.js'
 
 commander.version('0.0.1')
   .option('-p, --port <port>', 'set the port to listen to')
@@ -19,20 +19,18 @@ const defaultParam = (field, deflt) => {
 }
 
 if (commander.logfile)
-  log.logToFile(commander.logfile)
+  logger.logToFile(commander.logfile)
 
 defaultParam('port', '7641')
 defaultParam('addr', '0.0.0.0')
 defaultParam('usrdir', 'storeit-users')
 
+if (settings('STORMPATH_CLIENT_APIKEY_ID') === '')
+  logger.warn('Setup server.conf if you want to support StoreIt login')
+
 commander.usrdir += path.sep
 
-try {
-  fs.mkdirSync(commander.usrdir)
-}
-catch(e) {
-  log.logger.debug('userdir already there')
-}
+fs.mkdir(commander.usrdir, () => 'ignore')
 
 const cmd = commander
 export default cmd
