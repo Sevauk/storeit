@@ -54,7 +54,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         super.viewWillAppear(animated)
     	
         moveToolBar.isHidden = !navigationManager.movingOptions.isMoving
-        
+
         navigationManager.list = list
         navigationManager.moveToolBar = moveToolBar
 

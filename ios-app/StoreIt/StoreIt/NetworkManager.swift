@@ -14,7 +14,7 @@ class NetworkManager {
     static let shared = NetworkManager()
 
     private let WSManager: WebSocketManager
-    private let _host = "localhost"//"louismondesir.me"//"localhost"//"iglu.mobi" // "158.69.196.83"
+    private let _host = "localhost"//"iglu.mobi"//"10.38.165.62"//"localhost"////"localhost"// // "158.69.196.83"
     private let _port = 7641
     
     var host: String {
@@ -57,7 +57,7 @@ class NetworkManager {
         
         UidFactory.uid += 1
         
-        WSManager.send(jsonJoinCommand!, completion: completion)
+        WSManager.send(request: jsonJoinCommand!, completion: completion)
 
     }
     
@@ -68,7 +68,7 @@ class NetworkManager {
         
         UidFactory.uid += 1
 
-        WSManager.send(jsonJoinCommand!, completion: completion)
+        WSManager.send(request: jsonJoinCommand!, completion: completion)
     }
     
     func fadd(files: [File], completion: (() -> ())?) {
@@ -78,7 +78,7 @@ class NetworkManager {
 
         UidFactory.addNewWaitingCommand(CommandInfos.FADD, objects: files as AnyObject)
 
-        WSManager.send(jsonFaddCommand!, completion: completion)
+        WSManager.send(request: jsonFaddCommand!, completion: completion)
     }
 
     func fdel(files: [String], completion: (() -> ())?) {
@@ -88,7 +88,7 @@ class NetworkManager {
         
         UidFactory.addNewWaitingCommand(CommandInfos.FDEL, objects: files as AnyObject)
         
-        WSManager.send(jsonFdelCommand!, completion: completion)
+        WSManager.send(request: jsonFdelCommand!, completion: completion)
     }
     
     func fupt(files: [File], completion: (() -> ())?) {
@@ -98,7 +98,7 @@ class NetworkManager {
         
         UidFactory.addNewWaitingCommand(CommandInfos.FUPT, objects: files as AnyObject)
         
-        WSManager.send(jsonFuptCommand!, completion: completion)
+        WSManager.send(request: jsonFuptCommand!, completion: completion)
     }
     
     func fmove(movingOptions: MovingOptions, completion: (() -> ())?) {
@@ -108,7 +108,7 @@ class NetworkManager {
         
         UidFactory.addNewWaitingCommand(CommandInfos.FMOV, objects: movingOptions as AnyObject)
         
-        WSManager.send(jsonFmovCommand!, completion: completion)
+        WSManager.send(request: jsonFmovCommand!, completion: completion)
     }
     
 }
