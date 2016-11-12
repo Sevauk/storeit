@@ -15,6 +15,8 @@ extension UIViewController {
         
         myAlert.addAction(okAction)
         
+        myAlert.view.tintColor = LIGHT_GREY
+        
         self.present(myAlert, animated: true, completion: nil)
     }
 }

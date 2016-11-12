@@ -65,12 +65,12 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     func processDeveloperLogin() {
         SessionManager.set(connectionType: ConnectionType.developer)
         _ = SessionManager.set(token: "developer")
-        networkManager.initConnection(loginHandler: loginCallback)
+        networkManager.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
     func processFacebookLogin() {
         // refresh token here
-        networkManager.initConnection(loginHandler: loginCallback)
+        networkManager.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
     // MARK: FACEBOOK
@@ -129,7 +129,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         
         _ = SessionManager.set(token: user.authentication.accessToken)
         SessionManager.set(connectionType: ConnectionType.google)
-        networkManager.initConnection(loginHandler: loginCallback)
+        networkManager.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
     func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
@@ -137,6 +137,10 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
 
     // MARK: Utils
+    
+    func displayer(message: String) {
+        displayAlert(withMessage: message)
+    }
     
     func loginCallback(success: Bool, message: String) {
         print("[LoginView] logginCallback -> success \(success) with message \(message)")
@@ -150,7 +154,6 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
 
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
-        networkManager.manualLogout = true
         logout()
     }
     

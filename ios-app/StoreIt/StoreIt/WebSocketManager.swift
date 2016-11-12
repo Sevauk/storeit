@@ -10,28 +10,41 @@ import Foundation
 import Starscream
 import ObjectMapper
 
+struct SocketErrors {
+    static let closed_by_server = "connection closed by server"
+    static let no_internet_connectivity = "The operation couldn’t be completed. Socket is not connected"
+    static let connection_impossible = "The operation couldn’t be completed. Connection refused"
+}
+
 class WebSocketManager {
     
     private let url: URL
-    private let ws: WebSocket
+    private var ws: WebSocket?
+    
     
     private let navigationManager = NavigationManager.shared
 
     private var loginHandler: ((Bool, String) -> ())?
-    
-    var manualLogout = false
-    
+    private var displayer: ((String) -> ())?
+        
     init(host: String, port: Int) {
         url = URL(string: "ws://\(host):\(port)/")!
-        ws = WebSocket(url: url)
     }
     
     func disconnect() {
-        ws.disconnect()
+        ws?.disconnect()
     }
     
     func isConnected() -> Bool {
-        return ws.isConnected
+        return (ws?.isConnected)!
+    }
+    
+    private func prettyLog<T>(forCommand command: Command<T>) {
+        NSLog(command.toJSONString(prettyPrint: true) ?? "Cannot pretty print command")
+    }
+    
+    private func prettyLog(forResponse response: Response) {
+        NSLog(response.toJSONString(prettyPrint: true) ?? "Cannot pretty print response")
     }
     
     private func onConnect() {
@@ -39,22 +52,35 @@ class WebSocketManager {
         
         if let token = SessionManager.getToken() {
             if let connectionType = SessionManager.getConnectionType() {
-                NetworkManager.shared.join(authType: connectionType.rawValue, accessToken: token) { _ in
-                    print("[WebSocketManager] JOIN request succeeded.")
-                }
+                NetworkManager.shared.join(authType: connectionType.rawValue,
+                                           accessToken: token,
+                                           completion: nil)
             }
         }
 
     }
     
     private func onDisconnect(error: NSError?) {
-        print("[Client.WebSocketManager] Websocket is disconnected from \(self.url) with error: \(error?.localizedDescription)")
+        if let error = error?.localizedDescription {
+        	print("[Client.WebSocketManager] Websocket is disconnected from \(url) with error: \(error)")
         
-        if !self.manualLogout {
-            loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.")
+            switch error {
+            
+            case SocketErrors.connection_impossible:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.")
+                break
+                
+            case SocketErrors.closed_by_server:
+                break
+                
+            case SocketErrors.no_internet_connectivity:
+                break
+            
+            default:
+                break
+            }
+        	
         }
-        
-        manualLogout = false
     }
     
     private func serverHasResponded(withResponse response: Response) {
@@ -119,16 +145,11 @@ class WebSocketManager {
         
         // ERROR CODE
         else {
-        	// TODO: handle error here
+        	displayer?(response.text) // TODO: user friendly display
         }
     }
     
     private func serverHasSent(aCommand command: String, request: String) {
-        
-        func _prettyLog<T>(forCommand command: Command<T>) {
-            print("<=== [SERVER SENT REQUEST] ===>")
-            NSLog(command.toJSONString(prettyPrint: true) ?? "")
-        }
         
         func _isRenaming(from src: String, to dest: String) -> Bool {
             // Drop file name to compare path (if the path is the same, it's only a rename)
@@ -141,12 +162,14 @@ class WebSocketManager {
             
             return false
         }
+    
+        print("<=== [SERVER SENT REQUEST] ===>")
         
         switch command {
-        
+    
         case CommandInfos.FDEL:
             if let cmd: Command = Mapper<Command<FdelParameters>>().map(JSONString: request) {
-                _prettyLog(forCommand: cmd)
+                prettyLog(forCommand: cmd)
                 
                 if let paths = cmd.parameters?.files {
                     navigationManager.delete(paths: paths)
@@ -157,7 +180,7 @@ class WebSocketManager {
         
         case CommandInfos.FMOV:
             if let cmd: Command = Mapper<Command<FmovParameters>>().map(JSONString: request) {
-                _prettyLog(forCommand: cmd)
+                prettyLog(forCommand: cmd)
                 
                 if let parameters = cmd.parameters {
                     if (_isRenaming(from: parameters.src, to: parameters.dest)) {
@@ -175,7 +198,7 @@ class WebSocketManager {
             
         case CommandInfos.FADD:
             if let cmd: Command = Mapper<Command<DefaultParameters>>().map(JSONString: request) {
-                _prettyLog(forCommand: cmd)
+                prettyLog(forCommand: cmd)
                 
                 if let files = cmd.parameters?.files {
                     navigationManager.add(files: files)
@@ -186,7 +209,7 @@ class WebSocketManager {
             
         case CommandInfos.FUPT:
             if let cmd: Command = Mapper<Command<DefaultParameters>>().map(JSONString: request) {
-                _prettyLog(forCommand: cmd)
+                prettyLog(forCommand: cmd)
                 
                 if let files = cmd.parameters?.files {
                     navigationManager.update(files: files)
@@ -215,11 +238,7 @@ class WebSocketManager {
         }
         
         if let response = response {
-            let jsonResponse = Mapper().toJSONString(response)
-            
-            if let jsonResponse = jsonResponse {
-                send(request: jsonResponse, completion: nil)
-            }
+        	send(response: response, completion: nil)
         }
     }
     
@@ -254,24 +273,63 @@ class WebSocketManager {
         print("[Client.WebSocketManager] Client recieved some data: \(data.count)")
     }
     
-    func eventsInitializer(loginHandler: @escaping (Bool, String) -> ()) {
+    func eventsInitializer(loginHandler: @escaping (Bool, String) -> (), displayer: @escaping (String) -> ()) {
+        ws = WebSocket(url: url)
+        
         self.loginHandler = loginHandler
+        self.displayer = displayer
         
-        ws.onConnect = onConnect
-        ws.onDisconnect = onDisconnect
-        ws.onText = onText
-        ws.onData = onData
+        ws?.onConnect = onConnect
+        ws?.onDisconnect = onDisconnect
+        ws?.onText = onText
+        ws?.onData = onData
         
-        ws.connect()
+        ws?.connect()
     }
     
-    func send(request: String, completion: (() -> ())?) {
-        if (ws.isConnected) {
-            print("[WSManager] request is sending... : \(request)")
-            ws.write(string: request, completion: completion)
+    func send<T>(command: Command<T>, completion: ((Bool) -> ())?) {
+        print("<=== [SENDING REQUEST] ===>")
+		prettyLog(forCommand: command)
+        
+        if let ws = ws {
+            if (ws.isConnected) {
+                if let command = Mapper().toJSONString(command) {
+                    ws.write(string: command) { _ in
+                        print("<=== [REQUEST SENT] ===>")
+                        completion?(true)
+                    }
+                } else {
+                    print("<=== [REQUEST NOT SENT] ===>")
+                    completion?(false)
+                }
+            } else {
+                print("<=== [REQUEST NOT SENT] ===>")
+                completion?(false)
+            }
         } else {
-            print("[Client.WebSocketManager] Client can't send request \(request) to \(url), WS is disconnected")
+            print("<=== [REQUEST NOT SENT] ===>")
+            completion?(false)
         }
     }
-
+    
+    func send(response: Response, completion: (() -> ())?) {
+        print("<=== [SENDING RESPONSE] ===>")
+        prettyLog(forResponse: response)
+        
+        if let ws = ws {
+            if (ws.isConnected) {
+                if let response = Mapper().toJSONString(response) {
+                    ws.write(string: response) { _ in
+                        print("<=== [RESPONSE SENT] ===>")
+                    }
+                } else {
+                    print("<=== [RESPONSE NOT SENT] ===>")
+                }
+            } else {
+                print("<=== [RESPONSE NOT SENT] ===>")
+            }
+        } else {
+            print("<=== [RESPONSE NOT SENT] ===>")
+        }
+    }
 }

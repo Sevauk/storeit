@@ -279,13 +279,14 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                     {
                         let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
                         
-                        // Maybe begin some loading in interface here...
+                        // TODO: Maybe begin some loading in interface here...
                         IpfsManager.add(filePath: filePath) {
                             (
                             data, response, error) in
                             
                             guard let _:Data = data, let _:URLResponse = response  , error == nil else {
-                                print("[IPFS.ADD] Error while IPFS ADD: \(error)")
+                                print("[IPFS.ADD] Error while IPFS ADD: \(error?.localizedDescription)")
+                                self.displayAlert(withMessage: "Impossible d'upload le fichier pour le moment.")
                                 return
                             }
                             
@@ -296,7 +297,11 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                             
                             let file = self.navigationManager.createFile(path: relativePath, metadata: "", IPFSHash: ipfsAddResponse!.hash)
                             
-                            self.networkManager.fadd(files: [file], completion: nil)
+                            self.networkManager.fadd(files: [file]) { success in
+                                if (!success) {
+                                    self.displayAlert(withMessage: "L'ajout du fichier a échoué. Veuillez réessayer.")
+                                }
+                            }
                         }
                     }
                 })
@@ -318,9 +323,15 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             let relativePath = self.navigationManager.buildPath(for: input.text!)
             let newDirectory: File = self.navigationManager.createDir(path: relativePath, metadata: "", IPFSHash: "")
 
-            self.networkManager.fadd(files: [newDirectory], completion: nil)
+            self.networkManager.fadd(files: [newDirectory]) { success in
+                if (!success) {
+                    self.displayAlert(withMessage: "La création du dossier a échoué. Veuillez réessayer.")
+                }
+            }
             
         }))
+        
+        alert.view.tintColor = LIGHT_GREY
         
         present(alert, animated: true, completion: nil)
     }
@@ -366,8 +377,12 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     func deleteFile(action: UIAlertAction) -> Void {
         selectedFile { file in
-            networkManager.fdel(files: [file.path]) { _ in
+            networkManager.fdel(files: [file.path]) { success in
                 self.selectedIndex = nil
+                
+                if (!success) {
+                	self.displayAlert(withMessage: "Impossible de supprimer l'élément. Veuillez réessayer.")
+                }
             }
         }
     }
@@ -399,8 +414,12 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                     self.navigationManager.movingOptions.src = file.path
                     self.navigationManager.movingOptions.dest = newPath
                     
-                    self.networkManager.fmove(movingOptions: self.navigationManager.movingOptions) { _ in
+                    self.networkManager.fmove(movingOptions: self.navigationManager.movingOptions) { success in
                         self.selectedIndex = nil
+                        
+                        if (!success) {
+                             self.displayAlert(withMessage: "Impossible de renommer l'élément. Veuillez réessayer.")
+                        }
                     }
                 }
             }))
@@ -496,7 +515,11 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             navigationManager.movingOptions.file?.path = dest
             navigationManager.movingOptions.dest = dest
             
-            networkManager.fmove(movingOptions: (navigationManager.movingOptions), completion: nil)
+            networkManager.fmove(movingOptions: (navigationManager.movingOptions)) { success in
+                if (!success) {
+                	self.displayAlert(withMessage: "Impossible de déplacer l'élément. Veuillez réessayer.")
+                }
+            }
         }
     }
     
