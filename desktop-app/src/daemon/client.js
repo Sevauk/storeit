@@ -41,7 +41,7 @@ export default class DesktopClient extends StoreitClient {
       const bar = this.progressBars.get(file.path)
       bar.update(Math.floor(percent) / 100)
       if (bar.completed) {
-        bar.delete(file.path)
+        this.progressBars.delete(file.path)
       }
     }
   }
