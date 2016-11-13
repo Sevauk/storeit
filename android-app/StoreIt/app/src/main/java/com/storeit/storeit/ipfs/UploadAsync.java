@@ -4,6 +4,8 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Message;
+import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
@@ -14,6 +16,7 @@ import com.storeit.storeit.R;
 import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.fragments.FileViewerFragment;
 import com.storeit.storeit.protocol.StoreitFile;
+import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -42,9 +45,9 @@ public class UploadAsync extends AsyncTask<String, Integer, String> {
     private android.support.v4.app.NotificationCompat.Builder mBuilder;
     private int id = 1;
     private MainActivity mContext;
-    private SocketService mService;
+    private ServiceManager mService;
 
-    public UploadAsync(MainActivity context, SocketService service) {
+    public UploadAsync(MainActivity context, ServiceManager service) {
         mContext = context;
         mService = service;
     }
@@ -102,7 +105,12 @@ public class UploadAsync extends AsyncTask<String, Integer, String> {
                 }
                 manager.addFile(newFile, manager.getFileByPath(fragment.getCurrentFile()));
                 mContext.refreshFileExplorer();
-                mService.sendFADD(newFile);
+
+                try {
+                    mService.send(Message.obtain(null, SocketService.SEND_FADD, newFile));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
 

@@ -12,7 +12,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -42,11 +45,14 @@ import com.storeit.storeit.fragments.HomeFragment;
 import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.protocol.FileCommandHandler;
 import com.storeit.storeit.protocol.StoreitFile;
+import com.storeit.storeit.protocol.command.ConnectionInfo;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
 import com.storeit.storeit.protocol.command.FileStoreCommand;
+import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.services.IpfsService;
+import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -57,6 +63,8 @@ import java.io.File;
  * Contains all the fragments of the apps
  */
 public class MainActivity extends AppCompatActivity {
+
+    private static final String LOGTAG = "MainActivity";
 
     String TITLES[] = {"Home", "My files", "Settings"};
     int ICONS[] = {R.drawable.ic_cloud_black_24dp, R.drawable.ic_folder_black_24dp, R.drawable.ic_settings_applications_black_24dp};
@@ -81,70 +89,26 @@ public class MainActivity extends AppCompatActivity {
     ActionBarDrawerToggle mDrawerToggle;
     FloatingActionButton fbtn;
 
-    private boolean destroyIpfs = true;
-    private boolean destroySocket = true;
-
     public FloatingActionButton getFloatingButton() {
         return fbtn;
     }
 
     private FilesManager filesManager;
 
-    // Socket and ipfs service are already existing
-    private boolean mSocketServiceBound = false;
-    private boolean mIpfsServiceBound = false;
+    private ServiceManager mIpfsService;
 
-    private SocketService mSocketService = null;
-    private IpfsService mIpfsService = null;
-
-    private boolean willRestart = false;
-
-    // Should be the same class as LoginActivity ServiceConnection
-    private ServiceConnection mSocketServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mSocketService = ((SocketService.LocalBinder) service).getService();
-            mSocketService.setFileCommandandler(mFileCommandHandler);
-            mSocketServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mSocketService = null;
-            mSocketServiceBound = false;
-        }
-    };
-
-    private ServiceConnection mIpfsServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mIpfsService = ((IpfsService.LocalBinder) service).getService();
-            mIpfsServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mIpfsService = null;
-            mIpfsServiceBound = false;
-        }
-    };
+    private ServiceManager mSocketService;
+    private boolean mSocketConnected = true;
 
 
     @Override
     protected void onStart() {
         super.onStart();
-
-        Intent socketService = new Intent(this, SocketService.class);
-        getApplicationContext().bindService(socketService, mSocketServiceConnection, Context.BIND_AUTO_CREATE);
-
-        Intent ipfsService = new Intent(this, IpfsService.class);
-        getApplicationContext().bindService(ipfsService, mIpfsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
 
         setContentView(R.layout.activity_main);
@@ -270,7 +234,6 @@ public class MainActivity extends AppCompatActivity {
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
 
-            willRestart = true;
             return;
         }
 
@@ -284,8 +247,42 @@ public class MainActivity extends AppCompatActivity {
         if (!newFile.equals("")) {
             openFragment(FileViewerFragment.newInstance(newFile));
         }
-    }
 
+        mSocketService = new ServiceManager(this, SocketService.class, new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case SocketService.SOCKET_CONNECTED:
+                        mSocketConnected = true;
+                        Log.i(LOGTAG, "Socket connected!");
+                        break;
+                    case SocketService.SOCKET_DISCONNECTED:
+                        mSocketConnected = false;
+                        break;
+                    case SocketService.JOIN_RESPONSE:
+                        break;
+                    case SocketService.HANDLE_FADD:
+                        handleFADD((FileCommand) msg.obj);
+                        break;
+                    case SocketService.HANDLE_FDEL:
+                        handleFDEL((FileDeleteCommand) msg.obj);
+                        break;
+                    case SocketService.HANDLE_FMOV:
+                        handleFMOV((FileMoveCommand) msg.obj);
+                        break;
+                    case SocketService.HANDLE_FUPT:
+                        handleFUPT((FileCommand) msg.obj);
+                        break;
+                    case SocketService.HANDLE_FSTR:
+                        handleFSTR((FileStoreCommand) msg.obj);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        mSocketService.start();
+    }
 
     private void createFolder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -319,7 +316,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                     filesManager.addFile(folder, filesManager.getFileByPath(fragment.getCurrentFile()));
                     refreshFileExplorer();
-                    mSocketService.sendFADD(folder);
+
+                    try {
+                        mSocketService.send(Message.obtain(null, SocketService.SEND_FADD, folder));
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+
                 }
 
             }
@@ -332,7 +335,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startGalleryPicker() {
-        destroySocket = destroyIpfs = false;
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -340,7 +342,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startFilePickerIntent() {
-        destroySocket = destroyIpfs = false;
         Intent intent = new Intent(MainActivity.this, FilePickerActivity.class);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
         intent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
@@ -351,7 +352,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCameraIntent() {
-        destroySocket = destroyIpfs = false;
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         if (intent.resolveActivity(getPackageManager()) != null) {
             File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
@@ -363,34 +363,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.v("MainActivity", "onResume!!");
-        destroySocket = destroyIpfs = true;
     }
 
     @Override
-    protected void onDestroy(){
-
-        Log.v("MaiActivity", "unbind service!");
-
-        if (mIpfsServiceBound)
-            getApplicationContext().stopService(new Intent(MainActivity.this, IpfsService.class));
-        if (mSocketServiceBound)
-            getApplicationContext().stopService(new Intent(MainActivity.this, SocketService.class));
-
+    protected void onDestroy() {
         super.onDestroy();
+        mSocketService.stop();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
-
-
-         /*   if (!willRestart) {
-                Log.v("MaiActivity", "unbind service!");
-                getApplicationContext().stopService(new Intent(MainActivity.this, IpfsService.class));
-                getApplicationContext().stopService(new Intent(MainActivity.this, SocketService.class));
-            }*/
     }
 
     public void onTouchDrawer(final int position) {
@@ -411,7 +394,6 @@ public class MainActivity extends AppCompatActivity {
                     actionBar.setTitle("My Files");
                 break;
             case SETTINGS_FRAGMENT:
-                destroySocket = destroyIpfs = false;
                 Intent i = new Intent(this, StoreItPreferences.class);
                 startActivity(i);
                 break;
@@ -445,8 +427,6 @@ public class MainActivity extends AppCompatActivity {
 
         Intent i = new Intent(MainActivity.this, LoginActivity.class);
         startActivity(i);
-
-        // Add restart first activity
     }
 
     @Override
@@ -464,20 +444,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        destroySocket = destroyIpfs = true;
-
         Log.v("MainActivity", "Activity result : " + requestCode);
 
         if (requestCode == FILE_CODE_RESULT && resultCode == Activity.RESULT_OK) { // File picker
             Uri uri = data.getData();
             fbtn.setVisibility(View.VISIBLE);
-            new UploadAsync(this, mSocketService).execute(uri.getPath());
+
+            new UploadAsync(this, /*mSocketService*/ null).execute(uri.getPath());
         } else if (requestCode == PICK_IMAGE_GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) { // Gallery
             fbtn.setVisibility(View.VISIBLE);
 
             Uri uri = data.getData();
-            new UploadAsync(this, mSocketService).execute(getRealPathFromURI(uri));
+            new UploadAsync(this, /*mSocketService*/ null).execute(getRealPathFromURI(uri));
+
         } else if (requestCode == CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             LayoutInflater inflater = getLayoutInflater();
@@ -499,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("RENAME", "result : " + file.renameTo(fileRenamed));
 
                     fbtn.setVisibility(View.VISIBLE);
-                    new UploadAsync(MainActivity.this, mSocketService).execute(fileRenamed.getAbsolutePath());
+                    new UploadAsync(MainActivity.this, /*mSocketService*/ null).execute(fileRenamed.getAbsolutePath());
 
                 }
             }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -548,100 +527,73 @@ public class MainActivity extends AppCompatActivity {
 
             FileViewerFragment f = (FileViewerFragment) currentFragment;
             f.getAdapter().reloadFiles();
-
-            /*
-            FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
-            fragTransaction.detach(currentFragment);
-            fragTransaction.attach(currentFragment);
-            fragTransaction.commit();
-            Log.v("MainActivity", "tu fois quoi??");
-            */
         }
     }
 
-    public SocketService getSocketService() {
+    public ServiceManager getSocketService() {
         return mSocketService;
     }
 
-    private FileCommandHandler mFileCommandHandler = new FileCommandHandler() {
-        @Override
-        public void handleFDEL(FileDeleteCommand command) {
-            Log.v("MainActivity", "FDEL");
-            filesManager.removeFile(command.getFiles());
-            mSocketService.sendRSPONSE();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    refreshFileExplorer();
-                }
-            });
+    public void handleFDEL(FileDeleteCommand command) {
+        Log.v("MainActivity", "FDEL");
+        filesManager.removeFile(command.getFiles());
 
+        try {
+            mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+        refreshFileExplorer();
+    }
 
-        @Override
-        public void handleFADD(FileCommand command) {
-            Log.v("MainActivity", "FADD");
-            filesManager.addFile(command.getFiles());
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.v("MainActivity", "refresh");
-                    refreshFileExplorer();
-                }
-            });
-            mSocketService.sendRSPONSE();
+
+    public void handleFADD(FileCommand command) {
+        Log.v("MainActivity", "FADD");
+        filesManager.addFile(command.getFiles());
+
+        try {
+            mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+        refreshFileExplorer();
+    }
 
-        @Override
-        public void handleFUPT(FileCommand command) {
-            Log.v("MainActivity", "FUPT");
-            filesManager.updateFile(command.getFiles());
-            mSocketService.sendRSPONSE();
-           /* runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    refreshFileExplorer();
-                }
-            });
-            */
+    public void handleFUPT(FileCommand command) {
+        Log.v("MainActivity", "FUPT");
+        filesManager.updateFile(command.getFiles());
+
+        try {
+            mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+        refreshFileExplorer();
+    }
 
-        @Override
-        public void handleFMOV(FileMoveCommand command) {
-            Log.v("MainActivity", "FMOV");
-            filesManager.moveFile(command.getSrc(), command.getDst());
-            mSocketService.sendRSPONSE();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    refreshFileExplorer();
-                }
-            });
+
+    public void handleFMOV(FileMoveCommand command) {
+        Log.v("MainActivity", "FMOV");
+        filesManager.moveFile(command.getSrc(), command.getDst());
+        try {
+            mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
+        refreshFileExplorer();
+    }
 
-        @Override
-        public void handleFSTR(final FileStoreCommand command) {
-            boolean shouldKeep = command.shouldKeep();
-            final String hash = command.getHash();
+    public void handleFSTR(final FileStoreCommand command) {
+        boolean shouldKeep = command.shouldKeep();
+        final String hash = command.getHash();
 
-            if (!shouldKeep) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mIpfsService.removeFile(hash);
-                        mSocketService.sendRSPONSE();
-                    }
-                });
-                return;
-            }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mIpfsService.addFile(hash);
-                    mSocketService.sendRSPONSE();
-                }
-            });
+        //     mIpfsService.removeFile(hash);
+        //  mIpfsService.addFile(hash);
 
+        try {
+            mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
-    };
+    }
 }

@@ -1,13 +1,6 @@
 package com.storeit.storeit.services;
 
-import android.app.Service;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Binder;
-import android.os.Build;
-import android.os.IBinder;
-import android.os.SystemClock;
-import android.preference.PreferenceManager;
+import android.os.Message;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -17,14 +10,14 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketExtension;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
-import com.storeit.storeit.protocol.FileCommandHandler;
-import com.storeit.storeit.protocol.LoginHandler;
 import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.CommandManager;
+import com.storeit.storeit.protocol.command.ConnectionInfo;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
 import com.storeit.storeit.protocol.command.FileStoreCommand;
+import com.storeit.storeit.protocol.command.FmovInfo;
 import com.storeit.storeit.protocol.command.JoinCommand;
 import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.protocol.command.Response;
@@ -37,304 +30,243 @@ import java.util.Map;
 * This service handle the websocket connection
 * It communicate with the ui of the app
 */
-public class SocketService extends Service {
+public class SocketService extends AbstractService {
 
-
-    boolean connectedtoserver = false;
-
-    private final IBinder myBinder = new LocalBinder();
-
-    public String server;
-    private static final int TIMEOUT = 10000;
     public static final String LOGTAG = "SocketService";
 
+    // Messages
+    public static final int SOCKET_CONNECTED = 1;
+    public static final int SOCKET_DISCONNECTED = 2;
+    public static final int SEND_JOIN = 3;
+    public static final int SEND_FADD = 4;
+    public static final int SEND_FDEL = 5;
+    public static final int SEND_FUPT = 6;
+    public static final int SEND_FMOV = 7;
+    public static final int SEND_RESPONSE = 8;
+    public static final int JOIN_RESPONSE = 9;
+    public static final int HANDLE_FADD = 10;
+    public static final int HANDLE_FDEL = 11;
+    public static final int HANDLE_FUPT = 12;
+    public static final int HANDLE_FMOV = 13;
+    public static final int HANDLE_FSTR = 14;
+
+    // Websockets
+    private static final int TIMEOUT = 10000;
+    private static final String SERVER = "ws://louismondesir.me:7641";
+    private WebSocket mWebSocket = null;
+    private Thread mSocketThread = null;
     private boolean mConnected = false;
-    private WebSocket webSocket = null;
 
-    // Handlers for callback
-    private LoginHandler mLoginHandler;
-    private FileCommandHandler mFileCommandHandler;
-    private int uid = 0;
-    private String lastCmd;
+    // Protocol needed
+    private int mUID = 0;
+    private String mLastCmd;
 
 
-    private class SocketManager implements Runnable {
+    private class WebsocketManager implements Runnable {
         @Override
         public void run() {
+            try {
+                mWebSocket = new WebSocketFactory()
+                        .setConnectionTimeout(TIMEOUT)
+                        .createSocket(SERVER)
+                        .addListener(new WebSocketAdapter() {
+                            public void onConnected(WebSocket websocket, Map<String, List<String>> headers) {
+                                mConnected = true;
+                                Log.i(LOGTAG, "Socket connected to server");
 
-            Log.v(LOGTAG, "Starting socket on thread : " + Thread.currentThread().getId());
+                                send(Message.obtain(null, SOCKET_CONNECTED));
+                            }
 
-            // Loop on connection
-            mConnected = false;
+                            public void onDisconnected(WebSocket websocket,
+                                                       WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame,
+                                                       boolean closedByServer) {
+                                mConnected = false;
+                                Log.i(LOGTAG, "Socket diconnected from server");
 
-            while (!mConnected) {
-                try {
-                    webSocket = new WebSocketFactory()
-                            .setConnectionTimeout(TIMEOUT)
-                            .createSocket(server)
-                            .addListener(new WebSocketAdapter() {
+                                send(Message.obtain(null, SOCKET_DISCONNECTED));
+                            }
 
-                                public void onConnected(WebSocket websocket, Map<String, List<String>> headers)
-                                {
+                            public void onTextMessage(WebSocket websocket, String message) {
+                                Log.i(LOGTAG, "received : " + message);
 
+                                Gson gson = new Gson();
+
+                                int cmdType = CommandManager.getCommandType(message);
+                                switch (cmdType) {
+                                    case CommandManager.FADD:
+                                        FileCommand addCMD = gson.fromJson(message, FileCommand.class);
+                                        send(Message.obtain(null, HANDLE_FADD, addCMD));
+                                        mLastCmd = "FADD";
+                                        break;
+                                    case CommandManager.FDEL:
+                                        FileDeleteCommand delCMD = gson.fromJson(message, FileDeleteCommand.class);
+                                        send(Message.obtain(null, HANDLE_FDEL, delCMD));
+                                        mLastCmd = "FDEL";
+                                        break;
+                                    case CommandManager.FMOVE:
+                                        FileMoveCommand movCMD = gson.fromJson(message, FileMoveCommand.class);
+                                        send(Message.obtain(null, HANDLE_FMOV, movCMD));
+                                        mLastCmd = "FMOV";
+                                        break;
+                                    case CommandManager.FSTR:
+                                        FileStoreCommand strCMD = gson.fromJson(message, FileStoreCommand.class);
+                                        send(Message.obtain(null, HANDLE_FSTR, strCMD));
+                                        mLastCmd = "FSTR";
+                                        break;
+                                    case CommandManager.FUPT:
+                                        FileCommand uptCMD = gson.fromJson(message, FileCommand.class);
+                                        send(Message.obtain(null, HANDLE_FUPT, uptCMD));
+                                        mLastCmd = "FUPT";
+                                        break;
+                                    case CommandManager.RESP:
+                                        if (mLastCmd.equals("JOIN")) {
+                                            JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
+                                            send(Message.obtain(null, JOIN_RESPONSE, joinResponse));
+                                        }
+                                        mLastCmd = "RESP";
+                                        break;
+                                    default:
+                                        Log.i(LOGTAG, "Invalid command received");
+                                        break;
                                 }
-
-                                public void onDisconnected(WebSocket websocket,
-                                                           WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame,
-                                                           boolean closedByServer) throws IOException, WebSocketException {
-                                    mConnected = false;
-                                    if (mLoginHandler != null) {
-                                        //mLoginHandler.handleDisconnection();
-                                    }
-                                    webSocket = websocket.recreate().connect();
-                                }
-
-                                public void onTextMessage(WebSocket websocket, String message) {
-                                    Log.v(LOGTAG, "received : " + message);
-                                    int cmdType = CommandManager.getCommandType(message);
-                                    switch (cmdType) {
-                                        case CommandManager.RESP:
-                                            Log.v(LOGTAG, "Response!");
-                                            if (lastCmd.equals("JOIN")) {
-                                                Gson gson = new Gson();
-                                                JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
-                                                if (mLoginHandler != null) {
-                                                    Log.v(LOGTAG, "connect");
-                                                    mLoginHandler.handleJoin(joinResponse);
-                                                }
-                                            }
-                                            break;
-                                        case CommandManager.FDEL:
-                                            if (mFileCommandHandler != null) {
-                                                Gson gson = new Gson();
-                                                FileDeleteCommand fileCommand = gson.fromJson(message, FileDeleteCommand.class);
-                                                mFileCommandHandler.handleFDEL(fileCommand);
-                                            }
-                                            break;
-                                        case CommandManager.FADD:
-                                            if (mFileCommandHandler != null) {
-                                                Gson gson = new Gson();
-                                                FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
-                                                mFileCommandHandler.handleFADD(fileCommand);
-                                            }
-                                            break;
-                                        case CommandManager.FUPT:
-                                            if (mFileCommandHandler != null) {
-                                                Gson gson = new Gson();
-                                                FileCommand fileCommand = gson.fromJson(message, FileCommand.class);
-                                                mFileCommandHandler.handleFUPT(fileCommand);
-                                            }
-                                            break;
-                                        case CommandManager.FMOVE:
-                                            if (mFileCommandHandler != null) {
-                                                Gson gson = new Gson();
-                                                FileMoveCommand fileMoveCommand = gson.fromJson(message, FileMoveCommand.class);
-                                                mFileCommandHandler.handleFMOV(fileMoveCommand);
-                                            }
-                                            break;
-                                        case CommandManager.FSTR:
-                                            if (mFileCommandHandler != null) {
-                                                Gson gson = new Gson();
-                                                FileStoreCommand fileStoreCommand = gson.fromJson(message, FileStoreCommand.class);
-                                                mFileCommandHandler.handleFSTR(fileStoreCommand);
-                                            }
-                                            break;
-                                        default:
-                                            Log.v(LOGTAG, "Invalid command received :/");
-                                            break;
-                                    }
-                                }
-                            })
-                            .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
-                            .setMaxPayloadSize(128000)
-                            .connect();
-
-                    mConnected = true;
-                    Log.v(LOGTAG, "mConnected : " + mConnected);
-                    Log.v(LOGTAG, "mLoginHandler : " + (mLoginHandler != null));
-
-                    if (mLoginHandler != null)
-                    {
-                        Log.v(LOGTAG, "call handleConnection()");
-                        mLoginHandler.handleConnection(true);
-                    }
-
-                } catch (WebSocketException | IOException e) {
-                    e.printStackTrace();
-                    mConnected = false;
-                    Log.e(LOGTAG, "Cannot connect to server... Retrying in 5 seconds");
-                    if (mLoginHandler != null)
-                        mLoginHandler.handleConnection(false);
-                    SystemClock.sleep(5000);
-                }
+                            }
+                        })
+                        .addExtension(WebSocketExtension.PERMESSAGE_DEFLATE)
+                        .setMaxPayloadSize(25600000)
+                        .connect();
+            } catch (WebSocketException | IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    public boolean sendJOIN(String authType, String token) {
+    @Override
+    public void onStartService() {
+    }
+
+    @Override
+    public void onStopService() {
+        Log.i(LOGTAG, "Disconnecting websocket...");
+        mWebSocket.disconnect();
+    }
+
+    @Override
+    public void onReceiveMessage(Message msg) {
+        switch (msg.what) {
+            case MSG_REGISTER_CLIENT:
+                Log.i(LOGTAG, "Starting network!");
+                if (mSocketThread == null) {
+                    mSocketThread = new Thread(new WebsocketManager());
+                    mSocketThread.start();
+                }
+                break;
+            case SocketService.SEND_FADD:
+                sendFADD((StoreitFile) msg.obj);
+                break;
+            case SocketService.SEND_FDEL:
+                sendFDEL((StoreitFile) msg.obj);
+                break;
+            case SocketService.SEND_FMOV:
+                FmovInfo movInfo = (FmovInfo) msg.obj;
+                sendFMOV(movInfo.getSrc(), movInfo.getDst());
+                break;
+            case SocketService.SEND_FUPT:
+                sendFUPT((StoreitFile) msg.obj);
+                break;
+            case SocketService.SEND_JOIN:
+                sendJOIN((ConnectionInfo) msg.obj);
+                break;
+            case SocketService.SEND_RESPONSE:
+                sendRESP(msg.arg1);
+            default:
+                break;
+        }
+    }
+
+    private boolean sendJOIN(ConnectionInfo info) {
         if (!mConnected)
             return false;
 
+        Log.i(LOGTAG, "Sending join command " + info.getMethod() + " " + info.getToken());
+
         Gson gson = new Gson();
-        JoinCommand cmd = new JoinCommand(uid, authType, token);
-        webSocket.sendText(gson.toJson(cmd));
-        uid++;
-        lastCmd = "JOIN";
+        JoinCommand cmd = new JoinCommand(mUID, info.getMethod(), info.getToken());
+        mWebSocket.sendText(gson.toJson(cmd));
+        mUID++;
+        mLastCmd = "JOIN";
 
         return true;
     }
 
-    public boolean sendFADD(StoreitFile newFile) {
+    private boolean sendFADD(StoreitFile newFile) {
         if (!mConnected)
             return false;
 
         Log.v(LOGTAG, "Adding : " + newFile.getFileName());
 
         Gson gson = new Gson();
-        FileCommand cmd = new FileCommand(uid, "FADD", newFile);
-        webSocket.sendText(gson.toJson(cmd));
-        uid++;
-        lastCmd = "FADD";
+        FileCommand cmd = new FileCommand(mUID, "FADD", newFile);
+        mWebSocket.sendText(gson.toJson(cmd));
+        mUID++;
+        mLastCmd = "FADD";
 
         return true;
     }
 
-    public boolean sendFDEL(StoreitFile newFile) {
+    private boolean sendFDEL(StoreitFile newFile) {
         if (!mConnected)
             return false;
 
         Gson gson = new Gson();
-        FileDeleteCommand cmd = new FileDeleteCommand(uid, "FDEL", newFile);
-        webSocket.sendText(gson.toJson(cmd));
-        uid++;
-        lastCmd = "FDEL";
+        FileDeleteCommand cmd = new FileDeleteCommand(mUID, "FDEL", newFile);
+        mWebSocket.sendText(gson.toJson(cmd));
+        mUID++;
+        mLastCmd = "FDEL";
 
         return true;
     }
 
-    public boolean sendFUPT(StoreitFile newFile) {
+    private boolean sendFUPT(StoreitFile newFile) {
         if (!mConnected)
             return false;
 
         Gson gson = new Gson();
-        FileCommand cmd = new FileCommand(uid, "FUPT", newFile);
-        webSocket.sendText(gson.toJson(cmd));
-        uid++;
-        lastCmd = "FUPT";
+        FileCommand cmd = new FileCommand(mUID, "FUPT", newFile);
+        mWebSocket.sendText(gson.toJson(cmd));
+        mUID++;
+        mLastCmd = "FUPT";
 
         return true;
     }
 
-    public boolean sendFMOV(String src, String dst) {
+    private boolean sendFMOV(String src, String dst) {
         if (!mConnected)
             return false;
 
         Gson gson = new Gson();
-        FileMoveCommand cmd = new FileMoveCommand(uid, "FMOV", src, dst);
-        webSocket.sendText(gson.toJson(cmd));
-
+        FileMoveCommand cmd = new FileMoveCommand(mUID, "FMOV", src, dst);
+        mWebSocket.sendText(gson.toJson(cmd));
         Log.v("FMOV", gson.toJson(cmd));
-
-        uid++;
-        lastCmd = "FMOV";
-
+        mUID++;
+        mLastCmd = "FMOV";
         return true;
     }
 
-    public boolean sendRSPONSE() {
+    private boolean sendRESP(int success) {
         if (!mConnected)
             return false;
 
         Gson gson = new Gson();
-        Response response = new Response(0, "OK", uid, "RESP");
+        Response response;
+
+        if (success == 0){
+            response = new Response(0, "OK", mUID, "RESP");
+        } else {
+            response = new Response(1, "ERROR", mUID, "RESP");
+        }
+
+        mWebSocket.sendText(gson.toJson(response));
 
         return true;
     }
-
-    public void setmLoginHandler(LoginHandler handler) {
-        mLoginHandler = handler;
-        if (mConnected)
-        {
-            Log.v(LOGTAG, "call handleConnection()");
-            mLoginHandler.handleConnection(true);
-        }
-
-    }
-
-    public void setFileCommandandler(FileCommandHandler handler) {
-        mFileCommandHandler = handler;
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.v(LOGTAG, "Socket service binded.....");
-        return myBinder;
-    }
-
-    public class LocalBinder extends Binder {
-        public SocketService getService() {
-            return SocketService.this;
-        }
-    }
-
-    private Thread socketThread;
-
-    public void stopSocketThread(){
-        if (socketThread != null){
-            webSocket.disconnect();
-            socketThread.interrupt();
-            socketThread = null;
-            Log.v(LOGTAG, "stopSocketThread");
-        }
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-
-        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(this);
-//        server = SP.getString("pref_key_server_url", "ws://192.168.1.24:7641");
-
-       // server = "ws://louismondesir.me:7641";
-        server ="ws://10.38.165.62:7641";
-
-
-        socketThread = new Thread(new SocketManager());
-        socketThread.start();
-
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-        return START_NOT_STICKY;
-    }
-
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.v(LOGTAG, "On destroy :o");
-    }
-
-    @Override
-    public void onRebind(Intent intent){
-        Log.v(LOGTAG, "putain");
-
-        super.onRebind(intent);
-
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent){
-        Log.v(LOGTAG, "Socket unbinded!");
-        return true;
-    }
-
-    public boolean isConnected() {
-        return mConnected;
-    }
-
-
 }

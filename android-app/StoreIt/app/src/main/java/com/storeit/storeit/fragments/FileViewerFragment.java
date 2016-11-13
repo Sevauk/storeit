@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -27,6 +29,8 @@ import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.adapters.ExplorerAdapter;
 import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.protocol.StoreitFile;
+import com.storeit.storeit.protocol.command.FmovInfo;
+import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -188,14 +192,22 @@ public class FileViewerFragment extends Fragment {
         MainActivity activity = (MainActivity) getActivity();
         final FilesManager manager = activity.getFilesManager();
         final StoreitFile file = adapter.getFileAt(position);
-        final SocketService service = activity.getSocketService();
+        final ServiceManager service = activity.getSocketService();
 
         switch (item.getItemId()) {
             case R.id.action_delete_file:
                 Log.v("FileViewerFragment", "Delete");
                 manager.removeFile(file.getPath());
                 adapter.removeFile(position);
-                service.sendFDEL(file);
+
+
+                try {
+                    service.send(Message.obtain(null, SocketService.SEND_FDEL, file));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+
+
                 break;
             case R.id.action_delete_file_disk:
                 if (!file.isDirectory()) {
@@ -229,7 +241,14 @@ public class FileViewerFragment extends Fragment {
 
                                 manager.addFile(file, manager.getFileByPath(getCurrentFile()));
                                 adapter.reloadFiles();
-                                service.sendFMOV(oldPath, movedPath);
+
+                                try {
+                                    service.send(Message.obtain(null,
+                                            SocketService.SEND_FMOV,
+                                            new FmovInfo(oldPath, movedPath)));
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         });
                 snackbar.setCallback(new Snackbar.Callback() {
@@ -269,7 +288,18 @@ public class FileViewerFragment extends Fragment {
 
                 String finalName = f.getParent() + File.separator + fileName;
                 finalName = finalName.replace("//", "/");
-                ((MainActivity) getActivity()).getSocketService().sendFMOV(file.getPath(), finalName);
+
+                try {
+                    ((MainActivity) getActivity())
+                            .getSocketService()
+                            .send(Message.obtain(null,
+                                    SocketService.SEND_FMOV,
+                                    new FmovInfo(file.getPath(), finalName)));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+
+
                 manager.moveFile(file.getPath(), finalName);
                 adapter.reloadFiles();
 

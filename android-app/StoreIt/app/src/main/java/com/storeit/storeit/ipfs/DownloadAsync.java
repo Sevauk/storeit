@@ -44,7 +44,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     protected void onPreExecute() {
         mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext)
-                .setContentText("Downloading")
+                .setContentText("Starting download...")
                 .setContentTitle("StoreIt")
                 .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp)
                 .setAutoCancel(true);
@@ -66,13 +66,14 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
             mBuilder.setContentText("Error while downloading...")
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true);
+            mNotifyManager.notify(id, mBuilder.build());
         } else {
 
             mBuilder.setContentText("Download finished")
                     .setProgress(0, 0, false)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true);
-            mBuilder.setProgress(0, 0, false);
+            mNotifyManager.notify(id, mBuilder.build());
         }
         mNotifyManager.notify(id, mBuilder.build());
     }
