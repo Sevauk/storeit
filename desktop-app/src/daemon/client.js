@@ -1,4 +1,5 @@
 import WebSocket from 'ws'
+import MultiProgress from 'multi-progress'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
@@ -8,6 +9,8 @@ import logger from '../../lib/log'
 import Watcher from './watcher'
 import IPFSNode from './ipfs'
 import settings from './settings'
+
+const progressBar = new MultiProgress()
 
 const authTypes = {
   'facebook': 'fb',
@@ -24,8 +27,23 @@ export default class DesktopClient extends StoreitClient {
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
-    this.progressHandler = (percent, file) =>
-      logger.info(`[DL] <${Math.floor(percent)}%> ${file.path}`)
+    this.progressBars = new Map()
+    this.progressHandler = (percent, file) => {
+      if (!this.progressBars.has(file.path)) {
+        const fmt = `[DL] ${file.path} [:bar] :percent :elapseds :etas`
+        this.progressBars.set(file.path, progressBar.newBar(fmt, {
+          complete: '=',
+          incomplete: ' ',
+          total: 100, // TODO
+          width: 60,
+        }))
+      }
+      const bar = this.progressBars.get(file.path)
+      bar.update(Math.floor(percent) / 100)
+      if (bar.completed) {
+        bar.delete(file.path)
+      }
+    }
   }
 
   start(opts={}) {
