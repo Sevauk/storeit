@@ -9,6 +9,11 @@
     <string name="login_button">Login</string>
     <string name="login_acount_create">No account yet?\nCreate one</string>
 
+    <string name="drawer_item_home">Home</string>
+    <string name="drawer_item_explorer">My Files</string>
+    <string name="drawer_item_Settings">Settings</string>
+
+
     <string name="login_email_hint">Email</string>
     <string name="login_password_hint">Password</string>
     <string name="menu_logout">Logout</string>

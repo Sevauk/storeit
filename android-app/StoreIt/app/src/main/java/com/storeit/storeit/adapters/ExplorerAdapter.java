@@ -152,9 +152,9 @@ public class ExplorerAdapter extends RecyclerView.Adapter<ExplorerAdapter.ViewHo
     public void onBindViewHolder(final ExplorerAdapter.ViewHolder holder, int position) {
         holder.fileNameTextView.setText(mFiles[position].getFileName()); // Get file name
         if (mFiles[position].isDirectory()) { // Directory, we use folder icon
-            holder.fileTypeImageView.setImageResource(R.drawable.ic_folder_black_24dp);
+            holder.fileTypeImageView.setImageResource(R.drawable.ic_folder_grey600_36dp);
         } else { // File, we use file icon
-            holder.fileTypeImageView.setImageResource(R.drawable.ic_insert_drive_file_black_24dp);
+            holder.fileTypeImageView.setImageResource(R.drawable.ic_file_grey600_36dp);
         }
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override

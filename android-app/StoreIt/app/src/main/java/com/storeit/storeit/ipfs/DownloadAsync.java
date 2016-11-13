@@ -52,7 +52,6 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
             Intent intent = new Intent();
             intent.setClass(mContext, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
             pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder.setContentIntent(pendingIntent);

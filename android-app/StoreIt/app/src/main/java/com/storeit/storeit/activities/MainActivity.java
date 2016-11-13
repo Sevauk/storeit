@@ -1,19 +1,16 @@
 package com.storeit.storeit.activities;
 
 import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.provider.MediaStore;
@@ -24,26 +21,38 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
+import com.mikepenz.iconics.IconicsDrawable;
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IProfile;
+import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
+import com.mikepenz.materialdrawer.util.DrawerImageLoader;
+import com.mikepenz.materialdrawer.util.DrawerUIUtils;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
-import com.storeit.storeit.adapters.MainAdapter;
 import com.storeit.storeit.fragments.FileViewerFragment;
 import com.storeit.storeit.fragments.HomeFragment;
 import com.storeit.storeit.ipfs.UploadAsync;
-import com.storeit.storeit.protocol.FileCommandHandler;
 import com.storeit.storeit.protocol.StoreitFile;
 import com.storeit.storeit.protocol.command.ConnectionInfo;
 import com.storeit.storeit.protocol.command.FileCommand;
@@ -67,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOGTAG = "MainActivity";
 
     String TITLES[] = {"Home", "My files", "Settings"};
-    int ICONS[] = {R.drawable.ic_cloud_black_24dp, R.drawable.ic_folder_black_24dp, R.drawable.ic_settings_applications_black_24dp};
+    int ICONS[] = {R.drawable.ic_cloud_grey600_36dp, R.drawable.ic_folder_grey600_36dp, R.drawable.ic_settings_grey600_36dp};
 
     String NAME = "Louis Mondesir";
     String EMAIL = "louis.mondesir@gmail.com";
@@ -101,92 +110,142 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        launchSocketService();
+        launchIpfsService();
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.RecyclerView);
-
-        assert mRecyclerView != null;
-
-        final GestureDetector mGestureDetector = new GestureDetector(MainActivity.this, new GestureDetector.SimpleOnGestureListener() {
-
-            @Override
-            public boolean onSingleTapUp(MotionEvent e) {
-                return true;
-            }
-
-        });
-
-        mRecyclerView.setHasFixedSize(true);
+        final ActionBar bar = getSupportActionBar();
+        if (bar != null) {
+            bar.setTitle("Home");
+        }
 
         SharedPreferences sp = getSharedPreferences(getString(R.string.prefrence_file_key), Context.MODE_PRIVATE);
         String profileUrl = sp.getString("profile_url", "");
 
-        mAdapter = new MainAdapter(TITLES, ICONS, NAME, EMAIL, profileUrl, this);
-        mRecyclerView.setAdapter(mAdapter);
-
-
-        mRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+        DrawerImageLoader.init(new AbstractDrawerImageLoader() {
             @Override
-            public boolean onInterceptTouchEvent(RecyclerView recyclerView, MotionEvent motionEvent) {
-                View child = recyclerView.findChildViewUnder(motionEvent.getX(), motionEvent.getY());
+            public void set(ImageView imageView, Uri uri, Drawable placeholder) {
+                Glide.with(imageView.getContext()).load(uri).placeholder(placeholder).into(imageView);
+            }
 
+            @Override
+            public void cancel(ImageView imageView) {
+                Glide.clear(imageView);
+            }
 
-                if (child != null && mGestureDetector.onTouchEvent(motionEvent)) {
-                    Drawer.closeDrawers();
-                    onTouchDrawer(recyclerView.getChildLayoutPosition(child));
-                    return true;
+            @Override
+            public Drawable placeholder(Context ctx, String tag) {
+                if (DrawerImageLoader.Tags.PROFILE.name().equals(tag)) {
+                    return DrawerUIUtils.getPlaceHolder(ctx);
+                } else if (DrawerImageLoader.Tags.ACCOUNT_HEADER.name().equals(tag)) {
+                    return new IconicsDrawable(ctx).iconText(" ").backgroundColorRes(com.mikepenz.materialdrawer.R.color.primary).sizeDp(56);
+                } else if ("customUrlItem".equals(tag)) {
+                    return new IconicsDrawable(ctx).iconText(" ").backgroundColorRes(R.color.md_red_500).sizeDp(56);
                 }
 
-                return false;
-            }
 
-            @Override
-            public void onTouchEvent(RecyclerView recyclerView, MotionEvent motionEvent) {
-
-            }
-
-            @Override
-            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
+                return super.placeholder(ctx, tag);
             }
         });
 
-        mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
 
-        Drawer = (DrawerLayout) findViewById(R.id.DrawerLayout);
-        mDrawerToggle = new ActionBarDrawerToggle(this, Drawer, toolbar, R.string.drawer_open, R.string.drawer_close) {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
+        final IProfile profile = new ProfileDrawerItem()
+                .withName("Louis Mondesir")
+                .withEmail("louis.mondesir@gmail.com")
+                .withIcon(profileUrl)
+                .withIdentifier(100);
 
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-            }
+        AccountHeader headerResult = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.header_background)
+                .addProfiles(profile)
+                .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+                    @Override
+                    public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
+                        return false;
+                    }
+                })
+                .build();
 
 
-        }; // Drawer Toggle Object Made
-        Drawer.addDrawerListener(mDrawerToggle); // Drawer Listener set to the Drawer toggle
+        PrimaryDrawerItem homeItem = new PrimaryDrawerItem()
+                .withIdentifier(1)
+                .withName(R.string.drawer_item_home)
+                .withIcon(R.drawable.ic_cloud_white_36dp)
+                .withIconTintingEnabled(true);
 
-        mDrawerToggle.syncState();               // Finally we set the drawer toggle sync State
+        PrimaryDrawerItem explorerItem = new PrimaryDrawerItem()
+                .withIdentifier(2)
+                .withName(R.string.drawer_item_explorer)
+                .withIcon(R.drawable.ic_file_white_36dp)
+                .withIconTintingEnabled(true);
+
+        PrimaryDrawerItem settingsItem = new PrimaryDrawerItem()
+                .withIdentifier(3)
+                .withName(R.string.drawer_item_Settings)
+                .withIcon(R.drawable.ic_settings_white_36dp)
+                .withIconTintingEnabled(true);
+
+        Drawer result = new DrawerBuilder()
+                .withActivity(this)
+                .withToolbar(toolbar)
+                .withAccountHeader(headerResult)
+                .addDrawerItems(
+                        homeItem,
+                        explorerItem,
+                        settingsItem
+                )
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+
+                        if (drawerItem == null)
+                            return false;
+
+                        switch ((int) drawerItem.getIdentifier()) {
+                            case 1:
+                                fbtn.setVisibility(View.INVISIBLE);
+                                openFragment(new HomeFragment());
+                                if (bar != null)
+                                    bar.setTitle("Home");
+                                break;
+                            case 2:
+                                fbtn.setVisibility(View.VISIBLE);
+                                openFragment(FileViewerFragment.newInstance(""));
+                                if (bar != null)
+                                    bar.setTitle("My Files");
+                                break;
+                            case 3:
+                                Intent i = new Intent(MainActivity.this, StoreItPreferences.class);
+                                startActivity(i);
+                                break;
+                            default:
+                                break;
+                        }
+
+                        return false;
+                    }
+                })
+                .build();
+
+        openFragment(new HomeFragment());
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            result.getActionBarDrawerToggle().setDrawerIndicatorEnabled(true);
+        }
 
         fbtn = (FloatingActionButton) findViewById(R.id.add_file_button);
         assert fbtn != null;
         fbtn.setVisibility(View.INVISIBLE);
+
 
         fbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -218,22 +277,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        openFragment(new HomeFragment());
-        ActionBar bar = getSupportActionBar();
-        if (bar != null) {
-            bar.setTitle("Home");
-        }
 
         Intent intent = getIntent();
         String homeJson = intent.getStringExtra("home");
 
 
-        if (homeJson == null) { // App resumed relogin
-            Intent i = new Intent(MainActivity.this, LoginActivity.class);
-            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
+        if (homeJson == null) { // App resumed
 
-            return;
+            String savedJson = "";
+            if (savedInstanceState != null) {
+                savedJson = savedInstanceState.getString("home_json", "");
+            }
+            if (!savedJson.equals("")) {
+                homeJson = savedJson;
+            } else {
+                Intent i = new Intent(MainActivity.this, LoginActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(i);
+                return;
+            }
         }
 
         Gson gson = new Gson();
@@ -242,16 +304,18 @@ public class MainActivity extends AppCompatActivity {
         filesManager = new FilesManager(this, rootFile);
 
         String newFile = intent.getStringExtra("newFile");
-        Log.v("MainActivity", "received " + newFile);
         if (!newFile.equals("")) {
             openFragment(FileViewerFragment.newInstance(newFile));
         }
-
-        launchSocketService();
-        launchIpfsService();
     }
 
-    private void launchSocketService(){
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        Gson gson = new Gson();
+        savedInstanceState.putString("home_json", gson.toJson(filesManager.getRoot()));
+    }
+
+    private void launchSocketService() {
         mSocketService = new ServiceManager(this, SocketService.class, new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -288,12 +352,12 @@ public class MainActivity extends AppCompatActivity {
         mSocketService.start();
     }
 
-    private void launchIpfsService(){
-        mIpfsService = new ServiceManager(this, IpfsService.class, new Handler(){
+    private void launchIpfsService() {
+        mIpfsService = new ServiceManager(this, IpfsService.class, new Handler() {
             @Override
             public void handleMessage(Message msg) {
             }
-            });
+        });
         mIpfsService.start();
     }
 
@@ -390,31 +454,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    public void onTouchDrawer(final int position) {
-
-        ActionBar actionBar = getSupportActionBar();
-
-        switch (position) {
-            case HOME_FRAGMENT:
-                fbtn.setVisibility(View.INVISIBLE);
-                openFragment(new HomeFragment());
-                if (actionBar != null)
-                    actionBar.setTitle("Home");
-                break;
-            case FILES_FRAGMENT:
-                fbtn.setVisibility(View.VISIBLE);
-                openFragment(FileViewerFragment.newInstance(""));
-                if (actionBar != null)
-                    actionBar.setTitle("My Files");
-                break;
-            case SETTINGS_FRAGMENT:
-                Intent i = new Intent(this, StoreItPreferences.class);
-                startActivity(i);
-                break;
-            default:
-                break;
-        }
-    }
 
     public void openFragment(final Fragment fragment) {
         android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
@@ -480,13 +519,15 @@ public class MainActivity extends AppCompatActivity {
             builder.setView(dialogView);
 
             final EditText input = (EditText) dialogView.findViewById(R.id.dialog_file_name_input);
+            input.setText("image");
 
             builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
 
                     File file = new File(Environment.getExternalStorageDirectory() + File.separator + "image.jpg");
-                    String fileName = input.getText().toString();
+                    String fileName = input.getText().toString() + ".jpg";
+
 
                     File fileRenamed = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
                     Log.v("RENAME", "result : " + file.renameTo(fileRenamed));

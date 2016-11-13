@@ -42,7 +42,12 @@ public class FilesManager {
         createFilesMap(rootFile);
     }
 
-    void createFilesMap(StoreitFile root) {
+    public void recreate(StoreitFile rootFile) {
+        mFileMap.clear();
+        createFilesMap(rootFile);
+    }
+
+    private void createFilesMap(StoreitFile root) {
         if (!mFileMap.containsKey(root.getPath())) {
             mFileMap.put(root.getPath(), root);
         }
