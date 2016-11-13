@@ -464,12 +464,12 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = data.getData();
             fbtn.setVisibility(View.VISIBLE);
 
-            new UploadAsync(this, /*mSocketService*/ null).execute(uri.getPath());
+            new UploadAsync(this, mSocketService).execute(uri.getPath());
         } else if (requestCode == PICK_IMAGE_GALLERY_REQUEST_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) { // Gallery
             fbtn.setVisibility(View.VISIBLE);
 
             Uri uri = data.getData();
-            new UploadAsync(this, /*mSocketService*/ null).execute(getRealPathFromURI(uri));
+            new UploadAsync(this, mSocketService).execute(getRealPathFromURI(uri));
 
         } else if (requestCode == CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -492,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("RENAME", "result : " + file.renameTo(fileRenamed));
 
                     fbtn.setVisibility(View.VISIBLE);
-                    new UploadAsync(MainActivity.this, /*mSocketService*/ null).execute(fileRenamed.getAbsolutePath());
+                    new UploadAsync(MainActivity.this, mSocketService).execute(fileRenamed.getAbsolutePath());
 
                 }
             }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
