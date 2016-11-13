@@ -87,10 +87,11 @@ public class LoginActivity extends Activity {
     private boolean sharingIntentReceived = false;
     private Uri sharingIntentUri = null;
 
+    private ServiceManager mIpfsService;
     private ServiceManager mSocketService;
 
     private boolean mSocketConnected = true;
-    private boolean mStopSocketService = true;
+    private boolean mStopService = true;
 
     private GoogleApiClient client;
 
@@ -192,10 +193,12 @@ public class LoginActivity extends Activity {
     protected void onDestroy(){
         super.onDestroy();
         try{
-            if (mStopSocketService){
+            if (mStopService){
                 mSocketService.stop();
+                mIpfsService.stop();
             } else {
                 mSocketService.unbind();
+                mIpfsService.unbind();
             }
 
         } catch (Throwable t){
@@ -358,6 +361,14 @@ public class LoginActivity extends Activity {
             }
         });
         mSocketService.start();
+
+        mIpfsService = new ServiceManager(this, IpfsService.class, new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+
+            }
+        });
+        mIpfsService.start();
     }
 
     public void openFileExplorer(JoinResponse response){
@@ -387,7 +398,7 @@ public class LoginActivity extends Activity {
                 progessDialog.dismiss();
             }
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            mStopSocketService = false;
+            mStopService = false;
             startActivity(intent);
 
         } else {

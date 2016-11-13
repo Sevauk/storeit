@@ -96,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
     private FilesManager filesManager;
 
     private ServiceManager mIpfsService;
-
     private ServiceManager mSocketService;
     private boolean mSocketConnected = true;
 
@@ -248,6 +247,11 @@ public class MainActivity extends AppCompatActivity {
             openFragment(FileViewerFragment.newInstance(newFile));
         }
 
+        launchSocketService();
+        launchIpfsService();
+    }
+
+    private void launchSocketService(){
         mSocketService = new ServiceManager(this, SocketService.class, new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -282,6 +286,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mSocketService.start();
+    }
+
+    private void launchIpfsService(){
+        mIpfsService = new ServiceManager(this, IpfsService.class, new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+            }
+            });
+        mIpfsService.start();
     }
 
     private void createFolder() {
@@ -369,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mSocketService.stop();
+        mIpfsService.stop();
     }
 
     @Override
