@@ -49,6 +49,7 @@ describe 'Watcher', ->
     it 'should emit FADD events on file creation', (done) ->
       notifier = (ev) ->
         ev.type.should.equal 'FADD'
+        notifier = -> null # reset notifier to not call done twice on OS X
         done()
       watcher.start().then -> userFile.create 'foo'
       return
@@ -56,6 +57,7 @@ describe 'Watcher', ->
     it 'should emit FADD events on directory creation', (done) ->
       notifier = (ev) ->
         ev.type.should.equal 'FADD'
+        notifier = -> null # reset notifier to not call done twice on OS X
         done()
       watcher.start().then -> userFile.dirCreate 'foo'
       return
@@ -97,7 +99,9 @@ describe 'Watcher', ->
     it 'should make a file path unignored by the watcher', (done) ->
       watcher.ignore '/foo'
       watcher.unignore '/foo'
-      notifier = -> done()
+      notifier = ->
+        notifier = -> null # reset notifier to not call done twice on OS X
+        done()
       watcher.start()
         .then -> userFile.create 'foo'
       return
