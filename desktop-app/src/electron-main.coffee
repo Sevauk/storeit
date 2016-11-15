@@ -72,15 +72,16 @@ restart = ->
 init = (p) ->
   menu = electron.Menu.buildFromTemplate [
     {label: 'Preferences', click: -> loadPage 'settings'}
+    {label: 'Account', click: -> loadPage 'account'}
     {label: 'Downloads', click: -> loadPage 'downloads'}
     # {label: 'OAuth', click: -> loadPage 'oauth'} # only for debug
-    {label: 'Statistics', click: -> loadPage 'stats'}
     {label: 'Logout', click: -> logout()}
     {type: 'separator'}
     {label: 'Restart', click: -> restart()}
     {label: 'Quit', click: -> app.quit()}
   ]
-  view.tray.setContextMenu menu
+  view.tray.on 'right-click', ->
+    view.tray.popUpContextMenu menu
 
   authType = settings.getAuthType()
   if authType?

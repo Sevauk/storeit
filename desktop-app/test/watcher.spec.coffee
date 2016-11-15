@@ -34,9 +34,17 @@ describe 'Watcher', ->
   describe '#dispatch()', ->
     it 'should emit watch events with correct path', (done) ->
       p = 'bar'
-      notifier = (ev) ->
+      validatePath = (ev) ->
         ev.path.should.equal "/#{p}"
         done() if p is 'bar'
+
+      # TODO QUICKFIX
+      if process.platform is 'darwin'
+        notifier = (ev) ->
+          notifier = validatePath
+      else
+        notifier = validatePath
+
       watcher.start().then -> userFile.create p
       return
 
