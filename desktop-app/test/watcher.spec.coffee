@@ -8,6 +8,13 @@ store = settings.getStoreDir()
 notifier = ->
 watcher = new Watcher store, ignores, (ev) -> notifier(ev)
 
+darwinManage = (handler) ->
+  if process.platform is 'darwin'
+    notifier = (ev) ->
+      notifier = handler
+  else
+    notifier = handler
+
 describe 'Watcher', ->
 
   beforeEach ->
@@ -34,16 +41,9 @@ describe 'Watcher', ->
   describe '#dispatch()', ->
     it 'should emit watch events with correct path', (done) ->
       p = 'bar'
-      validatePath = (ev) ->
+      darwinManage (ev) ->
         ev.path.should.equal "/#{p}"
         done() if p is 'bar'
-
-      # TODO QUICKFIX
-      if process.platform is 'darwin'
-        notifier = (ev) ->
-          notifier = validatePath
-      else
-        notifier = validatePath
 
       watcher.start().then -> userFile.create p
       return
@@ -71,27 +71,37 @@ describe 'Watcher', ->
       return
 
     it 'should emit FDEL events on file deletion', (done) ->
-      notifier = (ev) ->
+      validatePath = (ev) ->
         ev.type.should.equal 'FDEL'
         done()
+
+      # TODO QUICKFIX
+      if process.platform is 'darwin'
+        notifier = (ev) ->
+          notifier = validatePath
+      else
+        notifier = validatePath
+
       userFile.create 'foo'
         .then -> watcher.start()
         .then -> userFile.del 'foo'
       return
 
     it 'should emit FDEL events on directory deletion', (done) ->
-      notifier = (ev) ->
+      darwinManage (ev) ->
         ev.type.should.equal 'FDEL'
         done()
+
       userFile.dirCreate 'foo'
         .then -> watcher.start()
         .then -> userFile.del 'foo'
       return
 
     it 'should emit FUPT events on file update', (done) ->
-      notifier = (ev) ->
+      darwinManage (ev) ->
         ev.type.should.equal 'FUPT'
         done()
+
       userFile.create 'foo'
         .then -> watcher.start()
         .then -> touch userFile.absolutePath 'foo'
