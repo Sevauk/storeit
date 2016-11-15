@@ -8,6 +8,9 @@ store = settings.getStoreDir()
 notifier = ->
 watcher = new Watcher store, ignores, (ev) -> notifier(ev)
 
+
+# TODO - QUICKFIX
+# Currently just bypasses first event
 darwinManage = (handler) ->
   if process.platform is 'darwin'
     notifier = (ev) ->
