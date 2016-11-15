@@ -74,10 +74,10 @@ init = (p) ->
     {label: 'Preferences', click: -> loadPage 'settings'}
     {label: 'Downloads', click: -> loadPage 'downloads'}
     # {label: 'OAuth', click: -> loadPage 'oauth'} # only for debug
-    {label: 'Statistics', click: -> loadPage 'stats'} #TODO
-    {label: 'Logout', click: -> logout()} #TODO
+    {label: 'Statistics', click: -> loadPage 'stats'}
+    {label: 'Logout', click: -> logout()}
     {type: 'separator'}
-    {label: 'Restart', click: -> restart()} #TODO
+    {label: 'Restart', click: -> restart()}
     {label: 'Quit', click: -> app.quit()}
   ]
   view.tray.setContextMenu menu
