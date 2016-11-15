@@ -3,3 +3,4 @@ storeit-users/
 node_modules/
 npm-debug.log
 coverage
+server.conf
