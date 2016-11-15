@@ -14,7 +14,7 @@ APP_ICON = "#{__dirname}/../assets/images/icon.png"
 APP_INDEX = "file://#{__dirname}/../index.html"
 
 view = menubar
-  alwaysOnTop: true #TODO remove
+  # alwaysOnTop: true #TODO remove
   index: APP_INDEX
   height: 500
   icon: APP_ICON
@@ -26,7 +26,7 @@ currPage = null
 loadPage = (page) ->
   unless currPage is page
     currPage = page
-    view.window.loadURL "#{APP_INDEX}?p=#{page or ''}"
+    view.window.webContents.send 'load', page
   view.showWindow()
   # view.window.openDevTools() if OPTIONS.dev
 
@@ -86,7 +86,7 @@ init = (p) ->
   if authType?
     login authType, false
   else
-    loadPage('oauth')
+    loadPage 'oauth'
 
 ipc.on 'auth', (ev, authType) ->
   login(authType, authType isnt 'developer')
