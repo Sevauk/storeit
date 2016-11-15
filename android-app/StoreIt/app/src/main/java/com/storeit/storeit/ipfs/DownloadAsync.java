@@ -16,6 +16,7 @@ import com.storeit.storeit.R;
 import com.storeit.storeit.activities.MainActivity;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.comparator.DefaultFileComparator;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -41,18 +42,18 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     }
 
     protected void onPreExecute() {
-        super.onPreExecute();
-
-
         mNotifyManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext)
                 .setContentText("Downloading")
                 .setContentTitle("StoreIt")
-                .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp);
+                .setSmallIcon(R.drawable.ic_insert_drive_file_black_24dp)
+                .setAutoCancel(true);
 
-        intent = new Intent(mContext, MainActivity.class);
-        pendingIntent = PendingIntent.getActivity(mContext.getApplicationContext(),
-                0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            Intent intent = new Intent();
+            intent.setClass(mContext, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder.setContentIntent(pendingIntent);
         mNotifyManager.notify(id, mBuilder.build());
@@ -61,14 +62,16 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
     @Override
     protected void onPostExecute(Boolean response) {
         if (!response) {
-
             mBuilder.setProgress(0, 0, false);
             mBuilder.setContentText("Error while downloading...")
-                    .setContentIntent(pendingIntent);
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true);
         } else {
 
             mBuilder.setContentText("Download finished")
-                    .setContentIntent(pendingIntent);
+                    .setProgress(0, 0, false)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true);
             mBuilder.setProgress(0, 0, false);
         }
         mNotifyManager.notify(id, mBuilder.build());
@@ -90,9 +93,10 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
         long size = -1;
 
         try {
+            Log.v("DownloadAsync", hash);
             url = new URL(nodeUrl + ":5001/api/v0/object/stat?arg=" + hash);
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setConnectTimeout(20000);
+            urlConnection.setConnectTimeout(100000);
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
 
             String result = IOUtils.toString(in);
@@ -100,7 +104,7 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
             JsonParser parser = new JsonParser();
             JsonObject obj = parser.parse(result).getAsJsonObject();
             size = obj.get("CumulativeSize").getAsLong();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (urlConnection != null) {
@@ -113,6 +117,8 @@ public class DownloadAsync extends AsyncTask<String, Integer, Boolean> {
 
     @Override
     protected Boolean doInBackground(String... params) {
+
+        Log.v("DownloadAsync", "LALALALALALAL");
 
         String path = params[0];
         String hash = params[1];

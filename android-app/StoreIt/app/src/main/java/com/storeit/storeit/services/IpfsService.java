@@ -38,6 +38,8 @@ public class IpfsService extends Service {
 
     private final IBinder myBinder = new LocalBinder();
 
+    private  Thread mDaemonThread;
+
     public class LocalBinder extends Binder {
         public IpfsService getService() {
             return IpfsService.this;
@@ -52,13 +54,21 @@ public class IpfsService extends Service {
         makeNotification(getApplicationContext());
         Log.v(LOGTAG, "onCreate!");
         copyIpfs();
-        new Thread(new Runnable() {
+
+        mDaemonThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.v(LOGTAG, "Launching ipfs daemon");
-                launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                 launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
             }
-        }).start();
+        });
+        mDaemonThread.start();
+
     }
 
     @Override
@@ -70,7 +80,7 @@ public class IpfsService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
 
@@ -171,5 +181,20 @@ public class IpfsService extends Service {
         n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
         notificationManager.notify(99, n);
+    }
+
+    public void stopDaemon(){
+        if (mDaemonThread != null){
+            mDaemonThread.interrupt();
+            mDaemonThread = null;
+        }
+
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent){
+        Log.v(LOGTAG, "Ipfs unbinded!");
+        notificationManager.cancelAll();
+        return true;
     }
 }
