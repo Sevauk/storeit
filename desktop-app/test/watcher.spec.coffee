@@ -74,16 +74,9 @@ describe 'Watcher', ->
       return
 
     it 'should emit FDEL events on file deletion', (done) ->
-      validatePath = (ev) ->
+      darwinManage (ev) ->
         ev.type.should.equal 'FDEL'
         done()
-
-      # TODO QUICKFIX
-      if process.platform is 'darwin'
-        notifier = (ev) ->
-          notifier = validatePath
-      else
-        notifier = validatePath
 
       userFile.create 'foo'
         .then -> watcher.start()
