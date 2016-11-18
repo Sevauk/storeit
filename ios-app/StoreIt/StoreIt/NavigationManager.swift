@@ -234,6 +234,8 @@ class NavigationManager {
         
         print("File is on current view, updating ...")
         
+        // Update list data source
+        
         if self.indexes.isEmpty {
             updateItems(with: home.files)
         } else {

@@ -35,7 +35,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
 
         list.rowHeight = UITableViewAutomaticDimension
         list.estimatedRowHeight = 100
-        
+                
     	navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
     	                                                    target: self,
     	                                                    action: #selector(uploadOptions))
@@ -365,7 +365,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         selectedFile { file in
             moveToolBar.isHidden = false
             
-            list!.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
+            list?.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
             
             navigationManager.movingOptions.isMoving = true
             navigationManager.movingOptions.src = file.path
@@ -525,7 +525,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     @IBAction func cancelMove(_ sender: AnyObject) {
         moveToolBar.isHidden = true
-        list!.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
+        list?.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
         navigationManager.movingOptions = MovingOptions()
     }
     
