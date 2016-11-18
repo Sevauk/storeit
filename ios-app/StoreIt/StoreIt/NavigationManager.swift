@@ -199,7 +199,7 @@ class NavigationManager {
     /*
  	** MARK: UPDATE TREE FUNCTIONS
  	*/
- 
+    
     private func updatePaths(_ storeit: inout [String:File], newPath: String) {
         let keys: [String] = Array(storeit.keys)
         
@@ -219,15 +219,27 @@ class NavigationManager {
         self.items = Array(currentDirectory.keys).sorted()
     }
     
-    private func update() {
+    private func update(atPath path: String) {
         // Check if file is on current view before ...
         
-        if indexes.isEmpty {
+        let components = path.components(separatedBy: "/")
+            .dropFirst()
+            .dropLast()
+        
+        let indexes = Array(components)
+        
+        if (indexes != self.indexes) {
+            return
+        }
+        
+        print("File is on current view, updating ...")
+        
+        if self.indexes.isEmpty {
             updateItems(with: home.files)
         } else {
             var subFiles = home.files
             
-            for index in indexes {
+            for index in self.indexes {
                 if let fileObj = subFiles[index] {
                     subFiles = fileObj.files
                 }
@@ -305,7 +317,7 @@ class NavigationManager {
             getLastParentFile(forPath: path) { parent in
                 if let fileName = getName(forPath: path) {
                     parent.files.removeValue(forKey: fileName)
-                    update()
+                    update(atPath: path)
                 }
             }
         }
@@ -322,7 +334,7 @@ class NavigationManager {
                         updatePaths(&parent.files[fileName]!.files, newPath: file.path)
                     }
                     
-                    update()
+                    update(atPath: file.path)
                 }
             }
         }
@@ -333,7 +345,7 @@ class NavigationManager {
         add(files: [file], isMoving: true)
         
         movingOptions = MovingOptions()
-        update()
+        update(atPath: file.path)
 
         moveToolBar?.isHidden = true
         
@@ -353,7 +365,7 @@ class NavigationManager {
                         parent.files[fileName]?.metadata = file.metadata
                     }
                     
-                    update()
+                    update(atPath: file.path)
                 }
             }
         }
@@ -374,7 +386,7 @@ class NavigationManager {
                      updatePaths(&parent.files[newFileName]!.files, newPath: dest)
                 }
                 
-                update()
+                update(atPath: dest)
             }
         }
     }

@@ -50,4 +50,5 @@ class File: Mappable {
         isDir <- map["isDir"]
         files <- map["files"]
     }
+    
 }
