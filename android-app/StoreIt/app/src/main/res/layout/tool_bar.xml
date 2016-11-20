@@ -7,4 +7,9 @@
     android:elevation="4dp"
     android:paddingTop="24dp"
     android:title="StoreIt">
+
+<TextView
+    android:text="Test 123"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
 </android.support.v7.widget.Toolbar>

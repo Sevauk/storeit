@@ -200,13 +200,11 @@ public class FileViewerFragment extends Fragment {
                 manager.removeFile(file.getPath());
                 adapter.removeFile(position);
 
-
                 try {
                     service.send(Message.obtain(null, SocketService.SEND_FDEL, file));
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-
 
                 break;
             case R.id.action_delete_file_disk:

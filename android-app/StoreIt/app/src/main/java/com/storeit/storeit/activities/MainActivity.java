@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -39,10 +40,13 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.SwitchDrawerItem;
+import com.mikepenz.materialdrawer.model.ToggleDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
@@ -178,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         PrimaryDrawerItem homeItem = new PrimaryDrawerItem()
                 .withIdentifier(1)
                 .withName(R.string.drawer_item_home)
-                .withIcon(R.drawable.ic_cloud_white_36dp)
+                .withIcon(R.drawable.ic_home_white_36dp)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem explorerItem = new PrimaryDrawerItem()
@@ -187,10 +191,41 @@ public class MainActivity extends AppCompatActivity {
                 .withIcon(R.drawable.ic_file_white_36dp)
                 .withIconTintingEnabled(true);
 
-        PrimaryDrawerItem settingsItem = new PrimaryDrawerItem()
+        PrimaryDrawerItem recentItem = new PrimaryDrawerItem()
                 .withIdentifier(3)
+                .withName("Recent")
+                .withIcon(R.drawable.ic_clock_white_36dp)
+                .withIconTintingEnabled(true);
+
+        PrimaryDrawerItem offlineItem = new PrimaryDrawerItem()
+                .withIdentifier(4)
+                .withName("Offline files")
+                .withIcon(R.drawable.close_network)
+                .withIconTintingEnabled(true);
+
+        PrimaryDrawerItem trashItem = new PrimaryDrawerItem()
+                .withIdentifier(5)
+                .withName("Trash")
+                .withIcon(R.drawable.ic_delete_white_36dp)
+                .withIconTintingEnabled(true);
+
+        PrimaryDrawerItem storageItem = new PrimaryDrawerItem()
+                .withIdentifier(6)
+                .withName("Upgrade storage")
+                .withDescription("1.3 GB of 5 GB used")
+                .withIcon(R.drawable.server_network)
+                .withIconTintingEnabled(true);
+
+        PrimaryDrawerItem settingsItem = new PrimaryDrawerItem()
+                .withIdentifier(7)
                 .withName(R.string.drawer_item_Settings)
                 .withIcon(R.drawable.ic_settings_white_36dp)
+                .withIconTintingEnabled(true);
+
+        PrimaryDrawerItem HelpItems = new PrimaryDrawerItem()
+                .withIdentifier(8)
+                .withName("Help")
+                .withIcon(R.drawable.ic_help_circle_black_36dp)
                 .withIconTintingEnabled(true);
 
         Drawer result = new DrawerBuilder()
@@ -200,7 +235,26 @@ public class MainActivity extends AppCompatActivity {
                 .addDrawerItems(
                         homeItem,
                         explorerItem,
-                        settingsItem
+                        recentItem,
+                        offlineItem,
+                        trashItem,
+                        new DividerDrawerItem(),
+                        storageItem,
+                        settingsItem,
+                        HelpItems,
+                        new DividerDrawerItem(),
+                        new SwitchDrawerItem().withDescription("Ipfs node").withChecked(true).withOnCheckedChangeListener(new OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(IDrawerItem drawerItem, CompoundButton buttonView, boolean isChecked) {
+                                Toast.makeText(MainActivity.this, "Node activated : " + isChecked, Toast.LENGTH_SHORT).show();
+                            }
+                        }),
+                        new SwitchDrawerItem().withDescription("Offline mode").withChecked(false).withOnCheckedChangeListener(new OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(IDrawerItem drawerItem, CompoundButton buttonView, boolean isChecked) {
+                                Toast.makeText(MainActivity.this, "Offline : " + isChecked, Toast.LENGTH_SHORT).show();
+                            }
+                        })
                 )
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -222,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (bar != null)
                                     bar.setTitle("My Files");
                                 break;
-                            case 3:
+                            case 7:
                                 Intent i = new Intent(MainActivity.this, StoreItPreferences.class);
                                 startActivity(i);
                                 break;

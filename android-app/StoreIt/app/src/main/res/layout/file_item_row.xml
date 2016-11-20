@@ -1,30 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
     android:layout_height="wrap_content"
-    android:clickable="true"
-    android:focusable="true"
-    android:background="?android:attr/selectableItemBackground">
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp">
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_file_white_36dp"
         android:id="@+id/explorer_image_file_type"
-        android:paddingLeft="16dp"
-        android:src="@drawable/ic_launcher"/>
+        tools:tint="@color/cardview_dark_background"
+        android:layout_marginStart="16dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp" />
+
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@null"
+        android:src="@drawable/ic_dots_vertical_white_36dp"
+        android:id="@+id/file_item_row_button"
+        android:tint="?attr/colorButtonNormal"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp" />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:paddingLeft="12dp"
-        android:paddingTop="4dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Medium Text"
-        android:id="@+id/file_item_row_name" />
+        android:text="New File"
+        android:layout_width="240dp"
+        android:layout_height="15dp"
+        android:id="@+id/file_item_row_name"
+        app:layout_constraintRight_toLeftOf="@+id/file_item_row_button"
+        app:layout_constraintLeft_toRightOf="@+id/explorer_image_file_type"
+        app:layout_constraintBottom_toTopOf="@+id/file_item_row_last_modified" />
 
+    <TextView
+        android:text="Last modified: Feb 23"
+        android:layout_width="240dp"
+        android:layout_height="15dp"
+        android:id="@+id/file_item_row_last_modified"
+        app:layout_constraintRight_toLeftOf="@+id/file_item_row_button"
+        app:layout_constraintLeft_toRightOf="@+id/explorer_image_file_type"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp" />
 
-
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>
