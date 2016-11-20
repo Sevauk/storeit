@@ -10,6 +10,7 @@ client.run(0)
 client.run(2)
 client.run(2)
   .then(() => file.add(0, 'data100k', 'data'))
+  .then(() => file.add(0, 'directory', 'directory'))
   .then(() => {
     console.log('success!')
     client.kill()
