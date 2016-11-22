@@ -1,14 +1,17 @@
 const path = require('path')
-const fs = require('fs-extra')
+const bluebird = require('bluebird')
+const fs = bluebird.promisifyAll(require('fs-extra'))
 const spawn = require('child_process').spawn
+const repeat = require('./repeat.js')
 
 const codeLocation = path.normalize(`${__dirname}/../../`)
 const desktopClientPath = codeLocation + path.normalize('desktop-app/')
+const storeit_test_dir= '/tmp/storeit_test'
 const clients = {}
 
 try {
-  fs.removeSync('/tmp/storeit_test')
-  fs.mkdirSync('/tmp/storeit_test')
+  fs.removeSync(storeit_test_dir)
+  fs.mkdirSync(storeit_test_dir)
   fs.mkdirSync('logs', () => null)
 }
 catch (e) {
@@ -33,7 +36,8 @@ class Client {
 
     const cliSize = Object.keys(clients).length
     this.id = id
-    this.home = `/tmp/storeit_test/storeit-cli-${id}_${cliSize}`
+    this.homeDirName = `storeit-cli-${id}_${cliSize}`
+    this.home = `${storeit_test_dir}/${this.homeDirName}`
 
     return runIn(desktopClientPath, () => {
 
@@ -55,8 +59,17 @@ class Client {
       this.process = cli
       clients[cliSize] = this
 
-      return new Promise((resolve) => setTimeout(() => resolve(cli), 5000)) // wait 5 sec for the client to start
+      console.log(`starting ${id}`)
+
+      return this.clientWillStart()
+        .then(() => console.log('running.'))
     })
+  }
+
+  // the client is obviously running when some file appears
+  clientWillStart() {
+    return repeat.every(1, 20, // every 1s for max 20s
+      () => fs.lstatAsync(`${this.home}/readme.txt`)) // then this until it resolves
   }
 
   fullPath(p) {
@@ -71,7 +84,7 @@ const getClient = (id) => {
 
   for (const key of Object.keys(clients)) {
     if (clients[key].id === id)
-      instances.push(clients[key])
+    instances.push(clients[key])
   }
 
   return instances

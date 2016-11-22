@@ -2,9 +2,9 @@ const bluebird = require('bluebird')
 const fs = bluebird.promisifyAll(require('fs-extra'))
 const path = require('path')
 const client = require('./client.js')
-const repeat = require('repeat')
+const repeat = require('./repeat.js')
 
-const syncTimeout = 10 // seconds
+const syncTimeout = 20 // seconds
 const tryTime = 1 // seconds
 
 const isDiff = (fileA, fileB) => {
@@ -17,8 +17,9 @@ const isDiff = (fileA, fileB) => {
       return true
     const fileAContent = fs.readFileSync(fileA)
     const fileBContent = fs.readFileSync(fileB)
-    if (fileAContent === sourceBContent)
+    if (fileAContent.equals(fileBContent)) {
       return false
+    }
   }
   catch (e) {
   }
@@ -32,20 +33,16 @@ const testFileExists = (cliId, filePath, source) => {
   const cliList = client.get(cliId)
 
   for (const cli of cliList) {
-    if (isDiff(source, cli.fullPath(filePath)))
-      return undefined
+    if (isDiff(source, cli.fullPath(filePath))) {
+      return Promise.reject()
+    }
   }
 
-  return true
+  return Promise.resolve()
 }
 
 
-const checkInSync = (testFunc) =>
-  repeat(testFunc)
-    .every(tryTime, 's')
-    .for(syncTimeout, 's')
-    .start()
-    .then(() => true, (err) => Promise.reject(err))
+const checkInSync = (testFunc) => repeat.every(tryTime, syncTimeout, testFunc)
 
 const asset = (name) => path.normalize(`${__dirname}/../assets/${name}`)
 const cliGetHelper = (cliId) => {
