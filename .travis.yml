@@ -12,11 +12,13 @@ install:
 - export PATH=$PWD/go-ipfs:$PATH
 - ipfs version
 - npm install --prefix ./desktop-app ./desktop-app
+- npm install --prefix ./tests
 - npm run build --prefix ./desktop-app
 
 script:
 - npm run lint --prefix ./desktop-app
 - npm run cover --prefix ./desktop-app
+- npm run test --prefix ./tests
 
 after_success:
 - npm run report --prefix ./desktop-app
