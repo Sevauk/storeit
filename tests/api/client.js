@@ -9,6 +9,8 @@ const desktopClientPath = codeLocation + path.normalize('desktop-app/')
 const storeit_test_dir= '/tmp/storeit_test'
 const clients = {}
 
+let instanceCounter = 0
+
 try {
   fs.removeSync(storeit_test_dir)
   fs.mkdirSync(storeit_test_dir)
@@ -34,15 +36,14 @@ class Client {
 
     runIPFS()
 
-    const cliSize = Object.keys(clients).length
     this.id = id
-    this.homeDirName = `storeit-cli-${id}_${cliSize}`
+    this.homeDirName = `storeit-cli-${id}_${instanceCounter++}`
     this.home = `${storeit_test_dir}/${this.homeDirName}`
 
     return runIn(desktopClientPath, () => {
 
-      const cli = spawn('node', `-r dotenv/config bootstrap.js --store ${this.home} --developer ${id}`.split(' '))
-      const cliLog = path.normalize(`../logs/cli${id}_${cliSize}`)
+      const cli = spawn('node', `-r dotenv/config bootstrap.js --store ${this.home} -d --developer ${id}`.split(' '))
+      const cliLog = path.normalize(`../logs/cli${id}_${instanceCounter}`)
 
       const logErr = (err) => {
         if (err)
@@ -54,15 +55,10 @@ class Client {
       cli.stdout.on('data', (data) =>
       fs.appendFile(`${cliLog}_stdout.log`, data, (err) => logErr(err)))
 
-      cli.on('close', (code) => console.log(`Program exited with code ${code} (log: ${cliLog})`))
-
       this.process = cli
-      clients[cliSize] = this
-
-      console.log(`starting ${id}`)
+      clients[instanceCounter] = this
 
       return this.clientWillStart()
-        .then(() => console.log('running.'))
     })
   }
 
@@ -90,14 +86,17 @@ const getClient = (id) => {
   return instances
 }
 
-const killAll = () => Object.keys(clients).forEach((key) => clients[key].process.kill())
 const kill = (cliId, cliInstance) => {
-  if (!cliId) {
-    killAll()
-  }
-  else {
-    throw(new Error('not implemented'))
-  }
+
+  Object.keys(clients).forEach((key) => {
+    if (clients[key].id === cliId || cliId === undefined) {
+      fs.removeSync(clients[key].home) // sorry async todo
+      clients[key].process.kill()
+      delete clients[key]
+    }
+  })
+
+  return Promise.resolve()
 }
 
 module.exports = {

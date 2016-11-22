@@ -26,14 +26,12 @@ const isDiff = (fileA, fileB) => {
   return true
 }
 
-const testFileExists = (cliId, filePath, source) => {
-
-  console.log(`waiting for ${filePath} existence in client ${cliId} for each instance`)
+const testFileExists = (cliId, filePath, asset) => {
 
   const cliList = client.get(cliId)
 
   for (const cli of cliList) {
-    if (isDiff(source, cli.fullPath(filePath))) {
+    if (isDiff(asset, cli.fullPath(filePath))) {
       return Promise.reject()
     }
   }
@@ -47,7 +45,7 @@ const checkInSync = (testFunc) => repeat.every(tryTime, syncTimeout, testFunc)
 const asset = (name) => path.normalize(`${__dirname}/../assets/${name}`)
 const cliGetHelper = (cliId) => {
   const cliList = client.get(cliId)
-  if (cliList.length === 0) console.log(`no instance of client ${cliId}`)
+  if (cliList.length === 0) console.error(`no instance of client ${cliId}`)
   return cliList
 }
 
@@ -57,6 +55,8 @@ const add = (cliId, assetName, targetPath) => {
   // TODO: loop
   const cli = cliList[0]
 
+  if (!cli) return Promise.reject(new Error(`trying to add but no client #${cliId} running. ${cliList}`))
+
   const targetFullPath = cli.fullPath(targetPath)
 
   return fs.copyAsync(asset(assetName), targetFullPath)
@@ -64,16 +64,21 @@ const add = (cliId, assetName, targetPath) => {
       checkInSync(() => testFileExists(cliId, targetPath, asset(assetName))))
 }
 
-const move = (cliId, srcPath, targetPath) =>{
+const move = (cliId, assetPath, targetPath) =>{
   const cliList = cliGetHelper(cliId)
   const cli = cliList[0] // TODO: loop
   const srcFullPath = cli.fullPath(srcPath)
   const targetFullPath = cli.fullPath(targetPath)
   return fs.moveAsync(srcFullPath, targetFullPath)
-    .then(() => checkInSync(() => testFileExists(cliId, targetPath, srcPath)))
+    .then(() => FileExists(cliId, targetPath, assetPath))
 //    .then(() => checkInSync(() => testFileInexists(cliId, targetPath, srcPath)))
 }
 
+const fileExists = (cliId, targetPath, asset) =>
+  checkInSync(() => testFileExists(cliId, targetPath, asset))
+
 module.exports = {
-  add
+  add,
+  exists: fileExists,
+  asset
 }

@@ -141,7 +141,7 @@ export default class DesktopClient extends StoreitClient {
         home = params.home
         return this.recvFADD({parameters: {files: [params.home]}})
       })
-      .then(() => this.addFilesUnknownByServ(home))
+    //  .then(() => this.addFilesUnknownByServ(home))
       .tap(() => logger.info('[JOIN] home synchronized'))
     }
 

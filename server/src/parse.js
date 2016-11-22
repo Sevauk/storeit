@@ -31,6 +31,7 @@ const join = function(command, arg, socket, handlerFn) {
       }
 
       if (err && err.code === 'ENOENT') {
+        logger.info('new user ' + email)
         user.createUser(email, (err) => {
           if (err) {
             return handlerFn(protoObjs.ApiError.SERVERERROR)
@@ -103,8 +104,8 @@ const auth = (command, arg, client) => {
 
 const resp = (command, arg, client) => {
 
-  if (!command.commandUid) {
-    return logger.debug('client sent invalid response')
+  if (command.commandUid !== undefined) {
+    return logger.debug('client sent a response without uid (' + JSON.stringify(command) + ')')
   }
 
   const uid = command.commandUid
@@ -136,7 +137,7 @@ export const parse = function(msg, client) {
     return client.answerFailure(command.uid, protoObjs.ApiError.UNKNOWNREQUEST)
   }
 
-  logger.debug(`Command is ${JSON.stringify(command, null, 2)}`)
+  logger.debug(`User sent ${command.command}`)
 
   // TODO: catch the goddam exception
   const err = hmap[command.command](command, command.parameters, client, (err) => {
