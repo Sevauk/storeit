@@ -74,9 +74,9 @@ export default class DesktopClient extends StoreitClient {
       })
   }
 
-  developer(devId='') {
+  developer() {
     logger.info('[AUTH] login as developer')
-    return this.reqJoin({type: 'gg', accessToken: `developer${devId}`})
+    return this.reqJoin({type: 'gg', accessToken: `developer${this.authSettings.devId}`})
   }
 
   login(email, password) {
