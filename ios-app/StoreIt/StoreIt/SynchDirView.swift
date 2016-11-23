@@ -10,6 +10,7 @@ import UIKit
 import Photos
 import ObjectMapper
 import QuickLook
+import MobileCoreServices
 
 enum CellIdentifiers: String {
     case directory = "directoryCell"
@@ -217,7 +218,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     func buildUploadActionSheet() -> UIAlertController {
         let newDirectory = buildAction(title: "Créer un dossier", style: .default, handler: createNewDirectory)
         let uploadFromLibrary = buildAction(title: "Importer depuis mes photos et vidéos", style: .default, handler: pickImageFromLibrary)
-        let uploadFromCamera = buildAction(title: "Prendre avec l'appareil photo", style: .default, handler: takeImageWithCamera)
+        let uploadFromCamera = buildAction(title: "Prendre une photo", style: .default, handler: takeImageWithCamera)
         let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
         
         let alertController = UIAlertController(title: "Ajout d'un nouvel élément", message: "Choisissez une option", preferredStyle: .actionSheet)
@@ -267,46 +268,84 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     // MARK: ACTION SHEET HANDLERS
     
+    
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
-        dismiss(animated: true, completion: {_ in
-            let referenceUrl = editingInfo["UIImagePickerControllerReferenceURL"] as! URL
-            
-            if let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject {
-                PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
-                    (imagedata, dataUTI, orientation, info) in
-                    
-                    if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
-                    {
-                        let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
-                        
-                        // TODO: Maybe begin some loading in interface here...
-                        IpfsManager.add(filePath: filePath) {
-                            (
-                            data, response, error) in
-                            
-                            guard let _:Data = data, let _:URLResponse = response  , error == nil else {
-                                print("[IPFS.ADD] Error while IPFS ADD: \(error?.localizedDescription)")
-                                self.displayAlert(withMessage: "Impossible d'upload le fichier pour le moment.")
-                                return
-                            }
-                            
-                            // If ipfs add succeed
-                            let dataString = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
-                            let ipfsAddResponse = Mapper<IpfsAddResponse>().map(JSONString: dataString as String)
-                            let relativePath = self.navigationManager.buildPath(for: filePath.lastPathComponent)
-                            
-                            let file = self.navigationManager.createFile(path: relativePath, metadata: "", IPFSHash: ipfsAddResponse!.hash)
-                            
-                            self.networkManager.fadd(files: [file]) { success in
-                                if (!success) {
-                                    self.displayAlert(withMessage: "L'ajout du fichier a échoué. Veuillez réessayer.")
-                                }
-                            }
-                        }
+        func _ipfsAdd(fileName: String, data: Data) {
+            // TODO: Maybe begin some loading in interface here...
+            IpfsManager.add(fileName: fileName, data: data) {
+                (
+                data, response, error) in
+                
+                guard let _:Data = data, let _:URLResponse = response  , error == nil else {
+                    print("[IPFS.ADD] Error while IPFS ADD: \(error?.localizedDescription)")
+                    self.displayAlert(withMessage: "Impossible d'upload le fichier pour le moment.")
+                    return
+                }
+                
+                // If ipfs add succeed
+                let dataString = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
+                let ipfsAddResponse = Mapper<IpfsAddResponse>().map(JSONString: dataString as String)
+                let relativePath = self.navigationManager.buildPath(for: fileName)
+                
+                let file = self.navigationManager.createFile(path: relativePath, metadata: "", IPFSHash: ipfsAddResponse!.hash)
+                
+                self.networkManager.fadd(files: [file]) { success in
+                    if (!success) {
+                        self.displayAlert(withMessage: "L'ajout du fichier a échoué. Veuillez réessayer.")
                     }
-                })
+                }
             }
-        });
+        }
+        
+        dismiss(animated: true, completion: { _ in
+            if let data = UIImagePNGRepresentation(image) {
+                if picker.sourceType == UIImagePickerControllerSourceType.camera {
+                    let alert = UIAlertController(title: "Importer", message: "Entrez le nom du fichier", preferredStyle: .alert)
+                    
+                    alert.view.tintColor = LIGHT_GREY
+                    
+                    alert.addTextField { textField in
+                        textField.text = ".png"
+                        textField.tintColor = UIColor.clear
+                    }
+                    
+                    alert.addAction(UIAlertAction(title: "Annuler", style: .cancel, handler: nil))
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+                        let input = alert.textFields![0] as UITextField
+                        
+                        if let text = input.text {
+                            _ipfsAdd(fileName: text, data: data)
+                        }
+                    }))
+                    
+                    self.present(alert, animated: true) { _ in
+                        let textField = alert.textFields![0] as UITextField
+                        let beginning = textField.beginningOfDocument
+                        
+                        textField.selectedTextRange = textField.textRange(from: beginning, to: beginning)
+						textField.tintColor = LIGHT_GREY
+                    }
+                }
+                else if picker.sourceType == UIImagePickerControllerSourceType.photoLibrary {
+                    let referenceUrl = editingInfo["UIImagePickerControllerReferenceURL"] as! URL
+                    
+                    if let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject {
+                        PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
+                            (imagedata, dataUTI, orientation, info) in
+                            
+                            if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
+                            {
+                                let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
+                                
+                                _ipfsAdd(fileName: filePath.lastPathComponent, data: data)
+                            }
+                        })
+                    }
+                }
+            } else {
+                
+            }
+        })
     }
     
     func createNewDirectory(action: UIAlertAction) -> Void {
@@ -343,6 +382,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             imagePicker.delegate = self
             imagePicker.sourceType = UIImagePickerControllerSourceType.photoLibrary
             imagePicker.allowsEditing = true
+            imagePicker.mediaTypes = ["public.image", kUTTypeMovie as String]
             
             present(imagePicker, animated: true, completion: nil)
         }
@@ -356,6 +396,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             camera.allowsEditing = true
             camera.sourceType = UIImagePickerControllerSourceType.camera
             camera.delegate = self
+            camera.mediaTypes = ["public.image"] // video crashes the app
             
             present(camera, animated: true, completion: nil)
         }

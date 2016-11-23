@@ -261,10 +261,7 @@ class NavigationManager {
         
         let components = path.components(separatedBy: "/")
         
-        // Getting dir name
         if let firstComponent = components.first {
-            
-            // Checking if parent File OBJ exists
             if let _ = synchDir[firstComponent] {
                 
                 // Parent File OBJ found
@@ -289,7 +286,7 @@ class NavigationManager {
     }
     
     // Return reference of the last parent File OBJ in callback
-    func getLastParentFile(forPath path: String,
+    private func getLastParentFile(forPath path: String,
                            foundFile: (inout File) -> (),
                            fileNotFound: () -> ()) {
         
