@@ -24,7 +24,6 @@ after_success:
 - npm run report --prefix ./desktop-app
 
 after_failure:
-- echo "showing logs for tests clients"
 - tail -n 50 ./tests/logs/*
 
 notifications:
