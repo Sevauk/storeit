@@ -24,7 +24,7 @@ after_success:
 - npm run report --prefix ./desktop-app
 
 after_failure:
-- tail -n 50 ./tests/logs/*
+- cat ./tests/logs/*
 
 notifications:
   slack:

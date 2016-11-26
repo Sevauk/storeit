@@ -13,6 +13,7 @@ let instanceCounter = 0
 
 try {
   fs.removeSync(storeit_test_dir)
+  fs.removeSync(storeit_test_dir)
   fs.mkdirSync(storeit_test_dir)
   fs.mkdirSync('logs', () => null)
 }
@@ -44,6 +45,12 @@ class Client {
 
       const cli = spawn('node', `-r dotenv/config bootstrap.js --store ${this.home} -d --developer ${id}`.split(' '))
       const cliLog = path.normalize(`../logs/cli${id}_${instanceCounter}`)
+
+      try {
+        fs.removeSync(cliLog)
+      }
+      catch (e) {
+      }
 
       const logErr = (err) => {
         if (err)

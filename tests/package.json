@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -t 30000 index.js"
+    "start": "npm test",
+    "test": "rm ./logs/*; mocha -t 30000 index.js"
   },
   "author": "",
   "license": "ISC",
