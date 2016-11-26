@@ -144,7 +144,7 @@
                 <navigationController id="yzH-Dm-ieM" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Dossier StoreIt" image="ic_folder_open.png" id="H3d-e6-xqj"/>
                     <simulatedTabBarMetrics key="simulatedBottomBarMetrics" translucent="NO"/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="nf0-De-ASy">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" misplaced="YES" id="nf0-De-ASy">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -297,7 +297,7 @@
                 <navigationController storyboardIdentifier="StoreItSynchDir" automaticallyAdjustsScrollViewInsets="NO" navigationBarHidden="YES" id="2ie-nq-pmo" customClass="StoreItNavigationController" customModule="StoreIt" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="Item" id="7OQ-AH-5mL"/>
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="EXb-fo-DGY">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" misplaced="YES" id="EXb-fo-DGY">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <color key="barTintColor" red="0.86274509799999999" green="0.4039215686" blue="0.41176470590000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
