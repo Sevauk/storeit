@@ -4,7 +4,7 @@ const path = require('path')
 const client = require('./client.js')
 const repeat = require('./repeat.js')
 
-const syncTimeout = 20 // seconds
+const syncTimeout = 200 // seconds
 const tryTime = 1 // seconds
 
 const isDiff = (fileA, fileB) => {
