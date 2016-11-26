@@ -25,9 +25,6 @@ class IpfsManager {
         let CRLF = "\r\n"
         let boundary = generateBoundaryString()
         
-        //let data = try? Data(contentsOf: filePath)
-        let fileName = "toto"//filePath.lastPathComponent
-        
         let url = URL(string: "http://\(host):\(port)/api/v0/add?stream-cannels=true")
         var request = URLRequest(url: url!)
         
