@@ -60,6 +60,9 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         
         if success {
             performSegue(withIdentifier: "autoLog", sender: nil)
+            
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.shouldSupportAllOrientations = true
         } else {
             performSegue(withIdentifier: "loginView", sender: nil)
             
@@ -69,6 +72,12 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.shouldSupportAllOrientations = false
+        
+        let value = UIInterfaceOrientation.portrait.rawValue
+        UIDevice.current.setValue(value, forKey: "orientation")
+        
         OAuthServices.logout()
     }
 }

@@ -33,6 +33,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
+        
     }
     
     @IBAction func developerLogin(_ sender: AnyObject) {
@@ -116,6 +117,9 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         print("[LoginView] logginCallback -> success \(success) with message \(message)")
         
         if success {
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.shouldSupportAllOrientations = true
+            
             performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
         } else {
             if (goToLoginView) {
@@ -126,7 +130,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
             displayAlert(withMessage: message)
         }
     }
-
+    
 }
 
 

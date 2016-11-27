@@ -44,6 +44,9 @@ class OAuthServices {
         if let connectionType = SessionManager.getConnectionType() {
             print("[LoginView] Logging out...")
             
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.shouldSupportAllOrientations = false
+            
             if connectionType == ConnectionType.google {
                 GIDSignIn.sharedInstance().disconnect()
             } else if connectionType == ConnectionType.facebook {
