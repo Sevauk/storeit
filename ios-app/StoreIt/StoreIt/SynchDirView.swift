@@ -31,6 +31,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        navigationController?.isNavigationBarHidden = false
+        
         list.delegate = self
         list.dataSource = self
 

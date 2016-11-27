@@ -26,30 +26,17 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         super.viewDidLoad()
 
         fbButton.layer.cornerRadius = CORNER_RADIUS
-        //fbButton.center = view.center
         
         developerButton.layer.cornerRadius = CORNER_RADIUS
-        //developerButton.center = view.center
         
         googleButton.layer.cornerRadius = CORNER_RADIUS
-        //googleButton.center = view.center
         
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
-        
-        if let connectionType = SessionManager.getConnectionType() {
-            if connectionType == ConnectionType.google {
-                GIDSignIn.sharedInstance().signInSilently()
-            } else if connectionType == ConnectionType.facebook {
-                processFacebookLogin()
-            } else if connectionType == ConnectionType.developer {
-                processDeveloperLogin()
-            }
-        }
     }
     
     @IBAction func developerLogin(_ sender: AnyObject) {
-        processDeveloperLogin()
+        OAuthServices.developerLogin(loginCallback: loginCallback, displayer: displayer)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -59,18 +46,6 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
-    }
-    
-
-    func processDeveloperLogin() {
-        SessionManager.set(connectionType: ConnectionType.developer)
-        _ = SessionManager.set(token: "developer")
-        networkManager.initConnection(loginHandler: loginCallback, displayer: displayer)
-    }
-    
-    func processFacebookLogin() {
-        // refresh token here
-        networkManager.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
     // MARK: FACEBOOK
@@ -83,19 +58,19 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         login.logIn(withReadPermissions: ["public_profile", "email"], from: self) { (result, error) in
             guard let result = result else {
                 print(error ?? "")
-                self.logout()
+                OAuthServices.logout()
                 return
             }
             
             if result.isCancelled {
                 print(result)
-                self.logout()
+                OAuthServices.logout()
             }
                 
             else {
                 if result.grantedPermissions.contains("email"){
                     _ = SessionManager.set(token: result.token.tokenString)
-                    self.processFacebookLogin()
+                    OAuthServices.facebookLogin(loginCallback: self.loginCallback, displayer: self.displayer)
                 }
             }
         }
@@ -120,20 +95,15 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
-        
-        if let error = error {
-            print("[LoginView] \(error)")
-            SessionManager.removeConnectionType()
-            return
-        }
-        
-        _ = SessionManager.set(token: user.authentication.accessToken)
-        SessionManager.set(connectionType: ConnectionType.google)
-        networkManager.initConnection(loginHandler: loginCallback, displayer: displayer)
+        OAuthServices.googleSignIn(signIn,
+                                     didSignInFor: user,
+                                     withError: error,
+                                     loginCallback: loginCallback,
+                                     displayer: displayer)
     }
     
     func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
-        logout()
+        OAuthServices.logout()
     }
 
     // MARK: Utils
@@ -142,39 +112,19 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         displayAlert(withMessage: message)
     }
     
-    func loginCallback(success: Bool, message: String) {
+    func loginCallback(success: Bool, message: String, goToLoginView: Bool) {
         print("[LoginView] logginCallback -> success \(success) with message \(message)")
         
         if success {
             performSegue(withIdentifier: "StoreItSynchDirSegue", sender: nil)
         } else {
-            logoutToLoginView()
-            displayAlert(withMessage: message)
-        }
-    }
-
-    @IBAction func logoutSegue(_ segue: UIStoryboardSegue) {
-        logout()
-    }
-    
-    func logout() {
-        if let connectionType = SessionManager.getConnectionType() {
-            print("[LoginView] Logging out...")
-            
-            if connectionType == ConnectionType.google {
-                GIDSignIn.sharedInstance().disconnect()
-            } else if connectionType == ConnectionType.facebook {
-                FBSDKLoginManager().logOut()
+            if (goToLoginView) {
+                _ = navigationController?.popToRootViewController(animated: true)
             }
             
-            networkManager.close()
-            SessionManager.resetSession()
+            OAuthServices.logout()
+            displayAlert(withMessage: message)
         }
-    }
-    
-    func logoutToLoginView() {
-        _ = navigationController?.popToRootViewController(animated: true)
-        logout()
     }
 
 }

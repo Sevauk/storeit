@@ -118,7 +118,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-3273" y="-1370"/>
+            <point key="canvasLocation" x="-3346" y="-949"/>
         </scene>
         <!--File View-->
         <scene sceneID="p9Q-C1-PEg">
@@ -188,7 +188,7 @@
                                                 <rect key="frame" x="0.0" y="28" width="375" height="43"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="htM-Vz-f7B" id="Mst-rY-CTU">
-                                                    <rect key="frame" x="0.0" y="0.0" width="375" height="42"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <button opaque="NO" alpha="0.55000000000000004" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E3b-TD-tbm">
@@ -291,6 +291,78 @@
             </objects>
             <point key="canvasLocation" x="-250.40000000000001" y="-1648.4257871064469"/>
         </scene>
+        <!--Transition View-->
+        <scene sceneID="tWM-zj-y4M">
+            <objects>
+                <viewController id="Gtf-hk-0Gn" customClass="TransitionView" customModule="StoreIt" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="kH3-9c-qdN"/>
+                        <viewControllerLayoutGuide type="bottom" id="l4E-e9-bfa"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8ib-eS-SZY" customClass="Tran">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9JC-Rt-bv9">
+                                <rect key="frame" x="35" y="72" width="305" height="523"/>
+                                <subviews>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="Y8u-N9-qqZ">
+                                        <rect key="frame" x="20" y="20" width="265" height="425"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="265" id="G4A-ji-Jmf"/>
+                                            <constraint firstAttribute="height" constant="425" id="XmA-jt-1dB"/>
+                                        </constraints>
+                                    </imageView>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ATD-ei-DyO">
+                                        <rect key="frame" x="75" y="454" width="154" height="69"/>
+                                        <subviews>
+                                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="Aa4-q9-mtq">
+                                                <rect key="frame" x="8" y="24" width="20" height="20"/>
+                                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            </activityIndicatorView>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Chargement ..." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m0n-ov-51u">
+                                                <rect key="frame" x="38" y="20" width="114" height="29"/>
+                                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <color key="textColor" red="0.60000002379999995" green="0.60000002379999995" blue="0.60000002379999995" alpha="1" colorSpace="calibratedRGB"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="69" id="dWL-IT-slI"/>
+                                            <constraint firstAttribute="width" constant="154" id="dbZ-z1-Th8"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstItem="Y8u-N9-qqZ" firstAttribute="top" secondItem="9JC-Rt-bv9" secondAttribute="top" constant="20" id="JC0-FI-Di6"/>
+                                    <constraint firstItem="ATD-ei-DyO" firstAttribute="centerX" secondItem="Y8u-N9-qqZ" secondAttribute="centerX" id="LD9-Hk-bEE"/>
+                                    <constraint firstItem="ATD-ei-DyO" firstAttribute="top" secondItem="Y8u-N9-qqZ" secondAttribute="bottom" constant="9" id="OB7-F0-g0y"/>
+                                    <constraint firstItem="Y8u-N9-qqZ" firstAttribute="leading" secondItem="9JC-Rt-bv9" secondAttribute="leading" constant="20" id="Xte-Jo-LjM"/>
+                                    <constraint firstAttribute="trailing" secondItem="Y8u-N9-qqZ" secondAttribute="trailing" constant="20" id="kkO-gi-FuM"/>
+                                    <constraint firstAttribute="height" constant="523" id="zM9-9a-sFG"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="9JC-Rt-bv9" firstAttribute="centerY" secondItem="8ib-eS-SZY" secondAttribute="centerY" id="4an-JR-Hvx"/>
+                            <constraint firstItem="9JC-Rt-bv9" firstAttribute="centerX" secondItem="8ib-eS-SZY" secondAttribute="centerX" id="WrQ-z3-EOv"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="AAp-tp-f2O"/>
+                    <connections>
+                        <outlet property="loading" destination="Aa4-q9-mtq" id="VcV-jG-Zfg"/>
+                        <segue destination="grJ-Ff-90b" kind="show" identifier="autoLog" id="Igi-zX-JOU"/>
+                        <segue destination="BYZ-38-t0r" kind="show" identifier="loginView" animates="NO" id="UBt-YF-yCS"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="U2J-oN-aPl" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-4407.1999999999998" y="-1370.4647676161919"/>
+        </scene>
         <!--Item-->
         <scene sceneID="5Ar-8L-6OL">
             <objects>
@@ -311,12 +383,12 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </toolbar>
                     <connections>
-                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="fMT-If-wXd"/>
+                        <segue destination="Gtf-hk-0Gn" kind="relationship" relationship="rootViewController" id="pyo-nT-rn3"/>
                     </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gTf-0n-x96" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-4134" y="-1370"/>
+            <point key="canvasLocation" x="-5383" y="-1370"/>
         </scene>
         <!--Parameters-->
         <scene sceneID="olJ-HI-K1r">
@@ -337,7 +409,7 @@
                                     <color key="titleColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 </state>
                                 <connections>
-                                    <segue destination="hoL-6b-b7C" kind="unwind" unwindAction="logoutSegue:" id="Cjj-3W-1NH"/>
+                                    <segue destination="hoL-6b-b7C" kind="unwind" unwindAction="logoutSegue:" id="J94-Ap-CN3"/>
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Mode hors ligne" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GWp-Na-rnV">
@@ -402,6 +474,7 @@
         <image name="ic_settings" width="24" height="24"/>
     </resources>
     <inferredMetricsTieBreakers>
+        <segue reference="KWc-09-4h1"/>
         <segue reference="CNq-Bk-ve8"/>
     </inferredMetricsTieBreakers>
 </document>

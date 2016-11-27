@@ -24,7 +24,7 @@ class WebSocketManager {
     
     private let navigationManager = NavigationManager.shared
 
-    private var loginHandler: ((Bool, String) -> ())?
+    private var loginHandler: ((Bool, String, Bool) -> ())?
     private var displayer: ((String) -> ())?
         
     init(host: String, port: Int) {
@@ -67,7 +67,7 @@ class WebSocketManager {
             switch error {
             
             case SocketErrors.connection_impossible:
-                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.")
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
                 break
                 
             case SocketErrors.closed_by_server:
@@ -81,6 +81,10 @@ class WebSocketManager {
             }
         	
         }
+        // Unknown error - Maybe manual kill
+        else {
+            loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", true)
+        }
     }
     
     private func serverHasResponded(withResponse response: Response) {
@@ -93,7 +97,7 @@ class WebSocketManager {
                     
                     if let home = home {
                         navigationManager.set(home: home)
-                        loginHandler?(true, "Connection succeeded - Home set")
+                        loginHandler?(true, "Connection succeeded - Home set", false)
                     }
                 }
             }
@@ -273,7 +277,7 @@ class WebSocketManager {
         print("[Client.WebSocketManager] Client recieved some data: \(data.count)")
     }
     
-    func eventsInitializer(loginHandler: @escaping (Bool, String) -> (), displayer: @escaping (String) -> ()) {
+    func eventsInitializer(loginHandler: @escaping (Bool, String, Bool) -> (), displayer: ((String) -> ())?) {
         ws = WebSocket(url: url)
         
         self.loginHandler = loginHandler

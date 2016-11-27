@@ -21,18 +21,39 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="eBA-en-35c">
-                                <rect key="frame" x="55" y="121" width="265" height="425"/>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JEH-CK-RHp">
+                                <rect key="frame" x="35" y="72" width="305" height="523"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bienvenue sur StoreIt !" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Z2V-8z-MaC">
+                                        <rect key="frame" x="66" y="475" width="173" height="21"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <color key="textColor" red="0.60000002379999995" green="0.60000002379999995" blue="0.60000002379999995" alpha="1" colorSpace="calibratedRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="2017_logo_storeit" translatesAutoresizingMaskIntoConstraints="NO" id="eBA-en-35c">
+                                        <rect key="frame" x="20" y="20" width="265" height="425"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="265" id="fte-6n-pVk"/>
+                                            <constraint firstAttribute="height" constant="425" id="njy-aG-iNe"/>
+                                        </constraints>
+                                    </imageView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="265" id="J3H-fP-dUl"/>
-                                    <constraint firstAttribute="height" constant="425" id="VOj-z4-Jd0"/>
+                                    <constraint firstItem="Z2V-8z-MaC" firstAttribute="top" secondItem="eBA-en-35c" secondAttribute="bottom" constant="30" id="760-2r-cn9"/>
+                                    <constraint firstAttribute="width" constant="305" id="EPp-kO-leD"/>
+                                    <constraint firstItem="eBA-en-35c" firstAttribute="leading" secondItem="JEH-CK-RHp" secondAttribute="leading" constant="20" id="LtN-5w-Q1D"/>
+                                    <constraint firstAttribute="height" constant="523" id="W4D-ta-hM8"/>
+                                    <constraint firstItem="Z2V-8z-MaC" firstAttribute="centerX" secondItem="JEH-CK-RHp" secondAttribute="centerX" id="bcU-Zf-vHj"/>
+                                    <constraint firstAttribute="trailing" secondItem="eBA-en-35c" secondAttribute="trailing" constant="20" id="hRC-vT-RyL"/>
+                                    <constraint firstItem="eBA-en-35c" firstAttribute="top" secondItem="JEH-CK-RHp" secondAttribute="top" constant="20" id="wz0-7O-Xut"/>
                                 </constraints>
-                            </imageView>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="eBA-en-35c" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="29U-yP-zVC"/>
-                            <constraint firstItem="eBA-en-35c" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="UuF-YW-UEP"/>
+                            <constraint firstItem="JEH-CK-RHp" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="3Ig-QU-0ER"/>
+                            <constraint firstItem="JEH-CK-RHp" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Hwp-i9-U29"/>
                         </constraints>
                     </view>
                 </viewController>
