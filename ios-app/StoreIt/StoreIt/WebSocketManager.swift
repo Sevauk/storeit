@@ -14,6 +14,8 @@ struct SocketErrors {
     static let closed_by_server = "connection closed by server"
     static let no_internet_connectivity = "The operation couldn’t be completed. Socket is not connected"
     static let connection_impossible = "The operation couldn’t be completed. Connection refused"
+    static let host_is_down = "The operation couldn’t be completed. Host is down"
+    static let write_wait_timeout = "write wait timed out"
 }
 
 class WebSocketManager {
@@ -76,7 +78,16 @@ class WebSocketManager {
             case SocketErrors.no_internet_connectivity:
                 break
             
+            case SocketErrors.host_is_down:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
+            	break
+                
+            case SocketErrors.write_wait_timeout:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
+                break
+                
             default:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
                 break
             }
         	
