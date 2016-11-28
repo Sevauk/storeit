@@ -17,6 +17,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     
     let networkManager = NetworkManager.shared
     
+    @IBOutlet weak var storeitButton: UIButton!
     @IBOutlet weak var googleButton: UIButton!
     @IBOutlet weak var developerButton: UIButton!
     @IBOutlet weak var signInButton: GIDSignInButton!
@@ -30,6 +31,8 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         developerButton.layer.cornerRadius = CORNER_RADIUS
         
         googleButton.layer.cornerRadius = CORNER_RADIUS
+        
+        storeitButton.layer.cornerRadius = CORNER_RADIUS
         
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self

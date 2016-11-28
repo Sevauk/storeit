@@ -43,6 +43,8 @@
 		855C03A61D70469200F53398 /* ic_settings_white.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 855C03A51D70469200F53398 /* ic_settings_white.imageset */; };
 		855C03A81D70469B00F53398 /* ic_person.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 855C03A71D70469B00F53398 /* ic_person.imageset */; };
 		85708E821D130ED5001B7415 /* ParametersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85708E811D130ED5001B7415 /* ParametersView.swift */; };
+		857238731DEC627E0087A076 /* StoreItLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857238721DEC627E0087A076 /* StoreItLoginView.swift */; };
+		857238751DEC63530087A076 /* SubscribtionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857238741DEC63530087A076 /* SubscribtionView.swift */; };
 		857366661DBB86F200E979B6 /* ic_offline_pin.imageset in Resources */ = {isa = PBXBuildFile; fileRef = 857366651DBB86F200E979B6 /* ic_offline_pin.imageset */; };
 		857D8ED01D1A90D100166738 /* ConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857D8ECF1D1A90D100166738 /* ConnectionType.swift */; };
 		85838F341DAFE73600C21DDA /* UpdateElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85838F331DAFE73600C21DDA /* UpdateElement.swift */; };
@@ -124,6 +126,8 @@
 		855C03A51D70469200F53398 /* ic_settings_white.imageset */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ic_settings_white.imageset; sourceTree = "<group>"; };
 		855C03A71D70469B00F53398 /* ic_person.imageset */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ic_person.imageset; sourceTree = "<group>"; };
 		85708E811D130ED5001B7415 /* ParametersView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParametersView.swift; sourceTree = "<group>"; };
+		857238721DEC627E0087A076 /* StoreItLoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreItLoginView.swift; sourceTree = "<group>"; };
+		857238741DEC63530087A076 /* SubscribtionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubscribtionView.swift; sourceTree = "<group>"; };
 		857366651DBB86F200E979B6 /* ic_offline_pin.imageset */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ic_offline_pin.imageset; sourceTree = "<group>"; };
 		857D8ECF1D1A90D100166738 /* ConnectionType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConnectionType.swift; sourceTree = "<group>"; };
 		85838F331DAFE73600C21DDA /* UpdateElement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UpdateElement.swift; sourceTree = "<group>"; };
@@ -272,6 +276,8 @@
 				85145A721D3EC41900520B1E /* FileView.swift */,
 				8547C4D81DD4AC3D00DB2B4D /* Extensions.swift */,
 				85264E8A1DE9DBB80000F5C4 /* TransitionView.swift */,
+				857238721DEC627E0087A076 /* StoreItLoginView.swift */,
+				857238741DEC63530087A076 /* SubscribtionView.swift */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -653,8 +659,10 @@
 				857D8ED01D1A90D100166738 /* ConnectionType.swift in Sources */,
 				85A553861D96A19F009AFC1B /* SessionManager.swift in Sources */,
 				85B5A8F31D2C09AE00529533 /* UidFactory.swift in Sources */,
+				857238751DEC63530087A076 /* SubscribtionView.swift in Sources */,
 				85FF45E31D3CD7E200A89436 /* ErrorResponse.swift in Sources */,
 				855AFB3C1D16D643009B81D9 /* Parameters.swift in Sources */,
+				857238731DEC627E0087A076 /* StoreItLoginView.swift in Sources */,
 				850831541CE7358C00C11EB5 /* FileCell.swift in Sources */,
 				855AFB3E1D171080009B81D9 /* ResponseResolver.swift in Sources */,
 				85264E8B1DE9DBB80000F5C4 /* TransitionView.swift in Sources */,

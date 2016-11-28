@@ -27,7 +27,7 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         loading.startAnimating()
 
         navigationController?.isNavigationBarHidden = true
-                
+        
         if let connectionType = SessionManager.getConnectionType() {
             if connectionType == ConnectionType.google {
                 GIDSignIn.sharedInstance().signInSilently()
