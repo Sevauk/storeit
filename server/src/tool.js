@@ -18,8 +18,6 @@ map2:
   }
 */
 
-import {logger} from './lib/log.js'
-
 export class TwoHashMap {
 
   constructor() {

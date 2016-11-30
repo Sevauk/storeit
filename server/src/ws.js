@@ -17,6 +17,7 @@ class Client {
   constructor(ws) {
     this.ws = ws
     this.uid = clientUid++
+    this.commandUid = 0
     this.responseHandlers = []
 
     ws.on('message', (mess) => {
@@ -37,11 +38,15 @@ class Client {
   }
 
   sendObj(obj) {
-    this.sendText(JSON.stringify(obj))
+    const objStr = JSON.stringify(obj, null, 2)
+    logger.debug(`[SEND:${this.getUser().email}] ${objStr}`)
+    this.sendText(objStr)
   }
 
   sendCmd(name, parameters, handlerResponse) {
     const command = new protoObjs.Command(name, parameters)
+    this.commandUid++
+    command.commandUid = this.commandUid
     this.sendObj(command)
     this.responseHandlers[command.uid] = handlerResponse
   }
@@ -51,7 +56,6 @@ class Client {
   }
 
   answerFailure(commandUid, err) {
-    logger.debug('sending error to client ' + err.msg)
     this.sendObj(new protoObjs.Response(err.code, err.msg, commandUid, err.trace))
   }
 }

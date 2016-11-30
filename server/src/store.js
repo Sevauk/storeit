@@ -8,7 +8,7 @@ import {logger} from './lib/log.js'
 export const storeTable = new tool.TwoHashMap()
 
 export const registerHashesForUser = (socket, hashes) => {
-  storeTable.add(socket.uid, '')
+  // storeTable.add(socket.uid, '') why did I write this line ?
   if (hashes !== undefined) {
     for (const hash of hashes) {
       storeTable.add(socket.uid, hash)
@@ -38,7 +38,7 @@ export const keepChunkAlive = (hash) => {
     storeTable.add(usr, hash)
     user.getSocketFromUid(usr).sendObj(new api.Command('FSTR', {hash, 'keep': true}), (err) => {
       if (err) {
-        return logger.debug('user did not FSTR as asked (TODO: punish him and try with someone else)')
+        return logger.debug('user did not FSTR as asked (TODO: punish them and try with someone else)')
       }
       storeTable.add(usr, hash) // TODO: why is it not running this line ?
       logger.debug('user did download the chunk')

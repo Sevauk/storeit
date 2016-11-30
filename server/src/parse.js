@@ -23,32 +23,37 @@ const join = function(command, arg, socket, handlerFn) {
       return handlerFn(err)
     }
 
-    user.connectUser(email, socket, (err, usr) => {
+    let usrPromised = null
 
-      const unlock = (usr) => {
-        store.processHash(socket, arg)
-        sendWelcome(socket, usr, command.uid, {email, profilePic}, handlerFn)
-      }
+    const unlock = usr => {
+      store.processHash(socket, arg)
+      sendWelcome(socket, usr, command.uid, {email, profilePic}, handlerFn)
+    }
 
-      if (err && err.code === 'ENOENT') {
-        logger.info('new user ' + email)
-        user.createUser(email, (err) => {
-          if (err) {
-            return handlerFn(protoObjs.ApiError.SERVERERROR)
-          }
-          user.connectUser(email, socket, (err, usrAgain) => {
+    user.connectUser(email, socket)
+      .then(usr => {
+        usrPromised = usr
+        unlock(usr)
+      })
+      .catch(err => {
+        if (err && err.code === 'ENOENT') {
+          logger.info('new user ' + email)
+          user.createUser(email, (err) => {
             if (err) {
               return handlerFn(protoObjs.ApiError.SERVERERROR)
             }
-            unlock(usrAgain)
+            user.connectUser(email, socket, (err, usrPromised) => {
+              if (err) {
+                return handlerFn(protoObjs.ApiError.SERVERERROR)
+              }
+              unlock(usrPromised)
+            })
           })
-        })
-      }
-      else if (err) {
-        return handlerFn(err)
-      }
-      else unlock(usr)
-    })
+        }
+        else {
+          logger.error(err)
+        }
+      })
   })
 }
 
@@ -57,6 +62,8 @@ const recast = (command, client) => {
   const uid = command.uid
   const usr = client.getUser()
   command.uid = ++usr.commandUid
+
+  logger.debug(`recasting with ${user.getStat()} command ${command.command} to ${Object.keys(usr.sockets).length}`)
   for (const sock in usr.sockets) {
     if (parseInt(sock) === client.uid) {
       continue
@@ -137,7 +144,8 @@ export const parse = function(msg, client) {
     return client.answerFailure(command.uid, protoObjs.ApiError.UNKNOWNREQUEST)
   }
 
-  logger.debug(`User sent ${command.command}`)
+  const usr = client.getUser(client)
+  logger.debug(`User ${usr ? usr.email : 'unknown'} sent ${command.command}`)
 
   // TODO: catch the goddam exception
   const err = hmap[command.command](command, command.parameters, client, (err) => {

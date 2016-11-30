@@ -3,12 +3,12 @@ const file = require('./api/file.js')
 
 describe('StoreIt client', () => {
 
-  it('should run a client', () => client.run(0))
   it('should run multiple clients',() =>
     Promise.all([
       client.run(0),
-      client.run(2),
       client.run(3),
+      client.run(0),
+      client.run(2),
       client.run(3),
       client.run(3),
     ]))

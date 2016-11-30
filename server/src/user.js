@@ -3,9 +3,12 @@ import * as path from 'path'
 import * as api from './lib/protocol-objects.js'
 import * as tree from './lib/tree.js'
 import * as store from './store.js'
+import Repeat from 'repeat'
 import {logger} from './lib/log.js'
 import cmd from './main.js'
+import bluebird from 'bluebird'
 
+const fsPromisified = bluebird.promisifyAll(fs)
 export const users = {}
 export const sockets = {}
 
@@ -26,28 +29,9 @@ export const createUser = (email, handlerFn) => {
   fs.writeFile(userHomePath, JSON.stringify(basicHome, null, 2), (err) => handlerFn(err))
 }
 
-const readHome = (email, handlerFn) => {
-
-  const u = users[email] // TODO: improve code, use promise
-  if (u.home) {
-    return handlerFn(null, u.home)
-  }
-
-  fs.readFile(cmd.usrdir + email, 'utf8', (err, data) => {
-
-    if (err) {
-      return handlerFn(err)
-    }
-
-    try {
-      handlerFn(err, JSON.parse(data))
-    }
-    catch (err) {
-      logger.error(`user file for ${email} seems corrupt !`)
-      handlerFn(err)
-    }
-  })
-}
+const readHome = (email) =>
+  fsPromisified.readFileAsync(cmd.usrdir + email, 'utf8')
+    .then(data => JSON.parse(data))
 
 export class User {
 
@@ -55,6 +39,16 @@ export class User {
     this.email = email
     this.sockets = {}
     this.commandUid = 0
+
+    const flushHome = () => {
+      if (this.home) {
+        if (this.home === 'undefined') logger.error(`remove user ${this.email} home file`)
+        fsPromisified.writeFileAsync(cmd.usrdir + this.email, JSON.stringify(this.home, null, 2))
+            .catch(err => logger.error(err))
+      }
+    }
+
+    Repeat(flushHome).every(5, 's').start()
   }
 
   setTrees(trees, action) {
@@ -170,17 +164,11 @@ export class User {
     }
   }
 
-  loadHome(handlerFn) {
-
-    readHome(this.email, (err, obj) => {
-      this.home = obj
-      handlerFn(err, obj)
-    })
+  loadHome() {
+    return readHome(this.email)
+      .then(obj => this.home = obj)
   }
 
-  flushHome() {
-    fs.writeFile(cmd.usrdir + this.email, JSON.stringify(this.home, null, 2))
-  }
 }
 
 export const getUserCount = () => {
@@ -191,7 +179,7 @@ export const getConnectionCount = () => {
   return Object.keys(sockets).length
 }
 
-const getStat = () => {
+export const getStat = () => {
   return `${getUserCount()} users ${getConnectionCount()} sockets.`
 }
 
@@ -204,8 +192,6 @@ export const disconnectSocket = (client) => {
   }
 
   delete user.sockets[client.uid]
-
-  user.flushHome()
 
   if (Object.keys(user.sockets).length === 0) {
     delete users[user.email]
@@ -223,27 +209,24 @@ export const getSocketFromUid = (uid) => {
   return sockets[uidStr].sockets[uidStr]
 }
 
-export const connectUser = (email, client, handlerFn) => {
+export const connectUser = (email, client) => {
+
+  const setUser = user => {
+    sockets[client.uid] = user
+    users[email] = user
+    user.sockets[client.uid] = client
+
+    logger.debug(getStat())
+
+    return user
+  }
 
   let user = users[email]
 
   if (user === undefined) {
-    user = new User(email)
+    const user = new User(email)
+    return user.loadHome()
+      .then(() => setUser(user))
   }
-
-  sockets[client.uid] = user
-  users[email] = user
-  user.sockets[client.uid] = client
-
-  user.loadHome((err) => {
-
-    if (err) {
-      logger.error(err)
-      disconnectSocket(client)
-    }
-    else {
-      logger.info(`${user.email} has connected. ${getStat()}`)
-    }
-    handlerFn(err, user)
-  })
+  return Promise.resolve(setUser(user))
 }

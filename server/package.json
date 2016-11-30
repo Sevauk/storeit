@@ -9,7 +9,7 @@
     "lint": "eslint src/*.js",
     "build": "babel src -d build -s && babel ../lib/js/src -d build/lib -s",
     "dev": "babel-watch src/main.js",
-    "test": "mocha --compilers js:babel-core/register src/test.js",
+    "test": "babel ../lib/js/src -d src/lib && mocha --compilers js:babel-core/register src/test.js",
     "postinstall": "cd ../lib/js/; npm install; cd ../../server; cp -n .server-conf-sample.conf server.conf"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "ipfs": "^0.4.5",
     "ipfs-api": "^3.0.0",
     "reedsolomon": "^1.0.0",
+    "repeat": "0.0.6",
     "request": "^2.72.0",
     "stormpath": "^0.18.5",
     "string": "^3.3.1",
