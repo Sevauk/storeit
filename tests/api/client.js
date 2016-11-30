@@ -66,6 +66,7 @@ class Client {
   clientWillStart() {
     return repeat.every(1, 20, // every 1s for max 20s
       () => fs.lstatAsync(`${this.home}/readme.txt`)) // then this until it resolves
+      .delay(5000) // wait a little bit more
   }
 
   fullPath(p) {

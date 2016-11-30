@@ -40,7 +40,22 @@ const testFileExists = (cliId, filePath, asset) => {
 }
 
 
-const checkInSync = (testFunc) => repeat.every(tryTime, syncTimeout, testFunc)
+const checkInSync = (cliId, testFunc, param) => {
+
+  const testEveryInstance = () => {
+
+    const cliList = client.get(cliId)
+
+    for (const cli of cliList) {
+      if (testFunc(cli.home, param))
+        return Promise.reject()
+    }
+    return Promise.resolve()
+  }
+
+  return repeat.every(tryTime, syncTimeout, testEveryInstance)
+}
+
 
 const asset = (name) => path.normalize(`${__dirname}/../assets/${name}`)
 const cliGetHelper = (cliId) => {
@@ -70,15 +85,30 @@ const move = (cliId, assetPath, targetPath) =>{
   const srcFullPath = cli.fullPath(srcPath)
   const targetFullPath = cli.fullPath(targetPath)
   return fs.moveAsync(srcFullPath, targetFullPath)
-    .then(() => FileExists(cliId, targetPath, assetPath))
+    .then(() => fileExists(cliId, targetPath, assetPath))
 //    .then(() => checkInSync(() => testFileInexists(cliId, targetPath, srcPath)))
 }
 
 const fileExists = (cliId, targetPath, asset) =>
   checkInSync(() => testFileExists(cliId, targetPath, asset))
 
+const dirIsNotEmpty = (home) => fs.readdirSync(home).length > 1 // readme.txt doesn't count
+
+const emptyDir = (cliId, path) =>
+  fs.emptyDirAsync(path)
+    .then(() => fs.writeFileAsync(path + '/readme.txt', 'readme')) // I need it to detect that a client runs. TODO: will not work on windows
+    .then(() => checkInSync(cliId, dirIsNotEmpty))
+
+const remove = (cliId, what) => {
+  if (what === '*') {
+    const cli = client.get(cliId)[0]
+    return emptyDir(cliId, cli.home)
+  }
+}
+
 module.exports = {
   add,
+  remove,
   exists: fileExists,
   asset
 }
