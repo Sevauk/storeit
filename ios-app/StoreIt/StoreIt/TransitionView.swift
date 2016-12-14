@@ -32,9 +32,9 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
             if connectionType == ConnectionType.google {
                 GIDSignIn.sharedInstance().signInSilently()
             } else if connectionType == ConnectionType.facebook {
-                OAuthServices.facebookLogin(loginCallback: loginCallback, displayer: nil)
+                OAuthServices.shared.facebookLogin(loginCallback: loginCallback, displayer: nil)
             } else if connectionType == ConnectionType.developer {
-                OAuthServices.developerLogin(loginCallback: loginCallback, displayer: nil)
+                OAuthServices.shared.developerLogin(loginCallback: loginCallback, displayer: nil)
             }
         } else {
             performSegue(withIdentifier: "loginView", sender: nil)
@@ -48,7 +48,7 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
-        OAuthServices.googleSignIn(signIn,
+        OAuthServices.shared.googleSignIn(signIn,
                                      didSignInFor: user,
                                      withError: error,
                                      loginCallback: loginCallback,
@@ -66,7 +66,7 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         } else {
             performSegue(withIdentifier: "loginView", sender: nil)
             
-            OAuthServices.logout()
+            OAuthServices.shared.logout()
             displayAlert(withMessage: message)
         }
     }
@@ -78,6 +78,6 @@ class TransitionView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         let value = UIInterfaceOrientation.portrait.rawValue
         UIDevice.current.setValue(value, forKey: "orientation")
         
-        OAuthServices.logout()
+        OAuthServices.shared.logout()
     }
 }

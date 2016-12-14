@@ -15,7 +15,7 @@ class Response : Mappable {
     var text: String
     var commandUid: Int
     var command: String
-    var parameters: [String:File]?
+    var parameters: ReponseParameters?
     
     init() {
         code = -1
@@ -25,7 +25,7 @@ class Response : Mappable {
         parameters = nil
     }
     
-    init(code: Int, text: String, commandUid: Int, command: String, parameters: [String: File]?) {
+    init(code: Int, text: String, commandUid: Int, command: String, parameters: ReponseParameters?) {
         self.code = code
         self.text = text
         self.commandUid = commandUid

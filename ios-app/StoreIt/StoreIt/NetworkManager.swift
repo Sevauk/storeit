@@ -17,7 +17,8 @@ class NetworkManager {
     
     //private let _host = "localhost"
     //private let _host = "iglu.mobi"
-    private let _host = "192.168.1.12"
+    //private let _host = "192.168.1.12"
+    private let _host = "louismondesir.me"
     
     private let _port = 7641
     
@@ -41,8 +42,17 @@ class NetworkManager {
         return WSManager.isConnected()
     }
     
-    func initConnection(loginHandler: @escaping (Bool, String, Bool) -> (), displayer: ((String) -> ())?) {
+    func initConnection(loginHandler: ((Bool, String, Bool) -> ())?, displayer: ((String) -> ())?) {
         WSManager.eventsInitializer(loginHandler: loginHandler, displayer: displayer)
+    }
+    
+    func subs(email: String, password: String, isLogging: Bool, completion: ((Bool) -> ())?) {
+        let parameters = SubsParameters(email: email, password: password)
+        let subsCommand = Command(uid: UidFactory.uid, command: isLogging ? CommandInfos.AUTH : CommandInfos.SUBS, parameters: parameters)
+        
+        UidFactory.addNewWaitingCommand(CommandInfos.SUBS, objects: (email: email, password: password) as AnyObject)
+        
+        WSManager.send(command: subsCommand, completion: completion)
     }
     
     func joinDeveloper(completion: ((Bool) -> ())?) {
@@ -52,7 +62,6 @@ class NetworkManager {
         UidFactory.uid += 1
         
         WSManager.send(command: joinCommand, completion: completion)
-
     }
     
     func join(authType: String, accessToken: String, completion: ((Bool) -> ())?) {

@@ -9,6 +9,57 @@
 import Foundation
 import ObjectMapper
 
+class ReponseParameters: Mappable {
+    var home: File?
+    var accessToken: String?
+    
+    init() {
+        home = File()
+        accessToken = ""
+    }
+    
+    init(home: File, accessToken: String) {
+        self.home = home
+        self.accessToken = accessToken
+    }
+    
+    required init?(map: Map) {
+        home = File()
+        accessToken = ""
+    }
+    
+    func mapping(map: Map) {
+        home <- map["home"]
+        accessToken <- map["accessToken"]
+    }
+}
+
+class SubsParameters: Mappable {
+   
+    var email: String
+    var password: String
+    
+    init() {
+        email = ""
+        password = ""
+    }
+    
+    init(email: String, password: String) {
+        self.email = email
+        self.password = password
+    }
+    
+    required init?(map: Map) {
+        email = ""
+        password = ""
+    }
+    
+    func mapping(map: Map) {
+        email <- map["email"]
+        password <- map["password"]
+    }
+}
+
 class Auth: Mappable {
     
     var type: String

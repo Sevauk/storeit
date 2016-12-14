@@ -18,7 +18,7 @@ class UidFactory {
     private static var waintingForResponse: [Uid:Command] = [:]
     private static var objectsForUid: [Uid:AnyObject] = [:]
     
-    static func addNewWaitingCommand(_ command: Command, objects: AnyObject) {
+    static func addNewWaitingCommand(_ command: Command, objects: AnyObject?) {
         waintingForResponse[uid] = command
         objectsForUid[uid] = objects
         uid += 1

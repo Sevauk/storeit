@@ -18,6 +18,8 @@ struct CommandInfos {
     static let FUPT = "FUPT"
     static let FMOV = "FMOV"
     static let FSTR = "FSTR"
+    static let SUBS = "SUBS"
+    static let AUTH = "AUTH"
 
     static var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV, FSTR] }
     

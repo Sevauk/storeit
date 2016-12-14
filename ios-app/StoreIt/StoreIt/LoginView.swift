@@ -26,6 +26,8 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        navigationItem.title = "Accueil"
+        
         fbButton.layer.cornerRadius = CORNER_RADIUS
         
         developerButton.layer.cornerRadius = CORNER_RADIUS
@@ -40,7 +42,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     @IBAction func developerLogin(_ sender: AnyObject) {
-        OAuthServices.developerLogin(loginCallback: loginCallback, displayer: displayer)
+        OAuthServices.shared.developerLogin(loginCallback: loginCallback, displayer: displayer)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -62,19 +64,19 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
         login.logIn(withReadPermissions: ["public_profile", "email"], from: self) { (result, error) in
             guard let result = result else {
                 print(error ?? "")
-                OAuthServices.logout()
+                OAuthServices.shared.logout()
                 return
             }
             
             if result.isCancelled {
                 print(result)
-                OAuthServices.logout()
+                OAuthServices.shared.logout()
             }
                 
             else {
                 if result.grantedPermissions.contains("email"){
                     _ = SessionManager.set(token: result.token.tokenString)
-                    OAuthServices.facebookLogin(loginCallback: self.loginCallback, displayer: self.displayer)
+                    OAuthServices.shared.facebookLogin(loginCallback: self.loginCallback, displayer: self.displayer)
                 }
             }
         }
@@ -99,7 +101,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
-        OAuthServices.googleSignIn(signIn,
+        OAuthServices.shared.googleSignIn(signIn,
                                      didSignInFor: user,
                                      withError: error,
                                      loginCallback: loginCallback,
@@ -107,7 +109,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
     }
     
     func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
-        OAuthServices.logout()
+        OAuthServices.shared.logout()
     }
 
     // MARK: Utils
@@ -129,7 +131,7 @@ class LoginView: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate {
                 _ = navigationController?.popToRootViewController(animated: true)
             }
             
-            OAuthServices.logout()
+            OAuthServices.shared.logout()
             displayAlert(withMessage: message)
         }
     }

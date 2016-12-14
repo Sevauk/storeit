@@ -51,7 +51,10 @@ class WebSocketManager {
     
     private func onConnect() {
         print("[Client.WebSocketManager] WebSocket is connected to \(self.url)")
-        
+        join()
+    }
+    
+    private func join() {
         if let token = SessionManager.getToken() {
             if let connectionType = SessionManager.getConnectionType() {
                 NetworkManager.shared.join(authType: connectionType.rawValue,
@@ -59,7 +62,6 @@ class WebSocketManager {
                                            completion: nil)
             }
         }
-
     }
     
     private func onDisconnect(error: NSError?) {
@@ -104,11 +106,21 @@ class WebSocketManager {
             // JOIN RESPONSE
             if (response.text == CommandInfos.JOIN_RESPONSE_TEXT) {
                 if let params = response.parameters {
-                    let home: File? = params["home"]
-                    
-                    if let home = home {
+                    if let home = params.home {
                         navigationManager.set(home: home)
                         loginHandler?(true, "Connection succeeded - Home set", false)
+                    }
+                }
+            }
+            
+            // CMD RESPONSE WITH PARAMETERS
+            else if (response.parameters != nil) {
+
+                // AUTH RESPONSE
+                if let params = response.parameters {
+                    if let accessToken = params.accessToken {
+                        OAuthServices.shared.storeitLogin(token: accessToken)
+                        join()
                     }
                 }
             }
@@ -147,9 +159,16 @@ class WebSocketManager {
                         }
                         
                         break
+                    
+                    case CommandInfos.SUBS:
+                        let credentials = UidFactory.getObjectForUid(uid) as! (email: String, password: String)
+                        
+                        // subscribtion is a success: getting token with AUTH to connect
+                        NetworkManager.shared.subs(email: credentials.email, password: credentials.password, isLogging: true, completion: nil)
+                        
+                        break
                         
                 	default:
-                            
                         break
                     }
                     
@@ -160,7 +179,21 @@ class WebSocketManager {
         
         // ERROR CODE
         else {
-        	displayer?(response.text) // TODO: user friendly display
+            // BADPASSWORD
+            if (response.code == 11) {
+                displayer?("Le mot de passe est incorrect.")
+            }
+        	// EXISTING USER
+            else if (response.code == 12) {
+                displayer?("L'adresse email est déjà utilisée. Choisissez-en une autre.")
+            }
+            // BAD CREDENTIALS
+            else if (response.code == 1) {
+                displayer?("Le mot de passe ou l'addresse email n'est pas valide. Réessayez.")
+            }
+            else {
+                displayer?(response.text) // TODO: user friendly display
+            }
         }
     }
     
@@ -288,7 +321,7 @@ class WebSocketManager {
         print("[Client.WebSocketManager] Client recieved some data: \(data.count)")
     }
     
-    func eventsInitializer(loginHandler: @escaping (Bool, String, Bool) -> (), displayer: ((String) -> ())?) {
+    func eventsInitializer(loginHandler: ((Bool, String, Bool) -> ())?, displayer: ((String) -> ())?) {
         ws = WebSocket(url: url)
         
         self.loginHandler = loginHandler
@@ -314,15 +347,15 @@ class WebSocketManager {
                         completion?(true)
                     }
                 } else {
-                    print("<=== [REQUEST NOT SENT] ===>")
+                    print("<=== [REQUEST NOT SENT: cannot map to json] ===>")
                     completion?(false)
                 }
             } else {
-                print("<=== [REQUEST NOT SENT] ===>")
+                print("<=== [REQUEST NOT SENT: ws is not connected] ===>")
                 completion?(false)
             }
         } else {
-            print("<=== [REQUEST NOT SENT] ===>")
+            print("<=== [REQUEST NOT SENT: ws is nil] ===>")
             completion?(false)
         }
     }

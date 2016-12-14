@@ -11,14 +11,24 @@ import FBSDKLoginKit
 
 class OAuthServices {
     
-    class func developerLogin(loginCallback: @escaping (Bool, String, Bool) -> (),
+    static let shared = OAuthServices()
+    
+    var displayer: ((String) -> ())?
+    var loginCallback: ((Bool, String, Bool) -> ())?
+    
+    func storeitLogin(token: String) {
+        SessionManager.set(connectionType: ConnectionType.storeit)
+        _ = SessionManager.set(token: token)
+    }
+    
+    func developerLogin(loginCallback: @escaping (Bool, String, Bool) -> (),
                               displayer: ((String) -> ())?) {
         SessionManager.set(connectionType: ConnectionType.developer)
         _ = SessionManager.set(token: "developer")
         NetworkManager.shared.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
-    class func googleSignIn(_ signIn: GIDSignIn!,
+    func googleSignIn(_ signIn: GIDSignIn!,
                               didSignInFor user: GIDGoogleUser!,
                               withError error: Error!,
                               loginCallback: @escaping (Bool, String, Bool) -> (),
@@ -35,12 +45,12 @@ class OAuthServices {
         NetworkManager.shared.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
-    class func facebookLogin(loginCallback: @escaping (Bool, String, Bool) -> (), displayer: ((String) -> ())?) {
+    func facebookLogin(loginCallback: @escaping (Bool, String, Bool) -> (), displayer: ((String) -> ())?) {
         // refresh token here
         NetworkManager.shared.initConnection(loginHandler: loginCallback, displayer: displayer)
     }
     
-    class func logout() {
+    func logout() {
         if let connectionType = SessionManager.getConnectionType() {
             print("[LoginView] Logging out...")
             

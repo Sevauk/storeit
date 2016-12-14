@@ -12,4 +12,5 @@ enum ConnectionType: String {
     case google = "gg"
     case facebook = "fb"
     case developer = "dev"
+    case storeit = "si"
 }
