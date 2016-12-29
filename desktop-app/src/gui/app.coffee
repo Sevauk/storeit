@@ -16,10 +16,14 @@ pages =
 
 $ ->
   ($ template.html).appendTo($ document.body)
-  ipc.on 'load', (ev, name) ->
+  ipc.on 'load-page', (ev, name) ->
+    console.log 'page:', name
     if pages[name]?
       page = new pages[name]
       page.render()
+
+  console.log 'ready'
+  ipc.send('ready-to-load', true)
 
     # load dynamically
     # page = params.p

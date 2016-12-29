@@ -26,9 +26,9 @@ currPage = null
 loadPage = (page) ->
   unless currPage is page
     currPage = page
-    view.window.webContents.send 'load', page
+    view.window.webContents.send 'load-page', page
   view.showWindow()
-  # view.window.openDevTools() if OPTIONS.dev
+  view.window.openDevTools() if OPTIONS.dev
 
 authWin = null
 createAuthWin = (url, showModal=true) ->
@@ -69,7 +69,7 @@ restart = ->
   logger.debug('GUI: restart')
   daemon.restart()
 
-init = (p) ->
+initApp = (p) ->
   menu = electron.Menu.buildFromTemplate [
     {label: 'Preferences', click: -> loadPage 'settings'}
     {label: 'Account', click: -> loadPage 'account'}
@@ -80,14 +80,16 @@ init = (p) ->
     {label: 'Restart', click: -> restart()}
     {label: 'Quit', click: -> app.quit()}
   ]
-  view.tray.on 'right-click', ->
-    view.tray.popUpContextMenu menu
+  view.tray.on 'right-click', -> view.tray.popUpContextMenu menu
 
-  authType = settings.getAuthType()
-  if authType?
-    login authType, false
-  else
-    loadPage 'oauth'
+start = ->
+  logger.error 'received'
+  loadPage 'settings'
+  # authType = settings.getAuthType()
+  # if authType?
+  #   login authType, false
+  # else
+  #   loadPage 'oauth'
 
 ipc.on 'auth', (ev, authType) ->
   login(authType, authType isnt 'developer')
@@ -105,7 +107,10 @@ process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program
-  view.on 'ready', -> init()
+  view.on 'ready', ->
+    initApp()
+    start()
+
   view.on 'after-create-window', ->
     view.window.setTitle APP_NAME
     view.window.setSkipTaskbar true
