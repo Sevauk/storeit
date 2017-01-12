@@ -14,7 +14,7 @@ APP_ICON = "#{__dirname}/../assets/images/icon.png"
 APP_INDEX = "file://#{__dirname}/../index.html"
 
 view = menubar
-  # alwaysOnTop: true #TODO remove
+  # alwaysOnTop: true
   index: APP_INDEX
   height: 500
   icon: APP_ICON
@@ -61,15 +61,20 @@ login = (authType, showModal=true) ->
 
 # TODO
 logout = ->
-  logger.debug('GUI: logout')
+  logger.debug('[GUI] logout')
   daemon.logout()
 
 # TODO
 restart = ->
-  logger.debug('GUI: restart')
+  logger.debug('[GUI] restart')
   daemon.restart()
 
 initApp = (p) ->
+  ipc.on 'auth', (ev, authType) ->
+    login(authType, authType isnt 'developer')
+      .then -> ev.sender.send 'auth', 'done'
+      .catch -> ev.sender.send 'auth', 'done'
+  ipc.on 'restart', (ev) -> restart()
   menu = electron.Menu.buildFromTemplate [
     {label: 'Preferences', click: -> loadPage 'settings'}
     {label: 'Account', click: -> loadPage 'account'}
@@ -82,24 +87,8 @@ initApp = (p) ->
   ]
   view.tray.on 'right-click', -> view.tray.popUpContextMenu menu
 
-start = ->
-  logger.error 'received'
-  loadPage 'settings'
-  # authType = settings.getAuthType()
-  # if authType?
-  #   login authType, false
-  # else
-  #   loadPage 'oauth'
-
-ipc.on 'auth', (ev, authType) ->
-  login(authType, authType isnt 'developer')
-    .then -> ev.sender.send 'auth', 'done'
-    .catch -> ev.sender.send 'auth', 'done'
-
-ipc.on 'restart', (ev) -> restart()
-
 terminate = (err) ->
-  logger.error 'Fatal error:', err
+  logger.error '[GUI] Fatal error:', err
   process.exit 1
 
 process.on 'error', terminate
@@ -109,15 +98,17 @@ exports.run = (program) ->
   global.OPTIONS = program
   view.on 'ready', ->
     initApp()
-    start()
+    ipc.on 'renderer-ready', ->
+      authType = settings.getAuthType()
+      if authType?
+        login authType, false
+      else
+        loadPage 'oauth'
 
   view.on 'after-create-window', ->
     view.window.setTitle APP_NAME
     view.window.setSkipTaskbar true
     # view.window.openDevTools() if OPTIONS.dev # TODO remove
-
-  # I have no idea what's the point of this
-  # app.on 'activate', -> init() unless view.window?
 
   # this prevent default: quit on when all windows are closed
   app.on 'window-all-closed', ->

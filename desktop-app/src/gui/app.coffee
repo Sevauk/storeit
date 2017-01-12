@@ -23,7 +23,7 @@ $ ->
       page.render()
 
   console.log 'ready'
-  ipc.send('ready-to-load', true)
+  ipc.send('renderer-ready', true)
 
     # load dynamically
     # page = params.p
