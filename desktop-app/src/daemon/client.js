@@ -32,6 +32,7 @@ export default class DesktopClient extends StoreitClient {
   }
 
   start(opts={}) {
+    this.running = true
     logger.info('[STATUS] starting up daemon')
     this.authSettings.type = opts.type || this.authSettings.type
     this.authSettings.devId = opts.devId || this.authSettings.devId || 0
@@ -44,6 +45,7 @@ export default class DesktopClient extends StoreitClient {
   }
 
   stop() {
+    this.running = false
     logger.info('[STATUS] attempting to gracefully shut down daemon')
     return this.fsWatcher.stop()
       .then(() => this.close())
@@ -52,6 +54,8 @@ export default class DesktopClient extends StoreitClient {
   }
 
   auth() {
+    this.logging = true
+
     let service
     switch (this.authSettings.type) {
       case 'facebook':
@@ -92,7 +96,15 @@ export default class DesktopClient extends StoreitClient {
 
   }
 
+  logout() {
+    this.stop()
+    settings.resetTokens()
+  }
+
   connect() {
+    if (!this.running) {
+      return new Promise(() => undefined)
+    }
 
     return super.connect()
       .then(() => this.auth(this.authSettings))

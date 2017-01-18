@@ -59,10 +59,10 @@ login = (authType, showModal=true) ->
       authWin.close() if authWin?
       terminate e
 
-# TODO
 logout = ->
   logger.debug('[GUI] logout')
   daemon.logout()
+  loadPage 'oauth'
 
 # TODO
 restart = ->
@@ -86,6 +86,12 @@ initApp = (p) ->
     {label: 'Quit', click: -> app.quit()}
   ]
   view.tray.on 'right-click', -> view.tray.popUpContextMenu menu
+  ipc.on 'renderer-ready', ->
+    authType = settings.getAuthType()
+    if authType?
+      login authType, false
+    else
+      loadPage 'oauth'
 
 terminate = (err) ->
   logger.error '[GUI] Fatal error:', err
@@ -96,14 +102,7 @@ process.on 'uncaughtException', terminate
 
 exports.run = (program) ->
   global.OPTIONS = program
-  view.on 'ready', ->
-    initApp()
-    ipc.on 'renderer-ready', ->
-      authType = settings.getAuthType()
-      if authType?
-        login authType, false
-      else
-        loadPage 'oauth'
+  view.on 'ready', initApp
 
   view.on 'after-create-window', ->
     view.window.setTitle APP_NAME

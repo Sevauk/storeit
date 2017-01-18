@@ -87,6 +87,7 @@ export default class Watcher {
 
   stop() {
     if (this.monitor) this.monitor.close()
+    return Promise.resolve()
   }
 
   dispatch(evType, p, stats) {
