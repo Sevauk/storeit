@@ -64,7 +64,6 @@ logout = ->
   daemon.logout()
   loadPage 'oauth'
 
-# TODO
 restart = ->
   logger.debug('[GUI] restart')
   daemon.restart()

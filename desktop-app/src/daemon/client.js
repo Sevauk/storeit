@@ -53,6 +53,11 @@ export default class DesktopClient extends StoreitClient {
       .then(() => logger.info('[STATUS] daemon stopped'))
   }
 
+  restart() {
+    return this.stop()
+      .then(() => this.start())
+  }
+
   auth() {
     this.logging = true
 
