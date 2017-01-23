@@ -17,7 +17,7 @@ resetStore = ->
   rm '-rf', store
   mkdir store
 
-describe.only 'User File', ->
+describe 'User File', ->
 
   beforeEach -> resetStore()
 
