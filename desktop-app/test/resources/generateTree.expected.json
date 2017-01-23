@@ -1,1 +1,45 @@
-{"path":"","metadata":null,"IPFSHash":null,"isDir":true,"files":[{"path":"bar","metadata":null,"IPFSHash":"###bar###","isDir":false,"files":null},{"path":"foo","metadata":null,"IPFSHash":null,"isDir":true,"files":[{"path":"foo/foobar","metadata":null,"IPFSHash":"###foo/foobar###","isDir":false,"files":null}]}]}
+{
+  "path":"/",
+  "metadata":null,
+  "IPFSHash":null,
+  "isDir":true,
+  "files": {
+    "bar": {
+      "path":"/bar",
+      "metadata":null,
+      "IPFSHash":"###bar###",
+      "isDir":false,
+      "files":null
+    },
+    "foo": {
+      "path":"/foo",
+      "metadata":null,
+      "IPFSHash":null,
+      "isDir":true,
+      "files": {
+        "foobar": {
+          "path":"/foo/foobar",
+          "metadata":null,
+          "IPFSHash":"###foo/foobar###",
+          "isDir":false,
+          "files":null
+        },
+        "barfoo": {
+          "path":"/foo/barfoo",
+          "metadata":null,
+          "IPFSHash":null,
+          "isDir":true,
+          "files": {
+            "bar": {
+              "path":"/foo/barfoo/bar",
+              "metadata":null,
+              "IPFSHash":"###foo/barfoo/bar###",
+              "isDir":false,
+              "files":null
+            }
+          }
+        }
+      }
+    }
+  }
+}

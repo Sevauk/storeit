@@ -17,7 +17,7 @@ resetStore = ->
   rm '-rf', store
   mkdir store
 
-describe 'User File', ->
+describe.only 'User File', ->
 
   beforeEach -> resetStore()
 
@@ -128,8 +128,11 @@ describe 'User File', ->
       mkdir "#{store}/foo"
       touch "#{store}/bar"
       touch "#{store}/foo/foobar"
+      mkdir "#{store}/foo/barfoo"
+      touch "#{store}/foo/barfoo/bar"
       fs.writeFileSync "#{store}/bar", 'bar'
       fs.writeFileSync "#{store}/foo/foobar", 'foobar'
+      fs.writeFileSync "#{store}/foo/barfoo/bar", 'bar'
       expected = fs.readFileSync './test/resources/generateTree.expected.json'
       userFile.generateTree((p) -> "####{p}###")
         .should.eventually.eql JSON.parse(expected)

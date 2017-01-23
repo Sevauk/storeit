@@ -67,10 +67,14 @@ const generateTree = (hashFunc, filePath='') => {
       if (stat.isDirectory()) {
         return fs.readdirAsync(absPath)
           .map(file => generateTree(hashFunc, path.join(filePath, file).replace(/\\/g, '/')))
-          .then(files => new FileObj(filePath, null, files))
+          .then(files => {
+            const stitFiles = {}
+            files.forEach(file => stitFiles[path.basename(file.path)] = file)
+            return new FileObj('/' + filePath, null, stitFiles)
+          })
       }
       return Promise.resolve(hashFunc(filePath))
-        .then(hash => new FileObj(filePath, hash))
+        .then(hash => new FileObj('/' + filePath, hash))
     })
 }
 
