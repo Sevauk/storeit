@@ -101,6 +101,10 @@ const auth = (command, arg, client) => {
   client.answerSuccess(command.uid, {accessToken: 'abcdefg12345'})
 }
 
+const rfsh = (command, arg, client) => {
+  client.answerSuccess(command.uid, {home: client.getUser().home})
+}
+
 const resp = (command, arg, client) => {
 
   if (!command.commandUid) {
@@ -127,6 +131,7 @@ export const parse = function(msg, client) {
     'FDEL': del,
     'RESP': resp,
     'AUTH': auth,
+    'RFSH': rfsh,
   }
 
   if (command.command !== 'JOIN' && command.command !== 'AUTH' && !client.getUser())
