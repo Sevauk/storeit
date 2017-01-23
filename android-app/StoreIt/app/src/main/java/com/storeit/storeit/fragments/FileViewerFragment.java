@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -25,7 +27,10 @@ import android.widget.Toast;
 import com.storeit.storeit.R;
 import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.adapters.ExplorerAdapter;
+import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.protocol.StoreitFile;
+import com.storeit.storeit.protocol.command.FmovInfo;
+import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.FilesManager;
 
@@ -43,12 +48,19 @@ public class FileViewerFragment extends Fragment {
         return adapter;
     }
 
+
+
     public FileViewerFragment() {
 
     }
 
-    public static FileViewerFragment newInstance(String param1, String param2) {
-        return new FileViewerFragment();
+    public static FileViewerFragment newInstance(String newFileUri) {
+        FileViewerFragment f = new FileViewerFragment();
+
+        Bundle args = new Bundle();
+        args.putString("newFileUri", newFileUri);
+        f.setArguments(args);
+        return f;
     }
 
     @Override
@@ -58,11 +70,13 @@ public class FileViewerFragment extends Fragment {
 
     CoordinatorLayout coordinatorLayout;
 
+    View rootView;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_file_viewer, container, false);
+        rootView = inflater.inflate(R.layout.fragment_file_viewer, container, false);
 
         explorersRecyclerView = (RecyclerView) rootView.findViewById(R.id.explorer_recycler_view);
         explorersRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -109,7 +123,42 @@ public class FileViewerFragment extends Fragment {
 
         registerForContextMenu(explorersRecyclerView);
 
+        Bundle args = getArguments();
+        if (args != null){
+            String newFileUri = args.getString("newFileUri");
+            if (!newFileUri.equals("")) {
+                addFileFromSharingIntent(newFileUri);
+            }
+        }
         return rootView;
+    }
+
+
+    public void addFileFromSharingIntent(final String uri) {
+        final MainActivity activity = (MainActivity) getActivity();
+
+        Snackbar snackbar = Snackbar.make(rootView, "Select location", Snackbar.LENGTH_INDEFINITE)
+                .setAction("ADD", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.VISIBLE);
+                        mMoving = false;
+
+                        new UploadAsync(activity, activity.getSocketService()).execute(uri);
+                    }
+                });
+        snackbar.setCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                super.onDismissed(snackbar, event);
+                ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.VISIBLE);
+                mMoving = false;
+            }
+        });
+
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.show();
+        Log.v("FileViewerFragment", uri);
     }
 
     public void backPressed() {
@@ -143,14 +192,22 @@ public class FileViewerFragment extends Fragment {
         MainActivity activity = (MainActivity) getActivity();
         final FilesManager manager = activity.getFilesManager();
         final StoreitFile file = adapter.getFileAt(position);
-        final SocketService service = activity.getSocketService();
+        final ServiceManager service = activity.getSocketService();
 
         switch (item.getItemId()) {
             case R.id.action_delete_file:
                 Log.v("FileViewerFragment", "Delete");
                 manager.removeFile(file.getPath());
                 adapter.removeFile(position);
-                service.sendFDEL(file);
+
+
+                try {
+                    service.send(Message.obtain(null, SocketService.SEND_FDEL, file));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+
+
                 break;
             case R.id.action_delete_file_disk:
                 if (!file.isDirectory()) {
@@ -164,14 +221,10 @@ public class FileViewerFragment extends Fragment {
                 renameFile(manager, file);
                 break;
             case R.id.action_move_file:
-                View focus = getActivity().getCurrentFocus();
-                if (focus == null)
-                    break;
-
                 mMoving = true;
                 ((MainActivity)getActivity()).getFloatingButton().setVisibility(View.GONE); // floating button
 
-                Snackbar snackbar = Snackbar.make(focus, "Move file", Snackbar.LENGTH_INDEFINITE)
+                Snackbar snackbar = Snackbar.make(rootView, "Move file", Snackbar.LENGTH_INDEFINITE)
                         .setAction("MOVE", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
@@ -188,7 +241,14 @@ public class FileViewerFragment extends Fragment {
 
                                 manager.addFile(file, manager.getFileByPath(getCurrentFile()));
                                 adapter.reloadFiles();
-                                service.sendFMOV(oldPath, movedPath);
+
+                                try {
+                                    service.send(Message.obtain(null,
+                                            SocketService.SEND_FMOV,
+                                            new FmovInfo(oldPath, movedPath)));
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         });
                 snackbar.setCallback(new Snackbar.Callback() {
@@ -228,7 +288,18 @@ public class FileViewerFragment extends Fragment {
 
                 String finalName = f.getParent() + File.separator + fileName;
                 finalName = finalName.replace("//", "/");
-                ((MainActivity) getActivity()).getSocketService().sendFMOV(file.getPath(), finalName);
+
+                try {
+                    ((MainActivity) getActivity())
+                            .getSocketService()
+                            .send(Message.obtain(null,
+                                    SocketService.SEND_FMOV,
+                                    new FmovInfo(file.getPath(), finalName)));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+
+
                 manager.moveFile(file.getPath(), finalName);
                 adapter.reloadFiles();
 

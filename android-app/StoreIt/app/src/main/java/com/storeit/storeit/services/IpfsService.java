@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by louis on 16. 8. 5.
@@ -38,7 +40,8 @@ public class IpfsService extends Service {
 
     private final IBinder myBinder = new LocalBinder();
 
-    private  Thread mDaemonThread;
+    private Thread mDaemonThread;
+    private static final int NOTIFICATION = 666;
 
     public class LocalBinder extends Binder {
         public IpfsService getService() {
@@ -46,34 +49,41 @@ public class IpfsService extends Service {
         }
     }
 
+    private boolean mBound = false;
+
+    private final LinkedBlockingQueue<String> filesToAdd = new LinkedBlockingQueue<>(20);
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         makeNotification(getApplicationContext());
+
         Log.v(LOGTAG, "onCreate!");
-        copyIpfs();
-
-        mDaemonThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(LOGTAG, "Launching ipfs daemon");
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                 launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
-            }
-        });
-        mDaemonThread.start();
-
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         Log.v(LOGTAG, "OnBind :)");
+
+        if (!mBound) {
+            copyIpfs();
+            mDaemonThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v(LOGTAG, "Launching ipfs daemon");
+                    launchCommand(Arrays.asList(IPFS_BINARY, "daemon"));
+                }
+            });
+            mDaemonThread.start();
+
+            //Thread addFileThread = new Thread(new ConsumerClass(filesToAdd));
+           // addFileThread.run();
+
+            mBound = true;
+        }
+
         return myBinder;
     }
 
@@ -87,7 +97,7 @@ public class IpfsService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        notificationManager.cancel(99);
+        notificationManager.cancel(NOTIFICATION);
         Log.v(LOGTAG, "On destroy :o");
     }
 
@@ -122,7 +132,6 @@ public class IpfsService extends Service {
         ProcessBuilder pb = new ProcessBuilder(args);
         Map<String, String> env = pb.environment();
         env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
-
         try {
             Process process = pb.start();
 
@@ -131,9 +140,7 @@ public class IpfsService extends Service {
                     new InputStreamReader(process.getInputStream()));
             int read;
             char[] buffer = new char[4096];
-//            StringBuffer output = new StringBuffer();
             while ((read = reader.read(buffer)) > 0) {
-//                output.append(buffer, 0, read);
                 Log.v("BINARY", String.valueOf(buffer, 0, read));
             }
             reader.close();
@@ -143,58 +150,78 @@ public class IpfsService extends Service {
         }
     }
 
-    public void addFile(final String hash) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(LOGTAG, "Downloading : " + hash);
-                launchCommand(Arrays.asList(IPFS_BINARY, "get", hash));
-                Log.v(LOGTAG, "Downloaded : " + hash);
-                Log.v(LOGTAG, "Adding : " + hash);
-                launchCommand(Arrays.asList(IPFS_BINARY, "add", hash));
-                Log.v(LOGTAG, "Added : " + hash);
-            }
-        }).run();
+    class ConsumerClass implements Runnable{
+        private final LinkedBlockingQueue<String> queue;
 
+        public ConsumerClass(LinkedBlockingQueue<String> queue){
+            this.queue = queue;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    String hash = queue.take();
+                    Log.v(LOGTAG, "Getting " + hash);
+                    launchCommand(Arrays.asList(IPFS_BINARY, "get", hash));
+                    Log.v(LOGTAG, "Adding " + hash);
+                    launchCommand(Arrays.asList(IPFS_BINARY, "add", hash));
+                    Log.v(LOGTAG, "Added " + hash);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
+    public void addFile(final String hash) {
+        try {
+            filesToAdd.put(hash);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void removeFile(final String hash) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                launchCommand(Arrays.asList(IPFS_BINARY, "pin", "rm", hash));
-            }
-        }).run();
+        Log.v(LOGTAG, "Deleting " + hash);
+        launchCommand(Arrays.asList(IPFS_BINARY, "pin", "rm", hash));
+        Log.v(LOGTAG, "Deleted " + hash);
     }
 
     private void makeNotification(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
 
-
         Notification.Builder builder = new Notification.Builder(context)
                 .setContentTitle("StoreIt")
                 .setContentText("You are an active ipfs node :)")
-                .setSmallIcon(R.drawable.ipfs_logo);
+                .setSmallIcon(R.drawable.ipfs_logo)
+                .setAutoCancel(true);
+
         Notification n;
-
-
         n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
-        notificationManager.notify(99, n);
-    }
-
-    public void stopDaemon(){
-        if (mDaemonThread != null){
-            mDaemonThread.interrupt();
-            mDaemonThread = null;
-        }
-
+        notificationManager.notify(NOTIFICATION, n);
     }
 
     @Override
-    public boolean onUnbind(Intent intent){
+    public void onTaskRemoved(Intent intent) {
+        Log.v(LOGTAG, "Wesh");
+        notificationManager.cancel(NOTIFICATION);
+        super.onTaskRemoved(intent);
+    }
+
+    public void stopDaemon() {
+        if (mDaemonThread != null) {
+            mDaemonThread.interrupt();
+            mDaemonThread = null;
+        }
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
         Log.v(LOGTAG, "Ipfs unbinded!");
-        notificationManager.cancelAll();
+        notificationManager.cancel(NOTIFICATION);
         return true;
     }
 }

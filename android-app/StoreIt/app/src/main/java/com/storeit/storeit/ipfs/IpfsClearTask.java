@@ -105,8 +105,6 @@ public class IpfsClearTask extends AsyncTask<Void, Void, Void> {
     }
 
     private void callGc() {
-
-
         URL url;
         HttpURLConnection urlConnection = null;
         try {
