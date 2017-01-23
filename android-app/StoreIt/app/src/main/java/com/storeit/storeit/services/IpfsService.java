@@ -35,7 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class IpfsService extends AbstractService {
 
     private static final String LOGTAG = "IpfsService";
-    private static final String IPFS_BINARY = "/data/data/com.storeit.storeit/ipfs";
+    private static final String IPFS_BINARY = "/data/data/com.storeit.storeit/ipfs_x86";
     private static final int NOTIFICATION = 123;
 
     public static final int HANDLE_ADD = 1;
@@ -112,7 +112,7 @@ public class IpfsService extends AbstractService {
         }
 
         try {
-            InputStream is = getAssets().open("ipfs"); // Copy file
+            InputStream is = getAssets().open("ipfs_x86"); // Copy file
             OutputStream os = new FileOutputStream(file);
 
             int len = 0;

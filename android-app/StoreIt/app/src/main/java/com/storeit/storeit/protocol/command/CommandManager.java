@@ -3,19 +3,17 @@ package com.storeit.storeit.protocol.command;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-/**
- * Created by loulo on 02/05/2016.
- */
 public class CommandManager {
 
-    public final static int RESP = 0, FDEL = 1, FADD = 2, FUPT = 3, FMOVE = 4, FSTR = 5;
+    public final static int RESP = 0, FDEL = 1, FADD = 2, FUPT = 3, FMOVE = 4, FSTR = 5, RFSH = 6;
     private static final String[] cmds = {
             "RESP",
             "FDEL",
             "FADD",
             "FUPT",
             "FMOV",
-            "FSTR"
+            "FSTR",
+            "RFSH"
     };
 
     public static int getCommandType(String cmd) {

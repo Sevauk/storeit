@@ -11,6 +11,7 @@ import android.os.RemoteException;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -41,14 +42,13 @@ public class FileViewerFragment extends Fragment {
     private ExplorerAdapter adapter;
     private OnFragmentInteractionListener mListener;
     private RecyclerView explorersRecyclerView;
-
+    private SwipeRefreshLayout swipeContainer;
+    private boolean mConnected = true;
     private boolean mMoving = false; // We are moving a file
 
     public ExplorerAdapter getAdapter() {
         return adapter;
     }
-
-
 
     public FileViewerFragment() {
 
@@ -130,9 +130,33 @@ public class FileViewerFragment extends Fragment {
                 addFileFromSharingIntent(newFileUri);
             }
         }
+
+        swipeContainer = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshUserDir();
+            }
+        });
+
+
         return rootView;
     }
 
+    private void refreshUserDir(){
+
+        ServiceManager service =  ((MainActivity)getActivity()).getSocketService();
+
+        try {
+            service.send(Message.obtain(null,
+                    SocketService.SEND_RFSH));
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+
+        swipeContainer.setRefreshing(false);
+    }
 
     public void addFileFromSharingIntent(final String uri) {
         final MainActivity activity = (MainActivity) getActivity();

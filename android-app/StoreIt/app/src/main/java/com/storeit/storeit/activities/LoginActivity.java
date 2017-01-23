@@ -5,22 +5,16 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
-import android.os.Messenger;
 import android.os.RemoteException;
-import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -29,27 +23,21 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.gson.Gson;
 import com.storeit.storeit.R;
 import com.storeit.storeit.oauth.GetUsernameTask;
-import com.storeit.storeit.protocol.LoginHandler;
 import com.storeit.storeit.protocol.command.ConnectionInfo;
 import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.services.IpfsService;
@@ -92,8 +80,6 @@ public class LoginActivity extends Activity {
 
     private boolean mSocketConnected = true;
     private boolean mStopService = true;
-
-    private GoogleApiClient client;
 
     private void pickUserAccount() {
         String[] accountTypes = new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE};
@@ -173,8 +159,6 @@ public class LoginActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
 
         mSocketService.start();
     }
@@ -184,9 +168,6 @@ public class LoginActivity extends Activity {
         super.onStop();
 
         Log.v("LoginActivity", "onStop()");
-
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
     }
 
     @Override
@@ -321,16 +302,6 @@ public class LoginActivity extends Activity {
             }
         }
 
-        ImageButton settingsBtn = (ImageButton) findViewById(R.id.app_settings_btn);
-        settingsBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(LoginActivity.this, StoreItPreferences.class);
-                startActivity(i);
-            }
-        });
-
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
         mSocketService = new ServiceManager(this, SocketService.class, new Handler(){
             @Override
@@ -436,21 +407,5 @@ public class LoginActivity extends Activity {
                 }
                 break;
         }
-    }
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("Login Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
     }
 }

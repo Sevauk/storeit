@@ -44,9 +44,7 @@ import com.mikepenz.materialdrawer.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SwitchDrawerItem;
-import com.mikepenz.materialdrawer.model.ToggleDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
@@ -55,15 +53,13 @@ import com.mikepenz.materialdrawer.util.DrawerUIUtils;
 import com.nononsenseapps.filepicker.FilePickerActivity;
 import com.storeit.storeit.R;
 import com.storeit.storeit.fragments.FileViewerFragment;
-import com.storeit.storeit.fragments.HomeFragment;
 import com.storeit.storeit.ipfs.UploadAsync;
 import com.storeit.storeit.protocol.StoreitFile;
-import com.storeit.storeit.protocol.command.ConnectionInfo;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
+import com.storeit.storeit.protocol.command.FileRefreshResponse;
 import com.storeit.storeit.protocol.command.FileStoreCommand;
-import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.services.IpfsService;
 import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
@@ -178,52 +174,45 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build();
 
-
-        PrimaryDrawerItem homeItem = new PrimaryDrawerItem()
-                .withIdentifier(1)
-                .withName(R.string.drawer_item_home)
-                .withIcon(R.drawable.ic_home_white_36dp)
-                .withIconTintingEnabled(true);
-
         PrimaryDrawerItem explorerItem = new PrimaryDrawerItem()
-                .withIdentifier(2)
+                .withIdentifier(1)
                 .withName(R.string.drawer_item_explorer)
                 .withIcon(R.drawable.ic_file_white_36dp)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem recentItem = new PrimaryDrawerItem()
-                .withIdentifier(3)
+                .withIdentifier(2)
                 .withName("Recent")
                 .withIcon(R.drawable.ic_clock_white_36dp)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem offlineItem = new PrimaryDrawerItem()
-                .withIdentifier(4)
+                .withIdentifier(3)
                 .withName("Offline files")
                 .withIcon(R.drawable.close_network)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem trashItem = new PrimaryDrawerItem()
-                .withIdentifier(5)
+                .withIdentifier(4)
                 .withName("Trash")
                 .withIcon(R.drawable.ic_delete_white_36dp)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem storageItem = new PrimaryDrawerItem()
-                .withIdentifier(6)
+                .withIdentifier(5)
                 .withName("Upgrade storage")
                 .withDescription("1.3 GB of 5 GB used")
                 .withIcon(R.drawable.server_network)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem settingsItem = new PrimaryDrawerItem()
-                .withIdentifier(7)
+                .withIdentifier(6)
                 .withName(R.string.drawer_item_Settings)
                 .withIcon(R.drawable.ic_settings_white_36dp)
                 .withIconTintingEnabled(true);
 
         PrimaryDrawerItem HelpItems = new PrimaryDrawerItem()
-                .withIdentifier(8)
+                .withIdentifier(7)
                 .withName("Help")
                 .withIcon(R.drawable.ic_help_circle_black_36dp)
                 .withIconTintingEnabled(true);
@@ -233,7 +222,6 @@ public class MainActivity extends AppCompatActivity {
                 .withToolbar(toolbar)
                 .withAccountHeader(headerResult)
                 .addDrawerItems(
-                        homeItem,
                         explorerItem,
                         recentItem,
                         offlineItem,
@@ -265,18 +253,12 @@ public class MainActivity extends AppCompatActivity {
 
                         switch ((int) drawerItem.getIdentifier()) {
                             case 1:
-                                fbtn.setVisibility(View.INVISIBLE);
-                                openFragment(new HomeFragment());
-                                if (bar != null)
-                                    bar.setTitle("Home");
-                                break;
-                            case 2:
                                 fbtn.setVisibility(View.VISIBLE);
                                 openFragment(FileViewerFragment.newInstance(""));
                                 if (bar != null)
                                     bar.setTitle("My Files");
                                 break;
-                            case 7:
+                            case 6:
                                 Intent i = new Intent(MainActivity.this, StoreItPreferences.class);
                                 startActivity(i);
                                 break;
@@ -289,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build();
 
-        openFragment(new HomeFragment());
+        openFragment(new FileViewerFragment());
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -297,9 +279,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         fbtn = (FloatingActionButton) findViewById(R.id.add_file_button);
-        assert fbtn != null;
-        fbtn.setVisibility(View.INVISIBLE);
-
 
         fbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -331,10 +310,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         Intent intent = getIntent();
         String homeJson = intent.getStringExtra("home");
-
 
         if (homeJson == null) { // App resumed
 
@@ -397,6 +374,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case SocketService.HANDLE_FSTR:
                         handleFSTR((FileStoreCommand) msg.obj);
+                        break;
+                    case SocketService.HANDLE_RFSH:
+                        handleRFSH((FileRefreshResponse) msg.obj);
                         break;
                     default:
                         break;
@@ -680,7 +660,6 @@ public class MainActivity extends AppCompatActivity {
         refreshFileExplorer();
     }
 
-
     public void handleFMOV(FileMoveCommand command) {
         Log.v("MainActivity", "FMOV");
         filesManager.moveFile(command.getSrc(), command.getDst());
@@ -699,6 +678,17 @@ public class MainActivity extends AppCompatActivity {
         //     mIpfsService.removeFile(hash);
         //  mIpfsService.addFile(hash);
 
+        try {
+            mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void handleRFSH(final FileRefreshResponse response) {
+
+        filesManager.recreate(response.getParameters().getHome());
+        refreshFileExplorer();
         try {
             mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
         } catch (RemoteException e) {

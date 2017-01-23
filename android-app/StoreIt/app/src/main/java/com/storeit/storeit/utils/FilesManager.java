@@ -182,15 +182,15 @@ public class FilesManager {
         }
     }
 
+
     public void moveFile(String src, String dst) {
 
-        for (Map.Entry<String, StoreitFile> entry : mFileMap.entrySet()) {
-            if (isChildren(src, entry.getKey())) {
+        StoreitFile file = getFileByPath(src);
 
+        removeFile(src);
+        file.setPath(dst);
+        addFile(file);
 
-            }
-
-        }
         /*
             Recupere le path du parent
 

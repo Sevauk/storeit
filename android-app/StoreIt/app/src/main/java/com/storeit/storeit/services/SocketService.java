@@ -4,6 +4,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
@@ -16,10 +17,12 @@ import com.storeit.storeit.protocol.command.ConnectionInfo;
 import com.storeit.storeit.protocol.command.FileCommand;
 import com.storeit.storeit.protocol.command.FileDeleteCommand;
 import com.storeit.storeit.protocol.command.FileMoveCommand;
+import com.storeit.storeit.protocol.command.FileRefreshResponse;
 import com.storeit.storeit.protocol.command.FileStoreCommand;
 import com.storeit.storeit.protocol.command.FmovInfo;
 import com.storeit.storeit.protocol.command.JoinCommand;
 import com.storeit.storeit.protocol.command.JoinResponse;
+import com.storeit.storeit.protocol.command.RefreshCommand;
 import com.storeit.storeit.protocol.command.Response;
 
 import java.io.IOException;
@@ -42,6 +45,7 @@ public class SocketService extends AbstractService {
     public static final int SEND_FDEL = 5;
     public static final int SEND_FUPT = 6;
     public static final int SEND_FMOV = 7;
+    public static final int SEND_RFSH = 16;
     public static final int SEND_RESPONSE = 8;
     public static final int JOIN_RESPONSE = 9;
     public static final int HANDLE_FADD = 10;
@@ -49,6 +53,7 @@ public class SocketService extends AbstractService {
     public static final int HANDLE_FUPT = 12;
     public static final int HANDLE_FMOV = 13;
     public static final int HANDLE_FSTR = 14;
+    public static final int HANDLE_RFSH = 15;
 
     // Websockets
     private static final int TIMEOUT = 10000;
@@ -122,6 +127,9 @@ public class SocketService extends AbstractService {
                                         if (mLastCmd.equals("JOIN")) {
                                             JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
                                             send(Message.obtain(null, JOIN_RESPONSE, joinResponse));
+                                        } else if (mLastCmd.equals("RFSH")) {
+                                            FileRefreshResponse rshResponse = gson.fromJson(message, FileRefreshResponse.class);
+                                            send(Message.obtain(null, HANDLE_RFSH, rshResponse));
                                         }
                                         mLastCmd = "RESP";
                                         break;
@@ -147,7 +155,8 @@ public class SocketService extends AbstractService {
     @Override
     public void onStopService() {
         Log.i(LOGTAG, "Disconnecting websocket...");
-        mWebSocket.disconnect();
+        if (mWebSocket != null)
+            mWebSocket.disconnect();
     }
 
     @Override
@@ -178,9 +187,26 @@ public class SocketService extends AbstractService {
                 break;
             case SocketService.SEND_RESPONSE:
                 sendRESP(msg.arg1);
+                break;
+            case SocketService.SEND_RFSH:
+                sendRFSH();
+                break;
             default:
                 break;
         }
+    }
+
+    private boolean sendRFSH() {
+        if (!mConnected)
+            return false;
+
+        Gson gson = new Gson();
+        RefreshCommand cmd = new RefreshCommand(mUID);
+        mWebSocket.sendText(gson.toJson(cmd));
+        mUID++;
+        mLastCmd = "RFSH";
+
+        return true;
     }
 
     private boolean sendJOIN(ConnectionInfo info) {
@@ -259,7 +285,7 @@ public class SocketService extends AbstractService {
         Gson gson = new Gson();
         Response response;
 
-        if (success == 0){
+        if (success == 0) {
             response = new Response(0, "OK", mUID, "RESP");
         } else {
             response = new Response(1, "ERROR", mUID, "RESP");

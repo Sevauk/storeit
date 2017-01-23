@@ -1,52 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
     android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp">
+    android:columnCount="3">
 
     <ImageView
+        android:id="@+id/explorer_image_file_type"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
         app:srcCompat="@drawable/ic_file_white_36dp"
-        android:id="@+id/explorer_image_file_type"
-        tools:tint="@color/cardview_dark_background"
-        android:layout_marginStart="16dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="8dp" />
+        tools:tint="@color/cardview_dark_background" />
+
+    <TableLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="24dp">
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/file_item_row_name"
+                android:layout_width="240dp"
+                android:layout_height="15dp"
+                android:text="New File" />
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/file_item_row_last_modified"
+                android:layout_width="240dp"
+                android:layout_height="15dp"
+                android:layout_marginBottom="8dp"
+                android:text="Last modified: Feb 23" />
+        </TableRow>
+    </TableLayout>
+
 
     <ImageButton
+        android:id="@+id/file_item_row_button"
         android:layout_width="30dp"
         android:layout_height="30dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="end"
+        android:layout_marginEnd="8dp"
         android:background="@null"
         android:src="@drawable/ic_dots_vertical_white_36dp"
-        android:id="@+id/file_item_row_button"
-        android:tint="?attr/colorButtonNormal"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:text="New File"
-        android:layout_width="240dp"
-        android:layout_height="15dp"
-        android:id="@+id/file_item_row_name"
-        app:layout_constraintRight_toLeftOf="@+id/file_item_row_button"
-        app:layout_constraintLeft_toRightOf="@+id/explorer_image_file_type"
-        app:layout_constraintBottom_toTopOf="@+id/file_item_row_last_modified" />
-
-    <TextView
-        android:text="Last modified: Feb 23"
-        android:layout_width="240dp"
-        android:layout_height="15dp"
-        android:id="@+id/file_item_row_last_modified"
-        app:layout_constraintRight_toLeftOf="@+id/file_item_row_button"
-        app:layout_constraintLeft_toRightOf="@+id/explorer_image_file_type"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="8dp" />
-
-</android.support.constraint.ConstraintLayout>
+        android:tint="@color/cardview_dark_background" />
+</GridLayout>
