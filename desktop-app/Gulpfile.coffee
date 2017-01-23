@@ -13,6 +13,7 @@ gulp.task 'watch', (done) ->
   gulp.watch JS_SRC, -> runSeq 'compile:daemon', 'test', ->
   gulp.watch CS_SRC, -> runSeq 'compile:gui', 'test', ->
   gulp.watch GUI_SRC, ['gui:reload']
+  gulp.watch SPEC, ['test']
   $.livereload.listen()
   runSeq 'compile:all', 'test', ->
   done()

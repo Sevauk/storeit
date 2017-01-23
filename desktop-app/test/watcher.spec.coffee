@@ -37,6 +37,7 @@ describe 'Watcher', ->
       notifier = (ev) ->
         ev.path.should.equal "/#{p}"
         done() if p is 'bar'
+
       watcher.start().then -> userFile.create p
       return
 
@@ -49,6 +50,7 @@ describe 'Watcher', ->
     it 'should emit FADD events on file creation', (done) ->
       notifier = (ev) ->
         ev.type.should.equal 'FADD'
+        notifier = -> null # reset notifier to not call done twice on OS X
         done()
       watcher.start().then -> userFile.create 'foo'
       return
@@ -56,6 +58,7 @@ describe 'Watcher', ->
     it 'should emit FADD events on directory creation', (done) ->
       notifier = (ev) ->
         ev.type.should.equal 'FADD'
+        notifier = -> null # reset notifier to not call done twice on OS X
         done()
       watcher.start().then -> userFile.dirCreate 'foo'
       return
@@ -64,6 +67,7 @@ describe 'Watcher', ->
       notifier = (ev) ->
         ev.type.should.equal 'FDEL'
         done()
+
       userFile.create 'foo'
         .then -> watcher.start()
         .then -> userFile.del 'foo'
@@ -73,6 +77,7 @@ describe 'Watcher', ->
       notifier = (ev) ->
         ev.type.should.equal 'FDEL'
         done()
+
       userFile.dirCreate 'foo'
         .then -> watcher.start()
         .then -> userFile.del 'foo'
@@ -82,9 +87,10 @@ describe 'Watcher', ->
       notifier = (ev) ->
         ev.type.should.equal 'FUPT'
         done()
+
       userFile.create 'foo'
         .then -> watcher.start()
-        .then -> touch userFile.absolutePath 'foo'
+        .then -> ls().to(userFile.absolutePath 'foo')
       return
 
   describe '#ignore()', ->
@@ -97,7 +103,9 @@ describe 'Watcher', ->
     it 'should make a file path unignored by the watcher', (done) ->
       watcher.ignore '/foo'
       watcher.unignore '/foo'
-      notifier = -> done()
+      notifier = ->
+        notifier = -> null # reset notifier to not call done twice on OS X
+        done()
       watcher.start()
         .then -> userFile.create 'foo'
       return

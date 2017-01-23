@@ -1,4 +1,5 @@
 import WebSocket from 'ws'
+import MultiProgress from 'multi-progress'
 
 import {FacebookService, GoogleService} from './oauth'
 import userFile from './user-file.js'
@@ -8,6 +9,8 @@ import logger from '../../lib/log'
 import Watcher from './watcher'
 import IPFSNode from './ipfs'
 import settings from './settings'
+
+const progressBar = new MultiProgress()
 
 const authTypes = {
   'facebook': 'fb',
@@ -24,11 +27,12 @@ export default class DesktopClient extends StoreitClient {
     const ignored = userFile.storePath(settings.getHostDir())
     this.fsWatcher = new Watcher(settings.getStoreDir(), ignored,
       (ev) => this.getFsEvent(ev))
-    this.progressHandler = (percent, file) =>
-      logger.info(`[DL] <${Math.floor(percent)}%> ${file.path}`)
+    this.progressBars = new Map()
+    this.progressHandler = this.asciiProgressBar.bind(this)
   }
 
   start(opts={}) {
+    this.running = true
     logger.info('[STATUS] starting up daemon')
     this.authSettings.type = opts.type || this.authSettings.type
     this.authSettings.devId = opts.devId || this.authSettings.devId || 0
@@ -41,6 +45,7 @@ export default class DesktopClient extends StoreitClient {
   }
 
   stop() {
+    this.running = false
     logger.info('[STATUS] attempting to gracefully shut down daemon')
     return this.fsWatcher.stop()
       .then(() => this.close())
@@ -48,7 +53,14 @@ export default class DesktopClient extends StoreitClient {
       .then(() => logger.info('[STATUS] daemon stopped'))
   }
 
+  restart() {
+    return this.stop()
+      .then(() => this.start())
+  }
+
   auth() {
+    this.logging = true
+
     let service
     switch (this.authSettings.type) {
       case 'facebook':
@@ -66,6 +78,8 @@ export default class DesktopClient extends StoreitClient {
     }
 
     logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
+
+    logger.debug('[AUTH] settings:', logger.toJson(this.authSettings))
     return service.oauth(this.authSettings.win)
       .then(tokens => this.reqJoin({type: authTypes[this.authSettings.type], accessToken: tokens.access_token}))
       .catch(e => {
@@ -89,14 +103,24 @@ export default class DesktopClient extends StoreitClient {
 
   }
 
+  logout() {
+    this.stop()
+    settings.resetTokens()
+    settings.save()
+  }
+
   connect() {
+    if (!this.running) {
+      // QUICKFIX never resolve to cancel reconnect on logout
+      return new Promise(() => {})
+    }
 
     return super.connect()
-      .then(() => this.auth(this.authSettings))
       .catch((e) => {
         logger.debug(`connect error: ${logger.toJson(e)}`)
         return this.reconnect()
       })
+      .then(() => this.auth(this.authSettings))
   }
 
   reloadSettings() {
@@ -219,5 +243,22 @@ export default class DesktopClient extends StoreitClient {
 
   setProgressHandler(progressHandler) {
     this.progressHandler = progressHandler
+  }
+
+  asciiProgressBar(percent, file) {
+    if (!this.progressBars.has(file.path)) {
+      const fmt = `[DL] ${file.path} [:bar] :percent :elapseds :etas`
+      this.progressBars.set(file.path, progressBar.newBar(fmt, {
+        complete: '=',
+        incomplete: ' ',
+        total: 100, // TODO
+        width: 60,
+      }))
+    }
+    const bar = this.progressBars.get(file.path)
+    bar.update(Math.floor(percent) / 100)
+    if (bar.completed) {
+      this.progressBars.delete(file.path)
+    }
   }
 }

@@ -7,6 +7,8 @@ queryString = require 'query-string'
 template = require './app.jade!'
 require './app.css!'
 
+ipc = electron.ipcRenderer
+
 pages =
  downloads: require './downloads/downloads.coffee!'
  oauth: require './oauth/oauth.coffee!'
@@ -14,10 +16,14 @@ pages =
 
 $ ->
   ($ template.html).appendTo($ document.body)
-  params = queryString.parse location.search
-  if params.p?
-    page = new pages[params.p]
-    page.render()
+  ipc.on 'load-page', (ev, name) ->
+    console.log 'page:', name
+    if pages[name]?
+      page = new pages[name]
+      page.render()
+
+  console.log 'ready'
+  ipc.send('renderer-ready', true)
 
     # load dynamically
     # page = params.p
