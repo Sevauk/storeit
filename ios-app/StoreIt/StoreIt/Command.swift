@@ -21,7 +21,7 @@ class Command<T: Mappable>: Mappable {
         parameters = nil
     }
     
-    init(uid: Int, command: String, parameters: T) {
+    init(uid: Int, command: String, parameters: T?) {
         self.uid = uid
         self.command = command
         self.parameters = parameters

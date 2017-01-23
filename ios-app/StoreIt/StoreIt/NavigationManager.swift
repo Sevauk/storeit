@@ -35,8 +35,10 @@ class NavigationManager {
     
     private var currentOfflineHashes: [String]
     
-    var list: UITableView?
-    var moveToolBar: UIToolbar?
+    
+    weak var list: UITableView?
+    weak var moveToolBar: UIToolbar?
+    var refreshControl: UIRefreshControl!
     
 	var movingOptions = MovingOptions()
     

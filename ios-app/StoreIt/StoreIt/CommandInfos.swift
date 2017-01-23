@@ -20,8 +20,9 @@ struct CommandInfos {
     static let FSTR = "FSTR"
     static let SUBS = "SUBS"
     static let AUTH = "AUTH"
+    static let RFSH = "RFSH"
 
-    static var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV, FSTR] }
+    static var SERVER_TO_CLIENT_CMD: [String] { return [FADD, FDEL, FUPT, FMOV, FSTR, RFSH] }
     
     static let JOIN_RESPONSE_TEXT = "welcome"
     static let SUCCESS_TEXT = "success"

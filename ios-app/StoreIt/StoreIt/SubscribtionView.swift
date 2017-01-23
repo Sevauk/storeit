@@ -57,11 +57,11 @@ class SubscribtionView: UIViewController {
             return
         }
         
-        NetworkManager.shared.subs(email: email, password: password, isLogging: false) { success in
+        /*NetworkManager.shared.subs(email: email, password: password, isLogging: false) { success in
             if (!success) {
                 self.displayAlert(withMessage: "L'inscription a échoué. Veuillez réessayer.")
             }
-        }
+        }*/
     }
 
 }

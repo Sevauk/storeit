@@ -114,16 +114,15 @@ class WebSocketManager {
             }
             
             // CMD RESPONSE WITH PARAMETERS
-            else if (response.parameters != nil) {
+            /*else if (response.parameters != nil) {
 
-                // AUTH RESPONSE
                 if let params = response.parameters {
                     if let accessToken = params.accessToken {
                         OAuthServices.shared.storeitLogin(token: accessToken)
                         join()
                     }
                 }
-            }
+            }*/
                 
             // CMD RESPONSE
             else if (response.text == CommandInfos.SUCCESS_TEXT) {
@@ -160,13 +159,18 @@ class WebSocketManager {
                         
                         break
                     
-                    case CommandInfos.SUBS:
+                    /*case CommandInfos.SUBS:
                         let credentials = UidFactory.getObjectForUid(uid) as! (email: String, password: String)
                         
                         // subscribtion is a success: getting token with AUTH to connect
                         NetworkManager.shared.subs(email: credentials.email, password: credentials.password, isLogging: true, completion: nil)
                         
-                        break
+                        break*/
+                    
+                    case CommandInfos.RFSH:
+                        print("Received response for refreshing tree")
+						navigationManager.refreshControl.endRefreshing()
+                        navigationManager.list?.reloadData()
                         
                 	default:
                         break

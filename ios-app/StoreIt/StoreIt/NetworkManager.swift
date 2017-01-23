@@ -18,6 +18,7 @@ class NetworkManager {
     //private let _host = "localhost"
     //private let _host = "iglu.mobi"
     //private let _host = "192.168.1.12"
+    //private let _host = "localhost"
     private let _host = "louismondesir.me"
     
     private let _port = 7641
@@ -46,14 +47,14 @@ class NetworkManager {
         WSManager.eventsInitializer(loginHandler: loginHandler, displayer: displayer)
     }
     
-    func subs(email: String, password: String, isLogging: Bool, completion: ((Bool) -> ())?) {
+    /*func subs(email: String, password: String, isLogging: Bool, completion: ((Bool) -> ())?) {
         let parameters = SubsParameters(email: email, password: password)
         let subsCommand = Command(uid: UidFactory.uid, command: isLogging ? CommandInfos.AUTH : CommandInfos.SUBS, parameters: parameters)
         
         UidFactory.addNewWaitingCommand(CommandInfos.SUBS, objects: (email: email, password: password) as AnyObject)
         
         WSManager.send(command: subsCommand, completion: completion)
-    }
+    }*/
     
     func joinDeveloper(completion: ((Bool) -> ())?) {
         let parameters: JoinParameters = JoinParameters(authType: "dev", accessToken: "developer")
@@ -107,6 +108,14 @@ class NetworkManager {
         UidFactory.addNewWaitingCommand(CommandInfos.FMOV, objects: movingOptions as AnyObject)
         
         WSManager.send(command: fmovCommand, completion: completion)
+    }
+    
+    func rfsh(completion: ((Bool) -> ())?) {
+        let rfshCommand = Command<DefaultParameters>(uid: UidFactory.uid, command: CommandInfos.RFSH, parameters: nil)
+        
+        UidFactory.addNewWaitingCommand(CommandInfos.RFSH, objects: nil)
+        
+        WSManager.send(command: rfshCommand, completion: nil)
     }
     
 }

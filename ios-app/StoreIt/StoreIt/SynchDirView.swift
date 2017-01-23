@@ -21,7 +21,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     @IBOutlet weak var list: UITableView!
     @IBOutlet weak var moveToolBar: UIToolbar!
-    
+        
     var selectedIndex: Int? = nil
     
     let networkManager = NetworkManager.shared
@@ -42,6 +42,26 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     	navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
     	                                                    target: self,
     	                                                    action: #selector(uploadOptions))
+        
+
+        navigationManager.refreshControl = UIRefreshControl()
+        
+        list.addSubview(navigationManager.refreshControl)
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        if (navigationManager.refreshControl.isRefreshing) {
+            networkManager.rfsh(completion: nil)
+            
+            /*DispatchQueue.main.async {
+                while (!self.navigationManager.isRefreshingTree) {
+                    //print("Refreshing tree...")
+                    self.navigationManager.isRefreshingTree = false
+                    self.list.reloadData()
+                    self.refreshControl.endRefreshing()
+                }
+            }*/
+        }
     }
     
     // function triggered when back button of navigation bar is pressed
