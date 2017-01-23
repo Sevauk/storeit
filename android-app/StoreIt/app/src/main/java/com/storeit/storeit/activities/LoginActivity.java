@@ -324,7 +324,6 @@ public class LoginActivity extends Activity {
                         break;
                     case SocketService.JOIN_RESPONSE:
                         openFileExplorer((JoinResponse)msg.obj);
-
                         break;
                     default:
                         break;

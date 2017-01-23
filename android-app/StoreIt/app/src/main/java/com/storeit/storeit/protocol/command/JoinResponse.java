@@ -43,10 +43,12 @@ public class JoinResponse {
         public String getUserPicture() {
             return usrProfile.profilePic;
         }
+        public  String getEmail() { return usrProfile.email;}
     }
 
     public class UserProfile
     {
+        String email;
         String profilePic;
     }
 }

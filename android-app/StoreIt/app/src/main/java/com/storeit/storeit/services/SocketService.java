@@ -57,7 +57,9 @@ public class SocketService extends AbstractService {
 
     // Websockets
     private static final int TIMEOUT = 10000;
-    private static final String SERVER = "ws://louismondesir.me:7641";
+    //private static final String SERVER = "ws://louismondesir.me:7641";
+    private static final String SERVER = "ws://iglu.mobi:7641";
+
     private WebSocket mWebSocket = null;
     private Thread mSocketThread = null;
     private boolean mConnected = false;
@@ -99,37 +101,65 @@ public class SocketService extends AbstractService {
                                 int cmdType = CommandManager.getCommandType(message);
                                 switch (cmdType) {
                                     case CommandManager.FADD:
-                                        FileCommand addCMD = gson.fromJson(message, FileCommand.class);
-                                        send(Message.obtain(null, HANDLE_FADD, addCMD));
-                                        mLastCmd = "FADD";
+                                        try {
+                                            FileCommand addCMD = gson.fromJson(message, FileCommand.class);
+                                            send(Message.obtain(null, HANDLE_FADD, addCMD));
+                                            mLastCmd = "FADD";
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         break;
                                     case CommandManager.FDEL:
-                                        FileDeleteCommand delCMD = gson.fromJson(message, FileDeleteCommand.class);
-                                        send(Message.obtain(null, HANDLE_FDEL, delCMD));
-                                        mLastCmd = "FDEL";
+                                        try {
+                                            FileDeleteCommand delCMD = gson.fromJson(message, FileDeleteCommand.class);
+                                            send(Message.obtain(null, HANDLE_FDEL, delCMD));
+                                            mLastCmd = "FDEL";
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         break;
                                     case CommandManager.FMOVE:
-                                        FileMoveCommand movCMD = gson.fromJson(message, FileMoveCommand.class);
-                                        send(Message.obtain(null, HANDLE_FMOV, movCMD));
-                                        mLastCmd = "FMOV";
+                                        try {
+                                            FileMoveCommand movCMD = gson.fromJson(message, FileMoveCommand.class);
+                                            send(Message.obtain(null, HANDLE_FMOV, movCMD));
+                                            mLastCmd = "FMOV";
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         break;
                                     case CommandManager.FSTR:
-                                        FileStoreCommand strCMD = gson.fromJson(message, FileStoreCommand.class);
-                                        send(Message.obtain(null, HANDLE_FSTR, strCMD));
-                                        mLastCmd = "FSTR";
+                                        try {
+                                            FileStoreCommand strCMD = gson.fromJson(message, FileStoreCommand.class);
+                                            send(Message.obtain(null, HANDLE_FSTR, strCMD));
+                                            mLastCmd = "FSTR";
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         break;
                                     case CommandManager.FUPT:
-                                        FileCommand uptCMD = gson.fromJson(message, FileCommand.class);
-                                        send(Message.obtain(null, HANDLE_FUPT, uptCMD));
-                                        mLastCmd = "FUPT";
+                                        try {
+                                            FileCommand uptCMD = gson.fromJson(message, FileCommand.class);
+                                            send(Message.obtain(null, HANDLE_FUPT, uptCMD));
+                                            mLastCmd = "FUPT";
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         break;
                                     case CommandManager.RESP:
                                         if (mLastCmd.equals("JOIN")) {
-                                            JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
-                                            send(Message.obtain(null, JOIN_RESPONSE, joinResponse));
+                                            try {
+                                                JoinResponse joinResponse = gson.fromJson(message, JoinResponse.class);
+                                                send(Message.obtain(null, JOIN_RESPONSE, joinResponse));
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
                                         } else if (mLastCmd.equals("RFSH")) {
-                                            FileRefreshResponse rshResponse = gson.fromJson(message, FileRefreshResponse.class);
-                                            send(Message.obtain(null, HANDLE_RFSH, rshResponse));
+                                            try {
+                                                FileRefreshResponse rshResponse = gson.fromJson(message, FileRefreshResponse.class);
+                                                send(Message.obtain(null, HANDLE_RFSH, rshResponse));
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
                                         }
                                         mLastCmd = "RESP";
                                         break;
