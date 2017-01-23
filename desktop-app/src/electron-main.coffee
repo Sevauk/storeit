@@ -28,27 +28,30 @@ loadPage = (page) ->
     currPage = page
     view.window.webContents.send 'load-page', page
   view.showWindow()
-  view.window.openDevTools() if OPTIONS.dev
+#  view.window.openDevTools() if OPTIONS.dev
 
 authWin = null
 createAuthWin = (url, showModal=true) ->
   authWin = new BrowserWindow
     icon: APP_ICON
-    parent: view.window
     modal: true
-    show: false
+    show: true
     title: "#{APP_NAME} - Authentication"
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
+  console.log('URL:', url)
   authWin.loadURL(url)
-  authWin.once 'ready-to-show', -> authWin.show() if authWin? # and showModal
+  console.log('loaded')
+  # authWin.once 'ready-to-show', -> authWin.show() if authWin? and showModal
 
 login = (authType, showModal=true) ->
+  ignoreLogin = true
+  console.log('show modal: ', showModal)
   logger.debug('[GUI] trigger login')
   opts =
-    type: 'developer'
-    # type: authType
+    # type: 'developer'
+    type: authType
     devId: null
     win: (url) -> createAuthWin(url, showModal)
   daemon.start opts
@@ -70,9 +73,10 @@ restart = ->
 
 initApp = (p) ->
   ipc.on 'auth', (ev, authType) ->
-    login(authType, authType isnt 'developer')
-      .then -> ev.sender.send 'auth', 'done'
-      .catch -> ev.sender.send 'auth', 'done'
+    unless authWin?
+      login(authType, authType isnt 'developer')
+        .then -> ev.sender.send 'auth', 'done'
+        .catch -> ev.sender.send 'auth', 'done'
   ipc.on 'restart', (ev) -> restart()
   menu = electron.Menu.buildFromTemplate [
     {label: 'Preferences', click: -> loadPage 'settings'}

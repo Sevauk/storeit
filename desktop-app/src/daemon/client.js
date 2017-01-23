@@ -78,6 +78,8 @@ export default class DesktopClient extends StoreitClient {
     }
 
     logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
+
+    logger.debug('[AUTH] settings:', logger.toJson(this.authSettings))
     return service.oauth(this.authSettings.win)
       .then(tokens => this.reqJoin({type: authTypes[this.authSettings.type], accessToken: tokens.access_token}))
       .catch(e => {
@@ -104,19 +106,21 @@ export default class DesktopClient extends StoreitClient {
   logout() {
     this.stop()
     settings.resetTokens()
+    settings.save()
   }
 
   connect() {
     if (!this.running) {
-      return new Promise(() => undefined)
+      // QUICKFIX never resolve to cancel reconnect on logout
+      return new Promise(() => {})
     }
 
     return super.connect()
-      .then(() => this.auth(this.authSettings))
       .catch((e) => {
         logger.debug(`connect error: ${logger.toJson(e)}`)
         return this.reconnect()
       })
+      .then(() => this.auth(this.authSettings))
   }
 
   reloadSettings() {

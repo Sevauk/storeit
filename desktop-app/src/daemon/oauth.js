@@ -13,7 +13,10 @@ const REDIRECT_URI = `http://localhost:${HTTP_PORT}/`
 
 class OAuthProvider {
   constructor(type) {
+    this.id = Math.random() * 100
     this.express = express()
+    this.http = this.express.listen(HTTP_PORT)
+    this.http.addListener('connection', (stream) => stream.setTimeout(2000))
     this.type = type
     this.tokens = settings.getTokens(type)
   }
@@ -34,44 +37,49 @@ class OAuthProvider {
     catch (e) {
       return Promise.reject(new Error(e))
     }
+    logger.debug('waiting...', this.id)
     return userIntent
+      .tap(() => logger.debug('[OAUTH] get token'))
       .then(code => this.getToken(code))
+      .tap(() => logger.debug('[OAUTH] setting credentials'))
       .tap(tokens => this.setCredentials(tokens))
+      .tap(() => logger.debug('[OAUTH] extending access token'))
       .then(tokens => this.extendAccesToken(tokens))
+      .tap(() => logger.debug('[OAUTH] saving...'))
       .tap(tokens => this.saveTokens(tokens))
+      .tap(() => logger.debug('[OAUTH] tokens saved'))
       .catch(e => {
         logger.error(`[OAUTH] ${this.type} authorization failed: ${e}`)
         throw new Error(e)
       })
+    // return new Promise(() => {})
   }
 
   waitAuthorized() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.express.use('/', (req, res) => {
-        if (this.http != null) resolve(this.getCode(req, res))
+        const code = req.query.code
+        const msg = 'Thank you for authenticating, you can now quit this page.'
+        res.send(`StoreIt: ${msg}`)
+        this.http.close(() => logger.debug('[OAUTH] server closed'))
+
+        if (code != null) {
+          logger.debug('[OAUTH] access granted')
+          resolve(code)
+        }
+        else {
+          logger.debug('[OAUTH] access failure')
+          reject(new Error('[OAUTH] could not get code'))
+        }
       })
-      this.http = this.express.listen(HTTP_PORT)
-      logger.debug(`[OAUTH] Http server listening on port ${HTTP_PORT}`)
     })
-  }
-
-  getCode(req, res) {
-    let msg = 'Thank you for authenticating, you can now quit this page.'
-    res.send(`StoreIt: ${msg}`)
-
-    this.http.close()
-    delete this.http
-    logger.debug('[OAUTH] Access granted, Http server stopped')
-
-    let code = req.query.code
-    if (code == null) throw new Error('[OAUTH] could not get code')
-    return code
   }
 
   saveTokens(tokens) {
     this.tokens = tokens
     settings.setTokens(this.type, tokens)
     settings.save()
+    logger.debug('[OAUTH] tokens saved')
   }
 
   hasTokens() {
@@ -138,9 +146,6 @@ export class FacebookService extends OAuthProvider {
       'redirect_uri': REDIRECT_URI,
       'scope': 'email'
     })
-  }
-
-  generateAuthUrl() {
     const ENDPOINT = 'auth/fb'
     this.express.use(`/${ENDPOINT}`, (req, res) => {
       if (!req.query.code) {
@@ -151,7 +156,10 @@ export class FacebookService extends OAuthProvider {
           res.send('access denied')
       }
     })
-    return `http://localhost:${HTTP_PORT}/${ENDPOINT}`
+  }
+
+  generateAuthUrl() {
+    return this.authUrl
   }
 
   getToken(code) {
