@@ -39,7 +39,9 @@ createAuthWin = (url, showModal=true) ->
     title: "#{APP_NAME} - Authentication"
     webPreferences:
       nodeIntegration: false
-  authWin.on 'closed', -> authWin = null
+  authWin.on 'closed', ->
+    daemon.cancelAuth()
+    authWin = null
   authWin.loadURL(url)
   authWin.once 'ready-to-show', -> authWin.show() if authWin? and showModal
 
@@ -54,6 +56,7 @@ login = (authType, showModal=true) ->
   daemon.start opts
     .then ->
       loadPage 'settings'
+      authWin.close() if authWin?
       authWin.close() if authWin?
     .catch (e) ->
       authWin.close() if authWin?

@@ -61,13 +61,13 @@ export default class DesktopClient extends StoreitClient {
   auth() {
     this.logging = true
 
-    let service
+    this.service = null
     switch (this.authSettings.type) {
       case 'facebook':
-        service = new FacebookService()
+        this.service = new FacebookService()
         break
       case 'google':
-        service = new GoogleService()
+        this.service = new GoogleService()
         break
       case 'st':
         return this.login('john.doe@gmail.com', 'physics') // TODO: use tokens returned by our backend
@@ -80,12 +80,21 @@ export default class DesktopClient extends StoreitClient {
     logger.info(`[AUTH] login with ${this.authSettings.type} OAuth`)
 
     logger.debug('[AUTH] settings:', logger.toJson(this.authSettings))
-    return service.oauth(this.authSettings.win)
+    return this.service.oauth(this.authSettings.win)
+      .tap(() => this.service = null)
       .then(tokens => this.reqJoin({type: authTypes[this.authSettings.type], accessToken: tokens.access_token}))
       .catch(e => {
+        this.cancelAuth()
         logger.error(`[AUTH] login failed ${e}`)
         throw new Error(e)
       })
+  }
+
+  cancelAuth() {
+    if (this.service != null) {
+      this.service.stopHttpServer()
+      this.service = null
+    }
   }
 
   developer(devId='') {

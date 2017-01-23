@@ -59,7 +59,7 @@ class OAuthProvider {
         const code = req.query.code
         const msg = 'Thank you for authenticating, you can now quit this page.'
         res.send(`StoreIt: ${msg}`)
-        this.http.close(() => logger.debug('[OAUTH] server closed'))
+        this.stopHttpServer()
 
         if (code != null) {
           logger.debug('[OAUTH] access granted')
@@ -71,6 +71,10 @@ class OAuthProvider {
         }
       })
     })
+  }
+
+  stopHttpServer() {
+    this.http.close(() => logger.debug('[OAUTH] server closed'))
   }
 
   saveTokens(tokens) {
