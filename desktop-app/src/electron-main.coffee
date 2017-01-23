@@ -35,13 +35,13 @@ createAuthWin = (url, showModal=true) ->
   authWin = new BrowserWindow
     icon: APP_ICON
     modal: true
-    show: true
+    show: false
     title: "#{APP_NAME} - Authentication"
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
   authWin.loadURL(url)
-  # authWin.once 'ready-to-show', -> authWin.show() if authWin? and showModal
+  authWin.once 'ready-to-show', -> authWin.show() if authWin? and showModal
 
 login = (authType, showModal=true) ->
   ignoreLogin = true
