@@ -37,7 +37,6 @@ class OAuthProvider {
     catch (e) {
       return Promise.reject(new Error(e))
     }
-    logger.debug('waiting...', this.id)
     return userIntent
       .tap(() => logger.debug('[OAUTH] get token'))
       .then(code => this.getToken(code))
@@ -52,7 +51,6 @@ class OAuthProvider {
         logger.error(`[OAUTH] ${this.type} authorization failed: ${e}`)
         throw new Error(e)
       })
-    // return new Promise(() => {})
   }
 
   waitAuthorized() {

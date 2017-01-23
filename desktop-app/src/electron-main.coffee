@@ -40,14 +40,11 @@ createAuthWin = (url, showModal=true) ->
     webPreferences:
       nodeIntegration: false
   authWin.on 'closed', -> authWin = null
-  console.log('URL:', url)
   authWin.loadURL(url)
-  console.log('loaded')
   # authWin.once 'ready-to-show', -> authWin.show() if authWin? and showModal
 
 login = (authType, showModal=true) ->
   ignoreLogin = true
-  console.log('show modal: ', showModal)
   logger.debug('[GUI] trigger login')
   opts =
     # type: 'developer'
