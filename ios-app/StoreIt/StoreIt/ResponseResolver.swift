@@ -15,8 +15,8 @@ class ResponseResolver : Mappable {
     var uid: Int
     
     required init?(map: Map) {
-        self.command = ""
-        self.uid = -1
+        command = ""
+        uid = -1
     }
     
     func mapping(map: Map) {

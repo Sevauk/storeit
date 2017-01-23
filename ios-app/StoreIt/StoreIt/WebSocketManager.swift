@@ -10,282 +10,341 @@ import Foundation
 import Starscream
 import ObjectMapper
 
+struct SocketErrors {
+    static let closed_by_server = "connection closed by server"
+    static let no_internet_connectivity = "The operation couldn’t be completed. Socket is not connected"
+    static let connection_impossible = "The operation couldn’t be completed. Connection refused"
+    static let host_is_down = "The operation couldn’t be completed. Host is down"
+    static let write_wait_timeout = "write wait timed out"
+}
+
 class WebSocketManager {
     
     private let url: URL
-    private let ws: WebSocket
-    private let navigationManager = NavigationManager.sharedInstance
+    private var ws: WebSocket?
+    
+    
+    private let navigationManager = NavigationManager.shared
 
+    private var loginHandler: ((Bool, String, Bool) -> ())?
+    private var displayer: ((String) -> ())?
+        
     init(host: String, port: Int) {
-        self.url = URL(string: "ws://\(host):\(port)/")!
-        self.ws = WebSocket(url: url)
+        url = URL(string: "ws://\(host):\(port)/")!
     }
     
     func disconnect() {
-        ws.disconnect()
+        ws?.disconnect()
     }
     
     func isConnected() -> Bool {
-        return ws.isConnected
+        return (ws?.isConnected)!
     }
     
-    private func closeMoveToolbar() {
-        self.navigationManager.moveToolBar?.isHidden = true
+    private func prettyLog<T>(forCommand command: Command<T>) {
+        NSLog(command.toJSONString(prettyPrint: true) ?? "Cannot pretty print command")
     }
     
-    private func updateList() {
-        if let list = self.navigationManager.list {
-            DispatchQueue.main.async {
-                list.reloadData()
+    private func prettyLog(forResponse response: Response) {
+        NSLog(response.toJSONString(prettyPrint: true) ?? "Cannot pretty print response")
+    }
+    
+    private func onConnect() {
+        print("[Client.WebSocketManager] WebSocket is connected to \(self.url)")
+        
+        if let token = SessionManager.getToken() {
+            if let connectionType = SessionManager.getConnectionType() {
+                NetworkManager.shared.join(authType: connectionType.rawValue,
+                                           accessToken: token,
+                                           completion: nil)
             }
         }
+
     }
     
-    private func removeRowAtIndex(_ index: Int) {
-        if let list = self.navigationManager.list {
-            let indexPath = IndexPath(row: index, section: 0)
-            list.deleteRows(at: [indexPath], with: UITableViewRowAnimation.automatic)
-			list.reloadData()
-        }
-    }
-    
-    private func deletePaths(_ paths: [String]) {
-        for path in paths {
-            let updateElement = UpdateElement(path: path)
-                        
-            let index = self.navigationManager.updateTree(updateElement)
+    private func onDisconnect(error: NSError?) {
+        if let error = error?.localizedDescription {
+        	print("[Client.WebSocketManager] Websocket is disconnected from \(url) with error: \(error)")
+        
+            switch error {
             
-            if (index != -1) {
-                self.removeRowAtIndex(index)
-            }
-        }
-    }
-    
-    private func isRenaming(_ src: String, dest: String) -> Bool {
-        // Drop file name to compare path (if the path is the same, it's only a rename)
-        let srcComponents = src.components(separatedBy: "/").dropLast()
-        let destComponents = dest.components(separatedBy: "/").dropLast()
-
-        if (srcComponents == destComponents) {
-            return true
-        }
-        
-        return false
-    }
-    
-    private func renameFile(_ src: String, dest: String) {
-        let updateElementForRename = UpdateElement(src: src, dest: dest)
-
-        let index = self.navigationManager.updateTree(updateElementForRename)
-        
-        if (index != -1) {
-            self.updateList()
-        }
-    }
-    
-    private func moveFile(_ src: String, file: File) {
-        let updateElementForDeletion = UpdateElement(path: src)
-        let updateElementForAddition = UpdateElement(file: file, isMoving: true)
-        
-        let index = self.navigationManager.updateTree(updateElementForDeletion)
-        let index_2 = self.navigationManager.updateTree(updateElementForAddition)
-        
-        self.navigationManager.movingOptions = MovingOptions()
-        
-        self.closeMoveToolbar()
-        
-        if (index != -1 || index_2 != -1) {
-            self.updateList()
-        }
-    }
-
-    private func addFiles(_ files: [File]) {
-        for file in files {
-            let updateElement = UpdateElement(file: file, isMoving: false)
-
-            let index = self.navigationManager.updateTree(updateElement)
+            case SocketErrors.connection_impossible:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
+                break
+                
+            case SocketErrors.closed_by_server:
+                break
+                
+            case SocketErrors.no_internet_connectivity:
+                break
             
-            if (index != -1) {
-                self.updateList()
+            case SocketErrors.host_is_down:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
+            	break
+                
+            case SocketErrors.write_wait_timeout:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
+                break
+                
+            default:
+                loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", false)
+                break
             }
+        	
+        }
+        // Unknown error - Maybe manual kill
+        else {
+            loginHandler?(false, "Une erreur est survenue avec le serveur. Veuillez réessayer plus tard.", true)
         }
     }
     
-    private func updateFiles(_ files: [File]) {
-        for file in files {
-            if (file.IPFSHash != "") {
-                let updateElement = UpdateElement(property: Property.ipfsHash, file: file)
-                _ = self.navigationManager.updateTree(updateElement)
-            }
-            if (file.metadata != "") {
-                let updateElement = UpdateElement(property: Property.metadata, file: file)
-                _ = self.navigationManager.updateTree(updateElement)
-            }
-        }
-    }
-    
-    func eventsInitializer(_ loginFunction: @escaping () -> Void, logoutFunction: @escaping () -> Void) {
-        self.ws.onConnect = {
-        	print("[Client.WebSocketManager] WebSocket is connected to \(self.url)")
-            loginFunction()
-        }
-
-        self.ws.onDisconnect = { (error: NSError?) in
-        	print("[Client.WebSocketManager] Websocket is disconnected from \(self.url) with error: \(error?.localizedDescription)")
-            logoutFunction()
-        }
-
-        self.ws.onText = { (request: String) in
-            print("[Client.WebSocketManager] Client recieved a request : \(request)")
-
-            let cmdInfos = CommandInfos()
+    private func serverHasResponded(withResponse response: Response) {
+		 if (response.code == CommandInfos.SUCCESS_CODE) {
             
-            if let command: ResponseResolver = Mapper<ResponseResolver>().map(JSONString: request) {
-                if (command.command == cmdInfos.RESP) {
+            // JOIN RESPONSE
+            if (response.text == CommandInfos.JOIN_RESPONSE_TEXT) {
+                if let params = response.parameters {
+                    let home: File? = params["home"]
                     
-                    // SEREVR HAS RESPONDED
-                    if let response: Response = Mapper<Response>().map(JSONString: request) {
+                    if let home = home {
+                        navigationManager.set(home: home)
+                        loginHandler?(true, "Connection succeeded - Home set", false)
+                    }
+                }
+            }
+                
+            // CMD RESPONSE
+            else if (response.text == CommandInfos.SUCCESS_TEXT) {
+                let uid = response.commandUid
+                
+                if (UidFactory.isWaitingForReponse(uid)) {
+                    
+                    let commandType = UidFactory.getCommandNameForUid(uid)
+                    
+                    switch commandType {
+                    
+                    case CommandInfos.FADD:
+                        let files = UidFactory.getObjectForUid(uid) as! [File]
                         
-                        // JOIN RESPONSE
-                        if (response.text == cmdInfos.JOIN_RESPONSE_TEXT) {
-                            if let params = response.parameters {
-                                let home: File? = params["home"]
-                                
-                                if let files = home?.files {
-                                    self.navigationManager.setItems(files)
-                                    self.updateList()
-                                }
-                            }
+                        navigationManager.add(files: files)
+                        
+                        break
+                        
+                    case CommandInfos.FDEL:
+                        let paths = UidFactory.getObjectForUid(uid) as! [String]
+                        
+                        navigationManager.delete(paths: paths)
+                        
+                        break
+                     
+                    case CommandInfos.FMOV:
+                        let movingOptions = UidFactory.getObjectForUid(uid) as! MovingOptions
+                        
+                        if (movingOptions.isMoving) {
+                            navigationManager.move(file: movingOptions.file!, from: movingOptions.src!)
+                        } else {
+                            navigationManager.rename(from: movingOptions.src!, to: movingOptions.dest!)
                         }
+                        
+                        break
+                        
+                	default:
                             
-                        // SUCCESS CMD RESPONSE
-                        else if (response.text == cmdInfos.SUCCESS_TEXT) {
-                            let uid = response.commandUid
-
-                            if (UidFactory.isWaitingForReponse(uid)) {
-                                
-                                let commandType = UidFactory.getCommandNameForUid(uid)
-
-                                // FADD
-                                if (commandType == cmdInfos.FADD) {
-                                    let files = UidFactory.getObjectForUid(uid) as! [File]
-                                    
-                                	self.addFiles(files)
-                                }
-                                // FDEL
-                                else if (commandType == cmdInfos.FDEL) {
-                                	let paths = UidFactory.getObjectForUid(uid) as! [String]
-                                    
-                                	self.deletePaths(paths)
-                                }
-                                
-                                // FMOVE
-                                else if (commandType == cmdInfos.FMOV) {
-                                	let movingOptions = UidFactory.getObjectForUid(uid) as! MovingOptions
-
-                                    if (movingOptions.isMoving) {
-                                        self.moveFile(movingOptions.src!, file: movingOptions.file!)
-                                    } else {
-                                    	self.renameFile(movingOptions.src!, dest: movingOptions.dest!)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // ERROR CMD RESPONSE
-                        // TODO
+                        break
                     }
+                    
+                    // TODO: maybe clean uid then
                 }
-                    
-                // Server has sent a command (FADD, FUPT, FDEL, FUPT)
-                else if (cmdInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
-                    
-                    // FDEL
-                    if (command.command == cmdInfos.FDEL) {
-                        let fdelCmd: Command? = Mapper<Command<FdelParameters>>().map(JSONString: request)
-                        
-                        if let cmd = fdelCmd {
-                            if let paths = cmd.parameters?.files {
-                                self.deletePaths(paths)
-                            }
-                        }
-                    }
-                    
-                    // FMOV
-                    else if (command.command == cmdInfos.FMOV) {
-                        let fmovCmd: Command? = Mapper<Command<FmovParameters>>().map(JSONString: request)
-
-                        if let cmd = fmovCmd {
-                            if let parameters = cmd.parameters {
-                                if (self.isRenaming(parameters.src, dest: parameters.dest)) {
-                                    self.renameFile(parameters.src, dest: parameters.dest)
-                                } else {
-                                    if let file = self.navigationManager.getFileObjByPath(parameters.src) {
-                                        file.path = parameters.dest
-                                        self.moveFile(parameters.src, file: file)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                        
-                    else if (command.command == cmdInfos.FSTR) {
-                        // TODO
-                    }
-                    
-                    // FADD / FUPT
-                    else {
-                        let defaultCmd: Command? = Mapper<Command<DefaultParameters>>().map(JSONString: request)
-                        
-                        if let files = defaultCmd?.parameters?.files {
-                            if (command.command == cmdInfos.FADD) {
-                            	self.addFiles(files)
-                            } else if (command.command == cmdInfos.FUPT) {
-                                self.updateFiles(files)
-                            }
-                        }
-                    }
-                    
-                    // TODO: Respond to server with response depending of the success of the update in the tree
-                    var response: Response?
-                    var jsonResponse: String?
-                    
-                    if (command.command == cmdInfos.FSTR) {
-                        response = ErrorResponse(code: cmdInfos.NOT_IMPLEMENTED.0, text: cmdInfos.NOT_IMPLEMENTED.1, commandUid: command.uid)
-                    } else {
-                        response = SuccessResponse(commandUid: command.uid)
-                    }
-                    
-                    if let unwrapResp = response {
-                        jsonResponse = Mapper().toJSONString(unwrapResp)
-                        if let response = jsonResponse {
-                            self.sendRequest(response, completion: nil)
-                        }
-                    }
-                }
-                    
-                // We don't know what the server wants
-                else {
-                    print("[Client.Client.WebSocketManager] Request cannot be processed")
+            }
+        }
+        
+        // ERROR CODE
+        else {
+        	displayer?(response.text) // TODO: user friendly display
+        }
+    }
+    
+    private func serverHasSent(aCommand command: String, request: String) {
+        
+        func _isRenaming(from src: String, to dest: String) -> Bool {
+            // Drop file name to compare path (if the path is the same, it's only a rename)
+            let srcComponents = src.components(separatedBy: "/").dropLast()
+            let destComponents = dest.components(separatedBy: "/").dropLast()
+            
+            if (srcComponents == destComponents) {
+                return true
+            }
+            
+            return false
+        }
+    
+        print("<=== [SERVER SENT REQUEST] ===>")
+        
+        switch command {
+    
+        case CommandInfos.FDEL:
+            if let cmd: Command = Mapper<Command<FdelParameters>>().map(JSONString: request) {
+                prettyLog(forCommand: cmd)
+                
+                if let paths = cmd.parameters?.files {
+                    navigationManager.delete(paths: paths)
                 }
             }
             
-        }
+            break
         
-        self.ws.onData = { (data: Data) in
-            print("[Client.WebSocketManager] Client recieved some data: \(data.count)")
-        }
+        case CommandInfos.FMOV:
+            if let cmd: Command = Mapper<Command<FmovParameters>>().map(JSONString: request) {
+                prettyLog(forCommand: cmd)
+                
+                if let parameters = cmd.parameters {
+                    if (_isRenaming(from: parameters.src, to: parameters.dest)) {
+                        navigationManager.rename(from: parameters.src, to: parameters.dest)
+                    } else {
+                        if let file = navigationManager.getFile(at: parameters.src) {
+                            file.path = parameters.dest
+                            navigationManager.move(file: file, from: parameters.src)
+                        }
+                    }
+                }
+            }
+            
+            break
+            
+        case CommandInfos.FADD:
+            if let cmd: Command = Mapper<Command<DefaultParameters>>().map(JSONString: request) {
+                prettyLog(forCommand: cmd)
+                
+                if let files = cmd.parameters?.files {
+                    navigationManager.add(files: files)
+                }
+            }
+            
+            break
+            
+        case CommandInfos.FUPT:
+            if let cmd: Command = Mapper<Command<DefaultParameters>>().map(JSONString: request) {
+                prettyLog(forCommand: cmd)
+                
+                if let files = cmd.parameters?.files {
+                    navigationManager.update(files: files)
+                }
+            }
+            
+            break
+            
+        default:
+            break
         
-        self.ws.connect()
+        }
     }
     
-    func sendRequest(_ request: String, completion: (() -> ())?) {
-        if (self.ws.isConnected) {
-            print("[WSManager] request is sending... : \(request)")
-            self.ws.write(string: request, completion: completion)
+    private func respondeToServer(forCommand command: String, uid: Int) {
+        // TODO: Respond to server with response depending of the success of the update in the tree
+
+        var response: Response?
+        
+        if (command == CommandInfos.FSTR) {
+            response = ErrorResponse(code: CommandInfos.NOT_IMPLEMENTED.0,
+                                     text: CommandInfos.NOT_IMPLEMENTED.1,
+                                     commandUid: uid)
         } else {
-            print("[Client.WebSocketManager] Client can't send request \(request) to \(url), WS is disconnected")
+            response = SuccessResponse(commandUid: uid)
+        }
+        
+        if let response = response {
+        	send(response: response, completion: nil)
         }
     }
+    
+    private func onText(request: String) {
+        if let command: ResponseResolver = Mapper<ResponseResolver>().map(JSONString: request) {
+            
+            // SEREVR HAS RESPONDED
+            if (command.command == CommandInfos.RESP) {
+                if let response: Response = Mapper<Response>().map(JSONString: request) {
+                    print("<=== [SERVER RESPONDED] ===>")
+                    NSLog(response.toJSONString(prettyPrint: true) ?? "")
+                    
+                    serverHasResponded(withResponse: response)
+                }
+            }
+                
+            // Server has sent a command (FADD, FUPT, FDEL, FUPT)
+            else if (CommandInfos.SERVER_TO_CLIENT_CMD.contains(command.command)) {
+                serverHasSent(aCommand: command.command, request: request)
+                respondeToServer(forCommand: command.command, uid: command.uid)
+            }
+                
+            // We don't know what the server wants
+            else {
+                print("[Client.Client.WebSocketManager] Request cannot be processed")
+            }
+        }
 
+    }
+ 
+    private func onData(data: Data) {
+        print("[Client.WebSocketManager] Client recieved some data: \(data.count)")
+    }
+    
+    func eventsInitializer(loginHandler: @escaping (Bool, String, Bool) -> (), displayer: ((String) -> ())?) {
+        ws = WebSocket(url: url)
+        
+        self.loginHandler = loginHandler
+        self.displayer = displayer
+        
+        ws?.onConnect = onConnect
+        ws?.onDisconnect = onDisconnect
+        ws?.onText = onText
+        ws?.onData = onData
+        
+        ws?.connect()
+    }
+    
+    func send<T>(command: Command<T>, completion: ((Bool) -> ())?) {
+        print("<=== [SENDING REQUEST] ===>")
+		prettyLog(forCommand: command)
+        
+        if let ws = ws {
+            if (ws.isConnected) {
+                if let command = Mapper().toJSONString(command) {
+                    ws.write(string: command) { _ in
+                        print("<=== [REQUEST SENT] ===>")
+                        completion?(true)
+                    }
+                } else {
+                    print("<=== [REQUEST NOT SENT] ===>")
+                    completion?(false)
+                }
+            } else {
+                print("<=== [REQUEST NOT SENT] ===>")
+                completion?(false)
+            }
+        } else {
+            print("<=== [REQUEST NOT SENT] ===>")
+            completion?(false)
+        }
+    }
+    
+    func send(response: Response, completion: (() -> ())?) {
+        print("<=== [SENDING RESPONSE] ===>")
+        prettyLog(forResponse: response)
+        
+        if let ws = ws {
+            if (ws.isConnected) {
+                if let response = Mapper().toJSONString(response) {
+                    ws.write(string: response) { _ in
+                        print("<=== [RESPONSE SENT] ===>")
+                    }
+                } else {
+                    print("<=== [RESPONSE NOT SENT] ===>")
+                }
+            } else {
+                print("<=== [RESPONSE NOT SENT] ===>")
+            }
+        } else {
+            print("<=== [RESPONSE NOT SENT] ===>")
+        }
+    }
 }

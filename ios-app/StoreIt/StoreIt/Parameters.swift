@@ -9,29 +9,55 @@
 import Foundation
 import ObjectMapper
 
-class JoinParameters: Mappable {
+class Auth: Mappable {
     
-    var authType: String
+    var type: String
     var accessToken: String
     
     init() {
-        self.authType = ""
-        self.accessToken = ""
+        type = ""
+        accessToken = ""
     }
     
-    init(authType: String, accessToken: String) {
-        self.authType = authType
+    init(type: String, accessToken: String) {
+        self.type = type
         self.accessToken = accessToken
     }
     
     required init?(map: Map) {
-        self.authType = ""
-        self.accessToken = ""
+        type = ""
+        accessToken = ""
     }
     
     func mapping(map: Map) {
-        authType <- map["authType"]
+        type <- map["type"]
         accessToken <- map["accessToken"]
+    }
+}
+
+class JoinParameters: Mappable {
+    
+    var hosting: [String]
+    var auth: Auth
+    
+    init() {
+        hosting = []
+        auth = Auth()
+    }
+    
+    init(authType: String, accessToken: String) {
+        auth = Auth(type: authType, accessToken: accessToken)
+        hosting = []
+    }
+    
+    required init?(map: Map) {
+        hosting = []
+        auth = Auth()
+    }
+    
+    func mapping(map: Map) {
+        auth <- map["auth"]
+        hosting <- map["hosting"]
     }
     
 }
@@ -42,8 +68,8 @@ class FmovParameters: Mappable {
     var dest: String
     
     init() {
-        self.src = ""
-        self.dest = ""
+        src = ""
+        dest = ""
     }
     
     init(src: String, dest: String) {
@@ -52,8 +78,8 @@ class FmovParameters: Mappable {
     }
     
     required init?(map: Map) {
-        self.src = ""
-        self.dest = ""
+        src = ""
+        dest = ""
     }
     
     func mapping(map: Map) {
@@ -67,7 +93,7 @@ class FdelParameters: Mappable {
     var files: [String]
     
     init() {
-        self.files = []
+        files = []
     }
     
     init(files: [String]) {
@@ -75,7 +101,7 @@ class FdelParameters: Mappable {
     }
     
     required init?(map: Map) {
-        self.files = []
+        files = []
     }
     
     func mapping(map: Map) {
@@ -88,7 +114,7 @@ class DefaultParameters: Mappable {
     var files: [File]
     
     init() {
-        self.files = []
+        files = []
     }
     
     init(files: [File]) {
@@ -96,7 +122,7 @@ class DefaultParameters: Mappable {
     }
     
     required init?(map: Map) {
-        self.files = []
+        files = []
     }
     
     func mapping(map: Map) {

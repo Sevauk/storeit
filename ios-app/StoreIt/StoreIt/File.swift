@@ -17,12 +17,14 @@ class File: Mappable {
     var isDir: Bool
     var files: [String: File]
     
+    var isSynching = false
+    
     init() {
-        self.path = ""
-        self.metadata = ""
-        self.IPFSHash = ""
-        self.files = [:]
-        self.isDir = false
+        path = ""
+        metadata = ""
+        IPFSHash = ""
+        files = [:]
+        isDir = false
     }
 
     init(path: String, metadata: String, IPFSHash: String, isDir: Bool, files: [String: File]) {
@@ -34,11 +36,11 @@ class File: Mappable {
     }
     
    required init?(map: Map) {
-        self.path = ""
-    	self.metadata = ""
-    	self.IPFSHash = ""
-    	self.isDir = false
-    	self.files = [:]
+        path = ""
+    	metadata = ""
+    	IPFSHash = ""
+    	isDir = false
+    	files = [:]
     }
     
     func mapping(map: Map) {
@@ -48,4 +50,5 @@ class File: Mappable {
         isDir <- map["isDir"]
         files <- map["files"]
     }
+    
 }

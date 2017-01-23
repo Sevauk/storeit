@@ -19,14 +19,11 @@ class IpfsManager {
         	completionHandler(response.data)
         }
     }
-
+    
     // TODO: multipart request with Alamofire
-    static func add(filePath: URL, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) {
+    static func add(fileName: String, data: Data, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) {
         let CRLF = "\r\n"
-        let boundary = self.generateBoundaryString()
-        
-        let data = try? Data(contentsOf: filePath)
-        let fileName = filePath.lastPathComponent
+        let boundary = generateBoundaryString()
         
         let url = URL(string: "http://\(host):\(port)/api/v0/add?stream-cannels=true")
         var request = URLRequest(url: url!)
@@ -41,9 +38,7 @@ class IpfsManager {
         body.append("Content-Transfer-Encoding: binary\r\n".data(using: String.Encoding.utf8)!)
         body.append("Content-Type: application/octet-stream\(CRLF)\(CRLF)".data(using: String.Encoding.utf8)!)
         
-        if let unwrappedData = data {
-            body.append(unwrappedData)
-        }
+        body.append(data)
         
         body.append("\(CRLF)".data(using: String.Encoding.utf8)!)
         body.append("--\(boundary)--\(CRLF)".data(using: String.Encoding.utf8)!)
@@ -51,8 +46,9 @@ class IpfsManager {
         request.httpBody = body as Data
         
         let session = URLSession.shared
-        let task = session.dataTask(with: request, completionHandler: completionHandler as! (Data?, URLResponse?, Error?) -> Void)
-
+        
+        let task = session.dataTask(with: request, completionHandler: completionHandler)
+        
         task.resume()
     }
     

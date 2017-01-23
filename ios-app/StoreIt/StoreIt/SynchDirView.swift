@@ -10,6 +10,7 @@ import UIKit
 import Photos
 import ObjectMapper
 import QuickLook
+import MobileCoreServices
 
 enum CellIdentifiers: String {
     case directory = "directoryCell"
@@ -23,22 +24,24 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     
     var selectedIndex: Int? = nil
     
-    let networkManager = NetworkManager.sharedInstance
-    let navigationManager = NavigationManager.sharedInstance
+    let networkManager = NetworkManager.shared
+    let navigationManager = NavigationManager.shared
+    let offlineManager = OfflineManager.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        navigationController?.isNavigationBarHidden = false
+        
         list.delegate = self
         list.dataSource = self
 
+        list.rowHeight = UITableViewAutomaticDimension
+        list.estimatedRowHeight = 100
+                
     	navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
     	                                                    target: self,
     	                                                    action: #selector(uploadOptions))
-        
-        if (!ActionSheetsManager.isInitialized()) {
-            addActions()
-        }
     }
     
     // function triggered when back button of navigation bar is pressed
@@ -46,7 +49,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         super.willMove(toParentViewController: parent)
         
         if (parent == nil) {
-            navigationManager.goPreviousDir()
+            navigationManager.goBack()
         }
     }
 
@@ -54,7 +57,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         super.viewWillAppear(animated)
     	
         moveToolBar.isHidden = !navigationManager.movingOptions.isMoving
-        
+
         navigationManager.list = list
         navigationManager.moveToolBar = moveToolBar
 
@@ -62,6 +65,8 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         
         navigationItem.title = ( currentPath == "/" ?
             navigationManager.rootDirTitle : currentPath.components(separatedBy: "/").last!)
+        
+        navigationManager.updateCurrentHashes()
         
         list.reloadData()
     }
@@ -71,7 +76,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
         // Dispose of any resources that can be recreated.
     }
     
-    // MARK: segues management
+    // MARK: SEGUE MANAGEMENT
     
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
         return false // segues are triggered manually
@@ -82,101 +87,267 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             if (segue.identifier == "nextDirSegue") {
                 
                 let listView = (segue.destination as! SynchDirView)
-                _ = navigationManager.goToNextDir(target)
+                _ = navigationManager.go(to: target)
                 
                 listView.navigationManager.movingOptions.isMoving = navigationManager.movingOptions.isMoving
             }
+                
+            // TODO: TRY WITHOUT FILE VIEW (PRESENT QL HERE)
             else if (segue.identifier == "showFileSegue") {
                 let fileView = segue.destination as! FileView
                 
-                fileView.navigationItem.title = navigationManager.getTargetName(target)
+                fileView.navigationItem.title = navigationManager.getName(for: target)
                 fileView.showActivityIndicatory()
 
-                IpfsManager.get(hash: target.IPFSHash) { data in
-                    fileView.data = data
+                let offlineActivated = navigationManager.isOfflineActivated(for: target.IPFSHash)
+                
+                if (offlineActivated) {
+                    print("GETTING DATA WITH OFFLINE MODE FOR HASH : \(target.IPFSHash)")
+                    
+                    fileView.data = offlineManager.getData(for: target.IPFSHash, at: target.path)
+                    fileView.navigationControllerCopy = self.navigationController
                     fileView.presentQlPreviewController()
+                } else {
+                    print("GETTING DATA WITH IPFS FOR HASH : \(target.IPFSHash)")
+                    
+                    IpfsManager.get(hash: target.IPFSHash) { data in
+                        fileView.data = data
+                        fileView.navigationControllerCopy = self.navigationController
+                        fileView.presentQlPreviewController()
+                    }
                 }
             }
         }
     }
 
-	// MARK: Creation and management of table cells
+	// MARK: TABLE VIEW MANAGEMENT
     
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return navigationManager.getSortedItems().count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return createItemCellAtIndexPath(indexPath: indexPath)
-    }
-    
-    // Function triggered when a cell is selected
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if let selectedFile: File = navigationManager.getSelectedFileAtRow(indexPath: indexPath) {
-            let isDir: Bool = navigationManager.isSelectedFileAtRowADir(indexPath: indexPath)
-            
-            if (isDir) {
-                self.performSegue(withIdentifier: "nextDirSegue", sender: selectedFile)
-            } else {
-                self.performSegue(withIdentifier: "showFileSegue", sender: selectedFile)
-            }
-        }
-    }
-    
-    func createItemCellAtIndexPath(indexPath: IndexPath) -> UITableViewCell {
-        let isDir: Bool = navigationManager.isSelectedFileAtRowADir(indexPath: indexPath)
+        let file = navigationManager.getFile(at: indexPath)!
         let items: [String] = navigationManager.getSortedItems()
+        
+        let synchedImage = navigationManager.isOfflineActivated(for: file.IPFSHash) ?
+            UIImage(named: "ic_offline_pin") : nil
                 
-        if (isDir) {
-            let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.directory.rawValue) as! DirectoryCell
-            cell.itemName.text = "\(items[(indexPath as NSIndexPath).row])"
-            cell.contextualMenu.tag = (indexPath as NSIndexPath).row
-            return cell
-        } else {
-            let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.file.rawValue) as! FillCell
-            cell.itemName.text = "\(items[(indexPath as NSIndexPath).row])"
-            cell.contextualMenu.tag = (indexPath as NSIndexPath).row
-            return cell
+        let fileImage = file.isDir ?
+            DIR_IMG : FILE_IMG
+        
+        let cell = list.dequeueReusableCell(withIdentifier: CellIdentifiers.file.rawValue) as! FileCell
+        
+        cell.fileImage.image = fileImage
+        cell.itemName.text = "\(items[indexPath.row])"
+        cell.itemName.sizeToFit()
+        cell.contextualMenu.tag = indexPath.row
+        cell.offlineImage.image = synchedImage
+ 
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        selectedIndex = indexPath.row
+        
+        selectedFile { file in
+            if (file.isDir) {
+                performSegue(withIdentifier: "nextDirSegue", sender: file)
+            } else {
+                performSegue(withIdentifier: "showFileSegue", sender: file)
+            }
         }
     }
 
-    // MARK: Action sheet creation and management
+    // MARK: ACTION SHEET MANAGEMENT
     
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
-        dismiss(animated: true, completion: {_ in
-            let referenceUrl = editingInfo["UIImagePickerControllerReferenceURL"] as! URL
-            
-            if let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject {
-                PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
-                    (imagedata, dataUTI, orientation, info) in
-                    
-                    if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
-                    {
-                        let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
+    enum ActionSheet {
+        case directory
+        case file
+        case upload
+    }
+    
+    func buildAction(title: String, style: UIAlertActionStyle, handler: ((UIAlertAction) -> Void)?) -> UIAlertAction {
+        return UIAlertAction(title: title, style: style, handler: handler)
+    }
+    
+    func buildFileActionSheet(title: String, message: String) -> UIAlertController {
+        let rename = buildAction(title: "Renommer", style: .default, handler: renameFile)
+        let move = buildAction(title: "Déplacer", style: .default, handler: moveFile)
+        let delete = buildAction(title: "Supprimer", style: .default, handler: deleteFile)
+        let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
+        
+        var offline: UIAlertAction?
+        
+        if let isOfflineActivated = UserDefaults.standard.value(forKey: IS_OFFLINE_ACTIVATED) as? Bool {
+            if isOfflineActivated {
+                if let index = selectedIndex {
+                    if let selectedFile = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
                         
-                        // Maybe begin some loading in interface here...
-                        IpfsManager.add(filePath: filePath) {
-                            (
-                            data, response, error) in
+                        if (!selectedFile.isDir) {
+                            let offlineActivated = navigationManager.isOfflineActivated(for: selectedFile.IPFSHash)
                             
-                            guard let _:Data = data, let _:URLResponse = response  , error == nil else {
-                                print("[IPFS.ADD] Error while IPFS ADD: \(error)")
-                                return
+                            if (offlineActivated) {
+                                offline = buildAction(title: "Désactiver le mode hors ligne pour ce fichier",
+                                                      style: .default,
+                                                      handler: deactivateOfflineForFile)
+                            } else {
+                                offline = buildAction(title: "Activer le mode hors ligne pour ce fichier",
+                                                      style: .default,
+                                                      handler: activateOfflineForFile)
                             }
-                            
-                            // If ipfs add succeed
-                            let dataString = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
-                            let ipfsAddResponse = Mapper<IpfsAddResponse>().map(JSONString: dataString as String)
-                            let relativePath = self.navigationManager.buildPath(filePath.lastPathComponent)
-                            
-                            let file = self.navigationManager.createFile(relativePath, metadata: "", IPFSHash: ipfsAddResponse!.hash)
-                            
-                            self.networkManager.fadd([file], completion: nil)
                         }
                     }
-                })
+                }
             }
-        });
+        }
+        
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+        
+        alertController.addAction(rename)
+        alertController.addAction(move)
+        alertController.addAction(delete)
+        
+        if let offline = offline {
+            alertController.addAction(offline)
+        }
+        
+        alertController.addAction(cancel)
+        
+        return alertController
+    }
+    
+    func buildUploadActionSheet() -> UIAlertController {
+        let newDirectory = buildAction(title: "Créer un dossier", style: .default, handler: createNewDirectory)
+        let uploadFromLibrary = buildAction(title: "Importer depuis mes photos et vidéos", style: .default, handler: pickImageFromLibrary)
+        let uploadFromCamera = buildAction(title: "Prendre une photo", style: .default, handler: takeImageWithCamera)
+        let cancel = buildAction(title: "Annuler", style: .cancel, handler: nil)
+        
+        let alertController = UIAlertController(title: "Ajout d'un nouvel élément", message: "Choisissez une option", preferredStyle: .actionSheet)
+        
+        alertController.addAction(newDirectory)
+        alertController.addAction(uploadFromLibrary)
+        alertController.addAction(uploadFromCamera)
+        alertController.addAction(cancel)
+        
+        return alertController
+    }
+    
+    func buildActionSheet(for type: ActionSheet) -> UIAlertController {
+        switch type {
+            
+        case .directory:
+            return buildFileActionSheet(title: "Dossier", message: "Que voulez-vous faire ?")
+            
+        case .file:
+            return buildFileActionSheet(title: "Fichier", message: "Que voulez-vous faire ?")
+            
+        case .upload:
+            return buildUploadActionSheet()
+        }
+        
+    }
+    
+    func uploadOptions() {
+        let actionSheet = buildActionSheet(for: .upload)
+        
+        actionSheet.view.tintColor = LIGHT_GREY
+        present(actionSheet, animated: true, completion: nil)
+    }
+    
+    @IBAction func openContextualMenu(_ sender: AnyObject) {
+        if let index = sender.tag {
+            self.selectedIndex = sender.tag
+            
+            let isDir = navigationManager.isFileADir(at: IndexPath(row: index, section: 0))
+            let actionSheet = isDir ? buildActionSheet(for: .directory) : buildActionSheet(for: .file)
+            
+            actionSheet.view.tintColor = LIGHT_GREY
+            present(actionSheet, animated: true, completion: nil)
+        }
+    }
+
+    
+    // MARK: ACTION SHEET HANDLERS
+    
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
+        func _ipfsAdd(fileName: String, data: Data) {
+            // TODO: Maybe begin some loading in interface here...
+            IpfsManager.add(fileName: fileName, data: data) {
+                (
+                data, response, error) in
+                
+                guard let _:Data = data, let _:URLResponse = response  , error == nil else {
+                    print("[IPFS.ADD] Error while IPFS ADD: \(error?.localizedDescription)")
+                    self.displayAlert(withMessage: "Impossible d'upload le fichier pour le moment.")
+                    return
+                }
+                
+                // If ipfs add succeed
+                let dataString = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!
+                let ipfsAddResponse = Mapper<IpfsAddResponse>().map(JSONString: dataString as String)
+                let relativePath = self.navigationManager.buildPath(for: fileName)
+                
+                let file = self.navigationManager.createFile(path: relativePath, metadata: "", IPFSHash: ipfsAddResponse!.hash)
+                
+                self.networkManager.fadd(files: [file]) { success in
+                    if (!success) {
+                        self.displayAlert(withMessage: "L'ajout du fichier a échoué. Veuillez réessayer.")
+                    }
+                }
+            }
+        }
+        
+        dismiss(animated: true, completion: { _ in
+            if let data = UIImagePNGRepresentation(image) {
+                if picker.sourceType == UIImagePickerControllerSourceType.camera {
+                    let alert = UIAlertController(title: "Importer", message: "Entrez le nom du fichier", preferredStyle: .alert)
+                    
+                    alert.view.tintColor = LIGHT_GREY
+                    
+                    alert.addTextField { textField in
+                        textField.text = ".png"
+                        textField.tintColor = UIColor.clear
+                    }
+                    
+                    alert.addAction(UIAlertAction(title: "Annuler", style: .cancel, handler: nil))
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+                        let input = alert.textFields![0] as UITextField
+                        
+                        if let text = input.text {
+                            _ipfsAdd(fileName: text, data: data)
+                        }
+                    }))
+                    
+                    self.present(alert, animated: true) { _ in
+                        let textField = alert.textFields![0] as UITextField
+                        let beginning = textField.beginningOfDocument
+                        
+                        textField.selectedTextRange = textField.textRange(from: beginning, to: beginning)
+						textField.tintColor = LIGHT_GREY
+                    }
+                }
+                else if picker.sourceType == UIImagePickerControllerSourceType.photoLibrary {
+                    let referenceUrl = editingInfo["UIImagePickerControllerReferenceURL"] as! URL
+                    
+                    if let asset = PHAsset.fetchAssets(withALAssetURLs: [referenceUrl], options: nil).firstObject {
+                        PHImageManager.default().requestImageData(for: asset, options: PHImageRequestOptions(), resultHandler: {
+                            (imagedata, dataUTI, orientation, info) in
+                            
+                            if info!.keys.contains(NSString(string: "PHImageFileURLKey"))
+                            {
+                                let filePath = info![NSString(string: "PHImageFileURLKey")] as! URL
+                                
+                                _ipfsAdd(fileName: filePath.lastPathComponent, data: data)
+                            }
+                        })
+                    }
+                }
+            } else {
+                
+            }
+        })
     }
     
     func createNewDirectory(action: UIAlertAction) -> Void {
@@ -190,12 +361,18 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
 
         	// TODO: check input
             
-            let relativePath = self.navigationManager.buildPath(input.text!)
-            let newDirectory: File = self.navigationManager.createDir(relativePath, metadata: "", IPFSHash: "")
+            let relativePath = self.navigationManager.buildPath(for: input.text!)
+            let newDirectory: File = self.navigationManager.createDir(path: relativePath, metadata: "", IPFSHash: "")
 
-            self.networkManager.fadd([newDirectory], completion: nil)
+            self.networkManager.fadd(files: [newDirectory]) { success in
+                if (!success) {
+                    self.displayAlert(withMessage: "La création du dossier a échoué. Veuillez réessayer.")
+                }
+            }
             
         }))
+        
+        alert.view.tintColor = LIGHT_GREY
         
         present(alert, animated: true, completion: nil)
     }
@@ -207,6 +384,7 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             imagePicker.delegate = self
             imagePicker.sourceType = UIImagePickerControllerSourceType.photoLibrary
             imagePicker.allowsEditing = true
+            imagePicker.mediaTypes = ["public.image", kUTTypeMovie as String]
             
             present(imagePicker, animated: true, completion: nil)
         }
@@ -220,156 +398,195 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
             camera.allowsEditing = true
             camera.sourceType = UIImagePickerControllerSourceType.camera
             camera.delegate = self
+            camera.mediaTypes = ["public.image"] // video crashes the app
             
             present(camera, animated: true, completion: nil)
         }
     }
     
     func moveFile(action: UIAlertAction) -> Void {
-        if let index = self.selectedIndex {
-            if let selectedFile = self.navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
-                moveToolBar.isHidden = false
-                
-                list!.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
-                
-                navigationManager.movingOptions.isMoving = true
-                navigationManager.movingOptions.src = selectedFile.path
-                navigationManager.movingOptions.file = navigationManager.getFileObjInCurrentDir(selectedFile.path)
+        selectedFile { file in
+            moveToolBar.isHidden = false
             
-                selectedIndex = nil
-            }
+            list?.contentInset = UIEdgeInsetsMake(0, 0, moveToolBar.frame.size.height, 0)
+            
+            navigationManager.movingOptions.isMoving = true
+            navigationManager.movingOptions.src = file.path
+            navigationManager.movingOptions.file = navigationManager.getFileInCurrentDir(at: file.path)
+            
+            selectedIndex = nil
         }
     }
     
     func deleteFile(action: UIAlertAction) -> Void {
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
-                networkManager.fdel([selectedFile.path]) { _ in
-                	self.selectedIndex = nil
+        selectedFile { file in
+            networkManager.fdel(files: [file.path]) { success in
+                self.selectedIndex = nil
+                
+                if (!success) {
+                	self.displayAlert(withMessage: "Impossible de supprimer l'élément. Veuillez réessayer.")
                 }
             }
         }
     }
     
     func renameFile(action: UIAlertAction) -> Void {
-        if let index = selectedIndex {
-            if let selectedFile = navigationManager.getSelectedFileAtRow(indexPath: IndexPath(row: index, section: 0)) {
-                let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .alert)
+        selectedFile { file in
+            let alert = UIAlertController(title: "Renommer l'élément", message: nil, preferredStyle: .alert)
+            
+            // TODO: bug here, selection does not work
+            alert.addTextField { (textField) -> Void in
+                textField.becomeFirstResponder()
+                textField.selectedTextRange = textField.textRange(from: textField.beginningOfDocument, to: textField.endOfDocument)
+                textField.text = file.path.components(separatedBy: "/").last!
+            }
+            
+            alert.addAction(UIAlertAction(title: "Annuler", style: .cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
                 
-                // TODO: bug here, selection does not work
-                alert.addTextField { (textField) -> Void in
-                    textField.becomeFirstResponder()
-                    textField.selectedTextRange = textField.textRange(from: textField.beginningOfDocument, to: textField.endOfDocument)
-                    textField.text = selectedFile.path.components(separatedBy: "/").last!
-                }
+                let input = alert.textFields![0] as UITextField
                 
-                alert.addAction(UIAlertAction(title: "Annuler", style: .cancel, handler: nil))
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+                // TODO: check input
+                
+                if let text = input.text {
+                    var components = file.path.components(separatedBy: "/").dropFirst()
+                    components = components.dropLast()
+                    components.append(text)
                     
-                    let input = alert.textFields![0] as UITextField
+                    let newPath = "/" + components.joined(separator: "/")
+                    self.navigationManager.movingOptions.src = file.path
+                    self.navigationManager.movingOptions.dest = newPath
                     
-                    // TODO: check input
-                    
-                    if let text = input.text {
-                        var components = selectedFile.path.components(separatedBy: "/").dropFirst()
-                        components = components.dropLast()
-                        components.append(text)
+                    self.networkManager.fmove(movingOptions: self.navigationManager.movingOptions) { success in
+                        self.selectedIndex = nil
                         
-                        let newPath = "/" + components.joined(separator: "/")
-                        self.navigationManager.movingOptions.src = selectedFile.path
-                        self.navigationManager.movingOptions.dest = newPath
-                        
-                        self.networkManager.fmove(self.navigationManager.movingOptions) { _ in
-                            self.selectedIndex = nil
+                        if (!success) {
+                             self.displayAlert(withMessage: "Impossible de renommer l'élément. Veuillez réessayer.")
                         }
                     }
-                }))
-                present(alert, animated: true, completion: nil)
-        	}
+                }
+            }))
+            
+            alert.view.tintColor = LIGHT_GREY
+            
+            present(alert, animated: true, completion: nil)
         }
     }
-    
-    func addActions() {
-        
-        var cancelAction = ActionSheetsManager.buildCancelAction(handler: nil)
-        
-        // UPLOAD
-        ActionSheetsManager.add(newActionSheetType: ActionSheet.upload, title: "Ajout d'un nouvel élément", message: nil)
-        
-        let newDir = ActionSheetsManager.buildDefaultAction(title: "Créer un dossier", handler: createNewDirectory)
-        let uploadFromLibrary = ActionSheetsManager.buildDefaultAction(title: "Importer depuis mes photos et vidéos", handler: pickImageFromLibrary)
-        let uploadFromCamera = ActionSheetsManager.buildDefaultAction(title: "Prendre avec l'appareil photo", handler: takeImageWithCamera)
 
-        ActionSheetsManager.add(newAction: newDir, to: ActionSheet.upload)
-        ActionSheetsManager.add(newAction: uploadFromLibrary, to: ActionSheet.upload)
-        ActionSheetsManager.add(newAction: uploadFromCamera, to: ActionSheet.upload)
-        ActionSheetsManager.add(newAction: cancelAction, to: ActionSheet.upload)
-        
-        // DIR ACTIONS
-        cancelAction = ActionSheetsManager.buildCancelAction(handler: nil)
-        
-        ActionSheetsManager.add(newActionSheetType: ActionSheet.dirOpt, title: "Dossier", message: nil)
-        
-        let rename = ActionSheetsManager.buildDefaultAction(title: "Renommer", handler: renameFile)
-        let move = ActionSheetsManager.buildDefaultAction(title: "Déplacer", handler: moveFile)
-        let delete = ActionSheetsManager.buildDefaultAction(title: "Supprimer", handler: deleteFile)
-        
-        ActionSheetsManager.add(newAction: rename, to: ActionSheet.dirOpt)
-        ActionSheetsManager.add(newAction: move, to: ActionSheet.dirOpt)
-        ActionSheetsManager.add(newAction: delete, to: ActionSheet.dirOpt)
-        ActionSheetsManager.add(newAction: cancelAction, to: ActionSheet.dirOpt)
-        
-        // FILE ACTIONS
-        ActionSheetsManager.add(newActionSheetType: ActionSheet.fileOpt, title: "Fichier", message: nil)
-        
-        let download = ActionSheetsManager.buildDefaultAction(title: "Renommer", handler: nil) // TODO
+    func activateOfflineForFile(action: UIAlertAction) -> Void {
+        selectedFile { file in
+            print("Getting ipfs data ...")
+            
+            self.startSynchImageRotation(for: file)
+            
+            IpfsManager.get(hash: file.IPFSHash) { data in
+                if let data = data {
+    
+                    self.offlineManager.write(hash: file.IPFSHash, to: file.path, content: data)
+                    self.navigationManager.addToCurrentHashes(hash: file.IPFSHash)
+                
+                    self.stopSynchImageRotation(for: file)
 
-        ActionSheetsManager.add(newAction: rename, to: ActionSheet.fileOpt)
-        ActionSheetsManager.add(newAction: move, to: ActionSheet.fileOpt)
-        ActionSheetsManager.add(newAction: delete, to: ActionSheet.fileOpt)
-        ActionSheetsManager.add(newAction: download, to: ActionSheet.fileOpt)
-		ActionSheetsManager.add(newAction: cancelAction, to: ActionSheet.fileOpt)
-    }
-    
-    func uploadOptions() {
-        if let actionSheet = ActionSheetsManager.getActionSheet(actionSheetType: ActionSheet.upload) {
-            actionSheet.view.tintColor = STOREIT_RED
-            present(actionSheet, animated: true, completion: nil)
-        }
-    }
-    
-    @IBAction func openContextualMenu(_ sender: AnyObject) {
-        if let index = sender.tag {
-            self.selectedIndex = sender.tag
-            
-            let isDir = self.navigationManager.isSelectedFileAtRowADir(indexPath: IndexPath(row: index, section: 0))
-            let actionSheetType: ActionSheet = isDir ? ActionSheet.dirOpt : ActionSheet.fileOpt
-            
-            if let actionSheet = ActionSheetsManager.getActionSheet(actionSheetType: actionSheetType) {
-                actionSheet.view.tintColor = STOREIT_RED
-                present(actionSheet, animated: true, completion: nil)
+                } else {
+                    print("Could not get ipfs data for file with hash \(file.IPFSHash)")
+                }
             }
         }
     }
     
-    // MARK: move feature
+    func deactivateOfflineForFile(action: UIAlertAction) -> Void {
+        selectedFile { file in
+            let removeSuccessful = self.offlineManager.remove(hash: file.IPFSHash, at: file.path)
+            
+            if (removeSuccessful) {
+                self.navigationManager.removeFromCurrentHashes(hash: file.IPFSHash)
+               
+                cellForSelectedFile { cell in
+                    cell.offlineImage.image = nil
+                }
+            }
+        }
+    }
     
-    @IBAction func moveInCurrentDirectory(sender: AnyObject) {
+    func rotateSynchImage(imageView: UIImageView, for file: File) {
+        UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveLinear, animations: {
+            
+            imageView.transform = imageView.transform.rotated(by: CGFloat(M_PI))
+            
+            }, completion: {
+                (value: Bool) in
+                
+                UIView.animate(withDuration: 0.5, delay: 0.0, options: .curveLinear, animations: {
+                    imageView.transform = CGAffineTransform.identity
+                    
+                    }, completion: { _ in
+
+                        if (file.isSynching) {
+                            self.rotateSynchImage(imageView: imageView, for: file)
+                        } else {
+                            imageView.image = UIImage(named: "ic_offline_pin")
+                        }
+                })
+        })
+    }
+    
+    func startSynchImageRotation(for file: File) {
+        if let index = selectedIndex {
+            let cell = list.cellForRow(at: IndexPath(row: index, section: 0)) as! FileCell
+            let image = cell.offlineImage
+
+            image!.image = UIImage(named: "ic_sync")
+            
+            file.isSynching = true
+            
+            rotateSynchImage(imageView: image!, for: file)
+        }
+    }
+    
+    func stopSynchImageRotation(for file: File) {
+        file.isSynching = false
+    }
+    
+    // MARK: MOVE FEATURE
+    
+    @IBAction func moveInCurrentDirectory(_ sender: AnyObject) {
         if let src = navigationManager.movingOptions.src {
             let targetPath = navigationManager.buildCurrentDirectoryPath()
 			let fileName = src.components(separatedBy: "/").last!
             let dest = "\(targetPath)\(targetPath.characters.last! == "/" ? "" : "/" )\(fileName)"
             
-            self.navigationManager.movingOptions.file?.path = dest
-            self.navigationManager.movingOptions.dest = dest
+            navigationManager.movingOptions.file?.path = dest
+            navigationManager.movingOptions.dest = dest
             
-            networkManager.fmove((self.navigationManager.movingOptions), completion: nil)
+            networkManager.fmove(movingOptions: (navigationManager.movingOptions)) { success in
+                if (!success) {
+                	self.displayAlert(withMessage: "Impossible de déplacer l'élément. Veuillez réessayer.")
+                }
+            }
         }
     }
     
     @IBAction func cancelMove(_ sender: AnyObject) {
         moveToolBar.isHidden = true
-        list!.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
+        list?.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
         navigationManager.movingOptions = MovingOptions()
     }
+    
+    // MARK: UTILS
+    
+    func selectedFile(completion: (File) -> Void) {
+        if let index = selectedIndex {
+            if let file = navigationManager.getFile(at: IndexPath(row: index, section: 0)) {
+                completion(file)
+            }
+        }
+    }
+    
+    func cellForSelectedFile(completion: (FileCell) -> Void) {
+        if let index = selectedIndex {
+            let cell = list.cellForRow(at: IndexPath(row: index, section: 0)) as! FileCell
+            completion(cell)
+        }
+    }
+    
 }

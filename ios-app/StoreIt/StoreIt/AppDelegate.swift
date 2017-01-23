@@ -18,6 +18,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         /*let navigationController = self.window?.rootViewController as! UINavigationController
         let loginView = navigationController.viewControllers[0] as! LoginView*/
         
+        if UserDefaults.standard.value(forKey: IS_OFFLINE_ACTIVATED) == nil {
+            UserDefaults.standard.set(true, forKey: IS_OFFLINE_ACTIVATED)
+        }
+        
         var configureError: NSError?
         GGLContext.sharedInstance().configureWithError(&configureError)
         assert(configureError == nil, "[AppDelegate] Error configuring Google services: \(configureError)")
@@ -36,6 +40,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         return true
+    }
+    
+    var shouldSupportAllOrientations = false
+    
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        if (shouldSupportAllOrientations == true){
+            return UIInterfaceOrientationMask.all
+        }
+        return UIInterfaceOrientationMask.portrait
     }
     
     func applicationWillResignActive(_ application: UIApplication) {
