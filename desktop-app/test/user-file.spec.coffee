@@ -28,11 +28,10 @@ describe 'User File', ->
       sp.should.equal "/#{p}"
 
   describe '#absolutePath()', ->
-    it 'should storeit path resolve to absolute path', ->
+    it 'should convert storeit path to absolute path', ->
       p = '/foo/bar'
       ap = userFile.absolutePath p
       ap.should.equal path.join(store, p)
-
 
   describe '#dirCreate()', ->
     it 'should create directories at store root', ->
@@ -123,7 +122,7 @@ describe 'User File', ->
           res.includes(chunk).should.be.true for chunk in hosted
           hosted.includes(chunk).should.be.true for chunk in res
 
-  describe.only '#generateTree()', ->
+  describe '#generateTree()', ->
     it 'should generate the file tree from user store\'s file', ->
       mkdir "#{store}/foo"
       touch "#{store}/bar"

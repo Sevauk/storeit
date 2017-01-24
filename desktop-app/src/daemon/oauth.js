@@ -22,10 +22,9 @@ class OAuthProvider {
   }
 
   oauth(opener=open) {
-    let userIntent = null
-    let url
     try {
-      url = this.generateAuthUrl()
+      let userIntent = null
+      const url = this.generateAuthUrl()
       if (url) {
         userIntent = this.waitAuthorized()
         opener(url)
@@ -33,24 +32,25 @@ class OAuthProvider {
       else {
         userIntent = Promise.resolve()
       }
+      return userIntent
+        .tap(() => logger.debug('[OAUTH] get token'))
+        .then(code => this.getToken(code))
+        .tap(() => logger.debug('[OAUTH] setting credentials'))
+        .tap(tokens => this.setCredentials(tokens))
+        .tap(() => logger.debug('[OAUTH] extending access token'))
+        .then(tokens => this.extendAccesToken(tokens))
+        .tap(() => logger.debug('[OAUTH] saving...'))
+        .tap(tokens => this.saveTokens(tokens))
+        .tap(() => logger.debug('[OAUTH] tokens saved'))
+        .catch(e => {
+          logger.error(`[OAUTH] ${this.type} authorization failed: ${e}`)
+          throw new Error(e)
+        })
     }
     catch (e) {
       return Promise.reject(new Error(e))
     }
-    return userIntent
-      .tap(() => logger.debug('[OAUTH] get token'))
-      .then(code => this.getToken(code))
-      .tap(() => logger.debug('[OAUTH] setting credentials'))
-      .tap(tokens => this.setCredentials(tokens))
-      .tap(() => logger.debug('[OAUTH] extending access token'))
-      .then(tokens => this.extendAccesToken(tokens))
-      .tap(() => logger.debug('[OAUTH] saving...'))
-      .tap(tokens => this.saveTokens(tokens))
-      .tap(() => logger.debug('[OAUTH] tokens saved'))
-      .catch(e => {
-        logger.error(`[OAUTH] ${this.type} authorization failed: ${e}`)
-        throw new Error(e)
-      })
+
   }
 
   waitAuthorized() {

@@ -62,18 +62,22 @@ const clear = (keepChunks=false) => {
 
 const generateTree = (hashFunc, filePath='') => {
   const absPath = absolutePath(filePath)
+
+  const arrayToMap = (entries) => {
+    const ret = {}
+    entries.forEach(file => ret[path.basename(file.path)] = file)
+    return ret
+  }
+  const normalizePath = (dir, file) => path.join(dir, file).replace(/\\/g, '/')
+
   return fs.statAsync(absPath)
     .then(stat => {
-      if (stat.isDirectory()) {
-        return fs.readdirAsync(absPath)
-          .map(file => generateTree(hashFunc, path.join(filePath, file).replace(/\\/g, '/')))
-          .then(files => {
-            const stitFiles = {}
-            files.forEach(file => stitFiles[path.basename(file.path)] = file)
-            return new FileObj('/' + filePath, null, stitFiles)
-          })
-      }
-      return Promise.resolve(hashFunc(filePath))
+      if (stat.isDirectory()) return fs.readdirAsync(absPath)
+        .map(entry => generateTree(hashFunc, normalizePath(filePath, entry)))
+        .then(arrayToMap)
+        .then(files => new FileObj('/' + filePath, null, files))
+
+      else return Promise.resolve(hashFunc(filePath))
         .then(hash => new FileObj('/' + filePath, hash))
     })
 }
