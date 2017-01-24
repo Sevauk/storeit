@@ -60,7 +60,7 @@ login = (authType, showModal=true) ->
       authWin.close() if authWin?
     .catch (e) ->
       authWin.close() if authWin?
-      terminate e
+      # terminate e
 
 logout = ->
   logger.debug('[GUI] logout')

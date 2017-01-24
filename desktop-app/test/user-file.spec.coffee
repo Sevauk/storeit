@@ -123,7 +123,7 @@ describe 'User File', ->
           res.includes(chunk).should.be.true for chunk in hosted
           hosted.includes(chunk).should.be.true for chunk in res
 
-  describe '#generateTree()', ->
+  describe.only '#generateTree()', ->
     it 'should generate the file tree from user store\'s file', ->
       mkdir "#{store}/foo"
       touch "#{store}/bar"
