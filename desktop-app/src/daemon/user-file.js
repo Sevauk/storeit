@@ -70,11 +70,12 @@ const generateTree = (hashFunc, filePath='', rec=true) => {
   }
   const normalizePath = (dir, file) => path.join(dir, file).replace(/\\/g, '/')
 
-  const bName = path.basename(filePath)
   return fs.statAsync(absPath)
     .then(stat => {
       if (stat.isDirectory()) {
+        // QUICKFIX macos watcher issue
         if (!rec) return Promise.resolve(new FileObj(storePath(absPath), null, {}))
+
         return fs.readdirAsync(absPath)
           .map(entry => generateTree(hashFunc, normalizePath(filePath, entry)))
           .then(arrayToMap)
