@@ -4,6 +4,7 @@ import * as path from 'path'
 import {logger} from './lib/log.js'
 import fs from 'fs'
 import {settings} from './settings.js'
+import './prompt.js'
 
 commander.version('0.0.1')
   .option('-p, --port <port>', 'set the port to listen to')

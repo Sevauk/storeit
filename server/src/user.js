@@ -212,6 +212,7 @@ export const disconnectSocket = (client) => {
   }
 
   delete sockets[client.uid]
+  client.ws.close()
   store.removeSocket(client)
   logger.info(`${user.email} has disconnected. ${getStat()}`)
 }
