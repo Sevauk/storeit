@@ -60,7 +60,7 @@ const clear = (keepChunks=false) => {
   return del([`${store}/**`, `${store}/.**`, ...keep], {force: true})
 }
 
-const generateTree = (hashFunc, filePath='') => {
+const generateTree = (hashFunc, filePath='', rec=true) => {
   const absPath = absolutePath(filePath)
 
   const arrayToMap = (entries) => {
@@ -70,15 +70,18 @@ const generateTree = (hashFunc, filePath='') => {
   }
   const normalizePath = (dir, file) => path.join(dir, file).replace(/\\/g, '/')
 
+  const bName = path.basename(filePath)
   return fs.statAsync(absPath)
     .then(stat => {
-      if (stat.isDirectory()) return fs.readdirAsync(absPath)
-        .map(entry => generateTree(hashFunc, normalizePath(filePath, entry)))
-        .then(arrayToMap)
-        .then(files => new FileObj(filePath, null, files))
-
+      if (stat.isDirectory()) {
+        if (!rec) return Promise.resolve(new FileObj(storePath(absPath), null, {}))
+        return fs.readdirAsync(absPath)
+          .map(entry => generateTree(hashFunc, normalizePath(filePath, entry)))
+          .then(arrayToMap)
+          .then(files => new FileObj(storePath(absPath), null, files))
+      }
       else return Promise.resolve(hashFunc(filePath))
-        .then(hash => new FileObj(filePath, hash))
+        .then(hash => new FileObj(storePath(absPath), hash))
     })
 }
 

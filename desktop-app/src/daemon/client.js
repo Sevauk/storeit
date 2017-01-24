@@ -229,14 +229,14 @@ export default class DesktopClient extends StoreitClient {
 
   sendFADD(filePath) {
     const hashFunc = this.ipfs.getFileHash.bind(this.ipfs)
-    return userFile.generateTree(hashFunc, filePath)
-      .then(files => this.request('FADD', {files: [files]}))
+    return userFile.generateTree(hashFunc, filePath, false)
+      .then(file => this.request('FADD', {files: [file]}))
       .catch(err => logger.error('FADD: ' + err))
   }
 
   sendFUPT(filePath) {
     const hashFunc = this.ipfs.getFileHash.bind(this.ipfs)
-    return userFile.generateTree(hashFunc, filePath)
+    return userFile.generateTree(hashFunc, filePath, false)
       .then(file => this.request('FUPT', {files: [file]}))
       .catch(err => logger.error('FUPT: ' + err))
   }
