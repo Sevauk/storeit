@@ -212,6 +212,7 @@ export default class DesktopClient extends StoreitClient {
   recvFSTR(req) {
     logger.debug(`[RECV:FSTR] ${logger.toJson(req)}`)
     const hash = req.parameters.hash
+    if (hash.length === 0) return Promise.resolve() // QUICKFIX
     if (req.parameters.keep)
       return this.ipfs.download(hash)
     else

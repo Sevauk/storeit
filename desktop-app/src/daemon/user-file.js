@@ -75,10 +75,10 @@ const generateTree = (hashFunc, filePath='') => {
       if (stat.isDirectory()) return fs.readdirAsync(absPath)
         .map(entry => generateTree(hashFunc, normalizePath(filePath, entry)))
         .then(arrayToMap)
-        .then(files => new FileObj('/' + filePath, null, files))
+        .then(files => new FileObj(filePath, null, files))
 
       else return Promise.resolve(hashFunc(filePath))
-        .then(hash => new FileObj('/' + filePath, hash))
+        .then(hash => new FileObj(filePath, hash))
     })
 }
 
