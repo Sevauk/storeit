@@ -52,12 +52,17 @@ public class FilesManager {
             mFileMap.put(root.getPath(), root);
         }
 
-        for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
-            mFileMap.put(entry.getValue().getPath(), entry.getValue());
-            if (entry.getValue().isDirectory()) {
-                createFilesMap(entry.getValue());
+        if (root.getFiles() != null){
+            for (Map.Entry<String, StoreitFile> entry : root.getFiles().entrySet()) {
+                if (entry != null && entry.getValue() != null){
+                    mFileMap.put(entry.getValue().getPath(), entry.getValue());
+                    if (entry.getValue().isDirectory()) {
+                        createFilesMap(entry.getValue());
+                    }
+                }
             }
         }
+
     }
 
     // Delete a directory and its content

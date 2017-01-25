@@ -334,8 +334,12 @@ public class MainActivity extends AppCompatActivity {
 
         filesManager = new FilesManager(this, rootFile);
 
+        fbtn.setVisibility(View.INVISIBLE);
+
         String newFile = intent.getStringExtra("newFile");
-        if (!newFile.equals("")) {
+        if (newFile == null) {
+            Log.e(LOGTAG, "Error newFile is null");
+        } else if (!newFile.equals("")) {
             openFragment(FileViewerFragment.newInstance(newFile));
         }
     }
@@ -683,8 +687,7 @@ public class MainActivity extends AppCompatActivity {
             if (!hash.isEmpty()) {
                 if (shouldKeep) {
                     mIpfsService.send(Message.obtain(null, IpfsService.HANDLE_ADD, hash));
-                }
-                else{
+                } else {
                     mIpfsService.send(Message.obtain(null, IpfsService.HANDLE_DEL, hash));
                 }
             }

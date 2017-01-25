@@ -43,7 +43,9 @@ import com.storeit.storeit.protocol.command.JoinResponse;
 import com.storeit.storeit.services.IpfsService;
 import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
+import com.storeit.storeit.utils.PathUtil;
 
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 /*
@@ -363,7 +365,13 @@ public class LoginActivity extends Activity {
             intent.putExtra("profile_url", response.getParameters().getUserPicture());
 
             if (sharingIntentReceived) {
-                intent.putExtra("newFile", getRealPathFromURI(sharingIntentUri));
+                try {
+                    Log.v(LOGTAG, "NewFile : " + PathUtil.getPath(this, sharingIntentUri));
+                    intent.putExtra("newFile", PathUtil.getPath(this, sharingIntentUri));
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                    intent.putExtra("newFile", "");
+                }
             } else {
                 intent.putExtra("newFile", "");
             }

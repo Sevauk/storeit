@@ -62,7 +62,7 @@ public class SocketService extends AbstractService {
 
     // Websockets
     private static final int TIMEOUT = 10000;
- //   private static final String SERVER = "ws://louismondesir.me:7641";
+    //private static final String SERVER = "ws://louismondesir.me:7641";
     private static final String SERVER = "ws://iglu.mobi:7641";
 
     private WebSocket mWebSocket = null;
