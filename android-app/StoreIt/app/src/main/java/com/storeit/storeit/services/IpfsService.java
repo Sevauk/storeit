@@ -15,6 +15,7 @@ import android.util.Log;
 
 import com.storeit.storeit.R;
 import com.storeit.storeit.activities.MainActivity;
+import com.storeit.storeit.protocol.StoreitFile;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,11 +23,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -43,7 +47,11 @@ public class IpfsService extends AbstractService {
 
     private NotificationManager mNotificationManager;
     private Thread mDaemonThread;
+    private Thread mIpfsOperationsThread;
     private Process mDaemonProcess;
+
+    private BlockingQueue<IpfsOperation> ipfsOperations = new ArrayBlockingQueue<>(256);
+    private volatile  boolean running = true;
 
     @Override
     public void onStartService() {
@@ -82,6 +90,11 @@ public class IpfsService extends AbstractService {
             });
             mDaemonThread.start();
         }
+        if (mIpfsOperationsThread == null){
+            mIpfsOperationsThread = new Thread(new StoreThread());
+            mIpfsOperationsThread.start();
+        }
+
     }
 
     @Override
@@ -90,15 +103,25 @@ public class IpfsService extends AbstractService {
         if (mDaemonProcess != null) {
             mDaemonProcess.destroy();
             mDaemonThread.interrupt();
+            running = false;
+            if (mIpfsOperationsThread != null)
+                mIpfsOperationsThread.interrupt();
         }
     }
 
     @Override
     public void onReceiveMessage(Message msg) {
+        String hash;
+
         switch (msg.what) {
+
             case HANDLE_ADD:
+                hash = (String)msg.obj;
+                ipfsOperations.add(new IpfsOperation(hash, true));
                 break;
             case HANDLE_DEL:
+                hash = (String)msg.obj;
+                ipfsOperations.add(new IpfsOperation(hash, false));
                 break;
             default:
                 break;
@@ -139,7 +162,6 @@ public class IpfsService extends AbstractService {
         try {
             Process process = pb.start();
 
-
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
             int read;
@@ -168,5 +190,79 @@ public class IpfsService extends AbstractService {
         n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
         mNotificationManager.notify(NOTIFICATION, n);
+    }
+
+
+
+    class StoreThread implements Runnable {
+
+        @Override
+        public void run() {
+            Log.v(LOGTAG, "Starting store thread...");
+            while (running){
+                try {
+                    IpfsOperation operation = ipfsOperations.take();
+                        executeCmd(operation.getHash(), operation.isAdd());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
+                }
+            }
+            Log.v(LOGTAG, "Exciting store thread...");
+        }
+
+        private void executeCmd(String hash, boolean add){
+
+            ProcessBuilder pb;
+
+            if (add)
+                pb = new ProcessBuilder(IPFS_BINARY, "get", hash);
+            else
+                pb = new ProcessBuilder(IPFS_BINARY, "pin rm", hash);
+            Map<String, String> env = pb.environment();
+            env.put("IPFS_PATH", "/data/data/com.storeit.storeit/");
+            try {
+                Process process = pb.start();
+
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(process.getInputStream()));
+                int read;
+                char[] buffer = new char[4096];
+                while ((read = reader.read(buffer)) > 0) {
+                    Log.v("BINARY", String.valueOf(buffer, 0, read));
+                }
+                reader.close();
+                process.waitFor();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    class IpfsOperation {
+
+        private String hash;
+        private boolean add;
+
+        public IpfsOperation(String hash, boolean add) {
+            this.hash = hash;
+            this.add = add;
+        }
+
+        public String getHash() {
+            return hash;
+        }
+
+        public void setHash(String hash) {
+            this.hash = hash;
+        }
+
+        public boolean isAdd() {
+            return add;
+        }
+
+        public void setAdd(boolean add) {
+            this.add = add;
+        }
     }
 }

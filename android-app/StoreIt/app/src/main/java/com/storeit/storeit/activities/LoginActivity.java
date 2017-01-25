@@ -325,6 +325,10 @@ public class LoginActivity extends Activity {
                     case SocketService.JOIN_RESPONSE:
                         openFileExplorer((JoinResponse)msg.obj);
                         break;
+                    case SocketService.JOIN_FAILED:
+
+
+                        break;
                     default:
                         break;
                 }

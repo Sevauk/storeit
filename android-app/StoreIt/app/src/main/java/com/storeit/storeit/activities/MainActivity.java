@@ -542,6 +542,7 @@ public class MainActivity extends AppCompatActivity {
             fbtn.setVisibility(View.VISIBLE);
 
             Uri uri = data.getData();
+            Log.v(LOGTAG, "uri : " + uri.toString());
             new UploadAsync(this, mSocketService).execute(getRealPathFromURI(uri));
 
         } else if (requestCode == CAPTURE_IMAGE_FULLSIZE_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -679,6 +680,15 @@ public class MainActivity extends AppCompatActivity {
         //  mIpfsService.addFile(hash);
 
         try {
+            if (!hash.isEmpty()) {
+                if (shouldKeep) {
+                    mIpfsService.send(Message.obtain(null, IpfsService.HANDLE_ADD, hash));
+                }
+                else{
+                    mIpfsService.send(Message.obtain(null, IpfsService.HANDLE_DEL, hash));
+                }
+            }
+
             mSocketService.send(Message.obtain(null, SocketService.SEND_RESPONSE, 0));
         } catch (RemoteException e) {
             e.printStackTrace();

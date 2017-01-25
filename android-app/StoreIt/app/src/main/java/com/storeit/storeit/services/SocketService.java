@@ -40,6 +40,9 @@ public class SocketService extends AbstractService {
     // Messages
     public static final int SOCKET_CONNECTED = 1;
     public static final int SOCKET_DISCONNECTED = 2;
+    public static final int RECONNECT_SOCKET_JOIN = 16;
+    public static final int SOCKET_CONNECTION_ERROR = 17;
+    public static final int JOIN_FAILED = 18;
     public static final int SEND_JOIN = 3;
     public static final int SEND_FADD = 4;
     public static final int SEND_FDEL = 5;
@@ -55,9 +58,11 @@ public class SocketService extends AbstractService {
     public static final int HANDLE_FSTR = 14;
     public static final int HANDLE_RFSH = 15;
 
+
+
     // Websockets
     private static final int TIMEOUT = 10000;
-    //private static final String SERVER = "ws://louismondesir.me:7641";
+ //   private static final String SERVER = "ws://louismondesir.me:7641";
     private static final String SERVER = "ws://iglu.mobi:7641";
 
     private WebSocket mWebSocket = null;
@@ -152,6 +157,7 @@ public class SocketService extends AbstractService {
                                                 send(Message.obtain(null, JOIN_RESPONSE, joinResponse));
                                             } catch (Exception e) {
                                                 e.printStackTrace();
+                                                send(Message.obtain(null, JOIN_FAILED));
                                             }
                                         } else if (mLastCmd.equals("RFSH")) {
                                             try {
@@ -174,6 +180,9 @@ public class SocketService extends AbstractService {
                         .connect();
             } catch (WebSocketException | IOException e) {
                 e.printStackTrace();
+                if (mWebSocket != null)
+                    mWebSocket.disconnect();
+                mConnected = false;
             }
         }
     }
