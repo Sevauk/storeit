@@ -30,7 +30,7 @@ module.exports = class DownloadsView extends Page
   render: ->
     super template
     daemon.setProgressHandler (percent, file) => @updateStatus(percent, file)
-    @mock()
+    # @mock()
 
   showInFolder: (filePath) ->
     shell.showItemInFolder userFile.absolutePath(filePath)

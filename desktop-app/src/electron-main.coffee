@@ -57,7 +57,6 @@ login = (authType, showModal=true) ->
     .then ->
       loadPage 'settings'
       authWin.close() if authWin?
-      authWin.close() if authWin?
     .catch (e) ->
       authWin.close() if authWin?
       # terminate e
@@ -85,7 +84,7 @@ initApp = (p) ->
     # {label: 'OAuth', click: -> loadPage 'oauth'} # only for debug
     {label: 'Logout', click: -> logout()}
     {type: 'separator'}
-    {label: 'Restart', click: -> restart()}
+    # {label: 'Restart', click: -> restart()}
     {label: 'Quit', click: -> app.quit()}
   ]
   view.tray.on 'right-click', -> view.tray.popUpContextMenu menu
