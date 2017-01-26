@@ -105,9 +105,6 @@ export default class Watcher {
   }
 
   ignoreEvent(ev) {
-    if (ev.type === 'FDEL')
-      return false // @Sevauk: ?
-
     return this.isIgnored(ev.path)
   }
 
