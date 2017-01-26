@@ -209,6 +209,7 @@ export default class DesktopClient extends StoreitClient {
         this.fsWatcher.unignore(file.path)
         logger.debug(`removed file ${file.path}`)
       })
+      .catch(err => logger.debug('Delete failure.'))
   }
 
   recvFMOV(req) {

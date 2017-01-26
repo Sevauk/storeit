@@ -37,6 +37,7 @@ class Client {
   }
 
   sendObj(obj) {
+    logger.debug("[SEND] " + JSON.stringify(obj, null, 2))
     this.sendText(JSON.stringify(obj))
   }
 

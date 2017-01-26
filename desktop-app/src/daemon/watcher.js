@@ -105,6 +105,8 @@ export default class Watcher {
   }
 
   ignoreEvent(ev) {
+    if (ev.type === 'FUPT' && ev.isDir)
+      return true
     return this.isIgnored(ev.path)
   }
 

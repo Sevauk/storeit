@@ -21,7 +21,7 @@ const use_command = (argv) => {
       logger.info('User content has been reset, Everyone has been disconnected')
     })
   } else if (argv[0] == 'stat') {
-    logger.info('32443 chunks')
+    logger.info(`${Object.keys(user.users).length} connected users`)
   } else {
     logger.error('Unknown command ' + argv[0])
   }

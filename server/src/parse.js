@@ -5,7 +5,7 @@ import * as authentication from './auth.js'
 import * as store from './store.js'
 
 const sendWelcome = (socket, usr, commandUid, usrProfile, handlerFn) => {
-  
+
   try {
 
   socket.sendObj(new protoObjs.Response(0, 'welcome', commandUid, {
@@ -14,7 +14,7 @@ const sendWelcome = (socket, usr, commandUid, usrProfile, handlerFn) => {
   }))
 
   } catch (err) {
-     logger.err(err)
+     logger.error(err)
   }
 }
 
@@ -120,7 +120,6 @@ const resp = (command, arg, client) => {
   }
 
   const uid = command.commandUid
-  logger.debug(client.responseHandlers)
   if (client.responseHandlers && uid in client.responseHandlers && client.responseHandlers[uid]) {
     client.responseHandlers[uid](command.code, command.text)
     delete client.responseHandlers[uid]

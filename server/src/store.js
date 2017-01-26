@@ -23,6 +23,12 @@ export const processHash = (socket, arg) => {
 const targetCount = 5
 
 export const keepChunkAlive = (hash) => {
+
+  if (hash === "") {
+    logger.error("Empty hash detected")
+    return
+  }
+
   let instances = storeTable.count(hash)
 
   if (instances >= targetCount)
@@ -36,13 +42,21 @@ export const keepChunkAlive = (hash) => {
 
   for (const usr of users) {
     storeTable.add(usr, hash)
-    user.getSocketFromUid(usr).sendObj(new api.Command('FSTR', {hash, 'keep': true}), (err) => {
-      if (err) {
-        return logger.debug('user did not FSTR as asked (TODO: punish him and try with someone else)')
-      }
-      storeTable.add(usr, hash) // TODO: why is it not running this line ?
-      logger.debug('user did download the chunk')
-    })
+
+    const socket = user.getSocketFromUid(usr)
+    if (socket != null) {
+
+      socket.sendObj(new api.Command('FSTR', {hash, 'keep': true}), (err) => {
+        if (err) {
+          return logger.debug('user did not FSTR as asked (TODO: punish him and try with someone else)')
+        }
+        storeTable.add(usr, hash) // TODO: why is it not running this line ?
+        logger.debug('user did download the chunk')
+      })
+    }
+    else {
+      logger.error('User is null')
+    }
   }
 }
 
@@ -53,7 +67,7 @@ export const removeSocket = (socket) => {
   storeTable.remove(socket.uid)
 
   if (!offlineChunks)
-    return
+  return
 
   for (const chunk of offlineChunks) {
     keepChunkAlive(chunk)
