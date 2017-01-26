@@ -5,10 +5,17 @@ import * as authentication from './auth.js'
 import * as store from './store.js'
 
 const sendWelcome = (socket, usr, commandUid, usrProfile, handlerFn) => {
+  
+  try {
+
   socket.sendObj(new protoObjs.Response(0, 'welcome', commandUid, {
     home: usr.home,
     usrProfile
   }))
+
+  } catch (err) {
+     logger.err(err)
+  }
 }
 
 const join = function(command, arg, socket, handlerFn) {
@@ -31,6 +38,7 @@ const join = function(command, arg, socket, handlerFn) {
       }
 
       if (err && err.code === 'ENOENT') {
+	console.log('connect user')
         user.createUser(email, (err) => {
           if (err) {
             return handlerFn(protoObjs.ApiError.SERVERERROR)

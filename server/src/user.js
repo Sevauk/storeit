@@ -5,6 +5,7 @@ import * as tree from './lib/tree.js'
 import * as store from './store.js'
 import {logger} from './lib/log.js'
 import cmd from './main.js'
+var sleep = require('sleep')
 
 export const users = {}
 export const sockets = {}
@@ -23,7 +24,9 @@ export const createUser = (email, handlerFn) => {
 
   const basicHome = makeBasicHome()
 
-  fs.writeFile(userHomePath, JSON.stringify(basicHome, null, 2), (err) => handlerFn(err))
+  fs.writeFile(userHomePath, JSON.stringify(basicHome, null, 2), (err) => {
+    handlerFn(err)
+  })
 }
 
 const readHome = (email, handlerFn) => {
@@ -44,6 +47,7 @@ const readHome = (email, handlerFn) => {
     }
     catch (err) {
       logger.error(`user file for ${email} seems corrupt !`)
+      logger.error(err)
       handlerFn(err)
     }
   })
@@ -205,7 +209,9 @@ export const disconnectSocket = (client) => {
 
   delete user.sockets[client.uid]
 
-  user.flushHome()
+  if (user.home) {
+      user.flushHome()
+  }
 
   if (Object.keys(user.sockets).length === 0) {
     delete users[user.email]
@@ -239,8 +245,11 @@ export const connectUser = (email, client, handlerFn) => {
   user.loadHome((err) => {
 
     if (err) {
-      logger.error(err)
+      try {
       disconnectSocket(client)
+      } catch (err) {
+         console.log(err)
+      }
     }
     else {
       logger.info(`${user.email} has connected. ${getStat()}`)
