@@ -109,11 +109,13 @@ export default class Watcher {
   }
 
   ignore(file) {
+    logger.debug(`[WATCH] adding ${file} to ignore set`)
     this.ignoreSet.add(file)
     Promise.delay(20000000).then(() => this.unignore(file))
   }
 
   unignore(file) {
+    logger.debug(`[WATCH] removing ${file} from ignore set`)
     this.ignoreSet.delete(file)
   }
 

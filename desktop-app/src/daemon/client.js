@@ -187,6 +187,7 @@ export default class DesktopClient extends StoreitClient {
     return Promise.map(files, (file) => {
       this.fsWatcher.ignore(file.path)
       return (file.isDir ? this.syncDir(file) : this.syncFile(file))
+        .delay(500)
         .then(() => this.fsWatcher.unignore(file.path))
     })
   }
@@ -199,14 +200,28 @@ export default class DesktopClient extends StoreitClient {
   recvFDEL(req) {
     logger.debug(`[RECV:FDEL] ${logger.toJson(req)}`)
     return Promise
-      .map(req.parameters.files, file => userFile.del(file))
-      .each(file => logger.debug(`removed file ${file.path}`))
+      .map(req.parameters.files, file => {
+        this.fsWatcher.ignore(file)
+        return userFile.del(file)
+      })
+      .delay(500)
+      .each(file => {
+        this.fsWatcher.unignore(file.path)
+        logger.debug(`removed file ${file.path}`)
+      })
   }
 
   recvFMOV(req) {
     logger.debug(`[RECV:FMOV] ${logger.toJson(req)}`)
+    this.fsWatcher.ignore(req.parameters.src)
+    this.fsWatcher.ignore(req.parameters.dest)
     return userFile.move(req.parameters.src, req.parameters.dest)
-      .tap(file => logger.debug(`moved file ${file.src} to ${file.dst}`))
+      .delay(500)
+      .tap(file => {
+        logger.debug(`moved file ${file.src} to ${file.dst}`)
+        this.fsWatcher.unignore(file.src)
+        this.fsWatcher.unignore(file.dst)
+      })
   }
 
   recvFSTR(req) {
