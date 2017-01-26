@@ -74,7 +74,7 @@ public class UploadAsync extends AsyncTask<String, Integer, String> {
             mBuilder.setContentText("Upload failed...")
                     .setProgress(0, 0, false);
         } else {
-            mBuilder.setContentText(response)
+            mBuilder.setContentText("Upload finished")
                     .setProgress(0, 0, false);
             Log.v("IPFS", response);
 

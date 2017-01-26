@@ -6,25 +6,34 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.storeit.storeit.R;
 import com.storeit.storeit.activities.MainActivity;
 import com.storeit.storeit.protocol.StoreitFile;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,11 +48,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class IpfsService extends AbstractService {
 
     private static final String LOGTAG = "IpfsService";
-    private static final String IPFS_BINARY = "/data/data/com.storeit.storeit/ipfs_x86";
+    private static final String IPFS_BINARY = "/data/data/com.storeit.storeit/ipfs";
     private static final int NOTIFICATION = 123;
 
     public static final int HANDLE_ADD = 1;
     public static final int HANDLE_DEL = 2;
+    public static final int IPFS_HASH_STORED = 3;
 
     private NotificationManager mNotificationManager;
     private Thread mDaemonThread;
@@ -51,12 +61,15 @@ public class IpfsService extends AbstractService {
     private Process mDaemonProcess;
 
     private BlockingQueue<IpfsOperation> ipfsOperations = new ArrayBlockingQueue<>(256);
-    private volatile  boolean running = true;
+    private volatile boolean running = true;
+
+    private ArrayList mStoredHash;
 
     @Override
     public void onStartService() {
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         makeNotification(getApplicationContext());
+
 
         copyIpfs();
         if (mDaemonThread == null) {
@@ -90,12 +103,12 @@ public class IpfsService extends AbstractService {
             });
             mDaemonThread.start();
         }
-        if (mIpfsOperationsThread == null){
+        if (mIpfsOperationsThread == null) {
             mIpfsOperationsThread = new Thread(new StoreThread());
             mIpfsOperationsThread.start();
         }
-
     }
+
 
     @Override
     public void onStopService() {
@@ -116,11 +129,11 @@ public class IpfsService extends AbstractService {
         switch (msg.what) {
 
             case HANDLE_ADD:
-                hash = (String)msg.obj;
+                hash = (String) msg.obj;
                 ipfsOperations.add(new IpfsOperation(hash, true));
                 break;
             case HANDLE_DEL:
-                hash = (String)msg.obj;
+                hash = (String) msg.obj;
                 ipfsOperations.add(new IpfsOperation(hash, false));
                 break;
             default:
@@ -135,7 +148,7 @@ public class IpfsService extends AbstractService {
         }
 
         try {
-            InputStream is = getAssets().open("ipfs_x86"); // Copy file
+            InputStream is = getAssets().open("ipfs"); // Copy file
             OutputStream os = new FileOutputStream(file);
 
             int len = 0;
@@ -192,17 +205,16 @@ public class IpfsService extends AbstractService {
         mNotificationManager.notify(NOTIFICATION, n);
     }
 
-
-
     class StoreThread implements Runnable {
 
         @Override
         public void run() {
             Log.v(LOGTAG, "Starting store thread...");
-            while (running){
+            while (running) {
                 try {
                     IpfsOperation operation = ipfsOperations.take();
-                        executeCmd(operation.getHash(), operation.isAdd());
+                    executeCmd(operation.getHash(), operation.isAdd());
+                    send(Message.obtain(null, IPFS_HASH_STORED, operation));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     break;
@@ -211,7 +223,7 @@ public class IpfsService extends AbstractService {
             Log.v(LOGTAG, "Exciting store thread...");
         }
 
-        private void executeCmd(String hash, boolean add){
+        private void executeCmd(String hash, boolean add) {
 
             ProcessBuilder pb;
 
@@ -239,7 +251,7 @@ public class IpfsService extends AbstractService {
         }
     }
 
-    class IpfsOperation {
+    public class IpfsOperation {
 
         private String hash;
         private boolean add;

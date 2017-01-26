@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -36,6 +37,9 @@ import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.SignInButton;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.storeit.storeit.R;
 import com.storeit.storeit.oauth.GetUsernameTask;
 import com.storeit.storeit.protocol.command.ConnectionInfo;
@@ -45,7 +49,15 @@ import com.storeit.storeit.services.ServiceManager;
 import com.storeit.storeit.services.SocketService;
 import com.storeit.storeit.utils.PathUtil;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /*
@@ -83,6 +95,8 @@ public class LoginActivity extends Activity {
     private boolean mSocketConnected = true;
     private boolean mStopService = true;
 
+    private ArrayList<String> mStoredHash;
+
     private void pickUserAccount() {
         String[] accountTypes = new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE};
         Intent intent = AccountPicker.newChooseAccountIntent(null, null,
@@ -112,7 +126,7 @@ public class LoginActivity extends Activity {
                 editor.apply();
 
                 try {
-                    mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo("gg", token)));
+                    mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo("gg", token, mStoredHash)));
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -192,6 +206,9 @@ public class LoginActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mStoredHash = getSavedHashes();
+
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_login);
 
@@ -250,7 +267,7 @@ public class LoginActivity extends Activity {
                 editor.apply();
 
                 try {
-                    mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo("gg", "developer")));
+                    mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo("gg", "developer", mStoredHash)));
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -273,7 +290,7 @@ public class LoginActivity extends Activity {
                 editor.apply();
 
                 try {
-                    mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo("fb", loginResult.getAccessToken().getToken())));
+                    mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo("fb", loginResult.getAccessToken().getToken(), mStoredHash)));
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -315,7 +332,7 @@ public class LoginActivity extends Activity {
                         if (mAutoLogin){
                             try {
                                 Log.i(LOGTAG, "Sending join!");
-                                mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo(m_method, m_token)));
+                                mSocketService.send(Message.obtain(null, SocketService.SEND_JOIN, new ConnectionInfo(m_method, m_token, mStoredHash)));
                             } catch (RemoteException e) {
                                 e.printStackTrace();
                             }
@@ -418,5 +435,63 @@ public class LoginActivity extends Activity {
                 }
                 break;
         }
+    }
+
+    public ArrayList<String> getSavedHashes() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String storageLocation = sp.getString("pref_key_storage_location", getExternalFilesDirs(null)[0].getPath());
+
+        ArrayList objList;
+        ArrayList<String> storedHashes = new ArrayList<>();
+
+        File jsonHashFile = new File(storageLocation + File.separator + ".save_hash.json");
+        if (!jsonHashFile.exists()) {
+
+            String json = "{\"hashes\": [] }";
+
+            try {
+                jsonHashFile.createNewFile();
+                FileOutputStream fOut = new FileOutputStream(jsonHashFile);
+                OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+                myOutWriter.append(json);
+                myOutWriter.close();
+                fOut.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            storedHashes = new ArrayList<String>();
+        } else {
+            try {
+                FileInputStream fIn = new FileInputStream(jsonHashFile);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(fIn));
+
+                String json = "";
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    json += line;
+                }
+
+                reader.close();
+
+                JsonParser jsonParser = new JsonParser();
+                JsonObject jo = (JsonObject) jsonParser.parse(json);
+                JsonArray array = jo.getAsJsonArray("hashes");
+
+
+
+                Gson gson = new Gson();
+                objList = gson.fromJson(array, ArrayList.class);
+
+                for (Object hash : objList){
+                    storedHashes.add((String)hash);
+                    Log.v(LOGTAG, "hosted : " + (String)hash);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return  storedHashes;
     }
 }

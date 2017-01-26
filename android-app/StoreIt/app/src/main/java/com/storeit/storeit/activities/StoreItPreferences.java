@@ -56,11 +56,15 @@ public class StoreItPreferences extends PreferenceActivity {
             ListPreference lp = (ListPreference) findPreference("pref_key_storage_location");
             ArrayList<CharSequence> entryValues = new ArrayList<>();
 
-            for (File f : mSavePath) {
-                entryValues.add(f.getPath());
+            if (mSavePath != null){
+                for (File f : mSavePath) {
+                    if (f != null)
+                        entryValues.add(f.getPath());
+                }
+                lp.setEntries(entryValues.toArray(new CharSequence[entryValues.size()]));
+                lp.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
             }
-            lp.setEntries(entryValues.toArray(new CharSequence[entryValues.size()]));
-            lp.setEntryValues(entryValues.toArray(new CharSequence[entryValues.size()]));
+
 
             Log.v("StoreitPreference", "Fragment loaded");
 

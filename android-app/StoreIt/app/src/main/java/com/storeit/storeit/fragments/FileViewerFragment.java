@@ -295,7 +295,7 @@ public class FileViewerFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
-        builder.setTitle("Save picture");
+        builder.setTitle("Rename file");
         View dialogView = inflater.inflate(R.layout.dialog_name_file, null);
         builder.setView(dialogView);
 

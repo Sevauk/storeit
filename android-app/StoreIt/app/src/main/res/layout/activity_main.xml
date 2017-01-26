@@ -19,7 +19,8 @@
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar">
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/add_file_button"
@@ -27,7 +28,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            android:src="@android:drawable/ic_input_add" />
+            android:src="@android:drawable/ic_input_add"
+            app:backgroundTint="?android:attr/colorPrimary"
+            android:tint="@color/colorPrimaryDark" />
 
     </FrameLayout>
 

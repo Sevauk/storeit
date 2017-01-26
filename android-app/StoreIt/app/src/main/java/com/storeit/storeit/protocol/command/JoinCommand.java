@@ -1,5 +1,7 @@
 package com.storeit.storeit.protocol.command;
 
+import java.util.ArrayList;
+
 /**
  * Created by loulo on 21/06/2016.
  */
@@ -9,27 +11,27 @@ public class JoinCommand {
     Parameters parameters;
 
 
-    public JoinCommand(int uid, String type, String accessToken){
+    public JoinCommand(int uid, String type, String accessToken, ArrayList<String> hosting) {
         this.uid = uid;
         this.command = "JOIN";
-        this.parameters = new Parameters(type, accessToken);
+        this.parameters = new Parameters(type, accessToken, hosting);
     }
 
-    class Parameters{
+    class Parameters {
         Auth auth;
-        String[] hosting;
+        ArrayList<String> hosting;
 
-        public Parameters(String type, String accessToken){
-            this.hosting = new String[0];
+        public Parameters(String type, String accessToken, ArrayList<String> hosting) {
             auth = new Auth(type, accessToken);
+            this.hosting = hosting;
         }
     }
 
-    class Auth{
+    class Auth {
         String type;
         String accessToken;
 
-        public  Auth(String type, String accessToken){
+        public Auth(String type, String accessToken) {
             this.type = type;
             this.accessToken = accessToken;
         }

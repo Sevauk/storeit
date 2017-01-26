@@ -19,7 +19,7 @@
 
     <TableLayout
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="24dp">
 
         <TableRow>
@@ -27,7 +27,7 @@
             <TextView
                 android:id="@+id/file_item_row_name"
                 android:layout_width="240dp"
-                android:layout_height="15dp"
+                android:layout_height="wrap_content"
                 android:text="New File" />
         </TableRow>
 
@@ -36,7 +36,7 @@
             <TextView
                 android:id="@+id/file_item_row_last_modified"
                 android:layout_width="240dp"
-                android:layout_height="15dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:text="Last modified: Feb 23" />
         </TableRow>

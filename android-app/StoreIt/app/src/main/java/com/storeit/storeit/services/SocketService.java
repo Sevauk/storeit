@@ -62,8 +62,9 @@ public class SocketService extends AbstractService {
 
     // Websockets
     private static final int TIMEOUT = 10000;
-    //private static final String SERVER = "ws://louismondesir.me:7641";
-    private static final String SERVER = "ws://iglu.mobi:7641";
+//    private static final String SERVER = "ws://louismondesir.me:7641";
+    //private static final String SERVER = "ws://iglu.mobi:7641";
+    private static final String SERVER = "ws://192.168.0.17:7641";
 
     private WebSocket mWebSocket = null;
     private Thread mSocketThread = null;
@@ -85,7 +86,6 @@ public class SocketService extends AbstractService {
                             public void onConnected(WebSocket websocket, Map<String, List<String>> headers) {
                                 mConnected = true;
                                 Log.i(LOGTAG, "Socket connected to server");
-
                                 send(Message.obtain(null, SOCKET_CONNECTED));
                             }
 
@@ -255,7 +255,7 @@ public class SocketService extends AbstractService {
         Log.i(LOGTAG, "Sending join command " + info.getMethod() + " " + info.getToken());
 
         Gson gson = new Gson();
-        JoinCommand cmd = new JoinCommand(mUID, info.getMethod(), info.getToken());
+        JoinCommand cmd = new JoinCommand(mUID, info.getMethod(), info.getToken(), info.getHosting());
         mWebSocket.sendText(gson.toJson(cmd));
         mUID++;
         mLastCmd = "JOIN";

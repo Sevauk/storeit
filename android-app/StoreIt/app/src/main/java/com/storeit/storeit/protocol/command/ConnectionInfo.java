@@ -1,5 +1,7 @@
 package com.storeit.storeit.protocol.command;
 
+import java.util.ArrayList;
+
 /**
  * Created by loulo on 13/11/2016.
  */
@@ -7,10 +9,12 @@ package com.storeit.storeit.protocol.command;
 public class ConnectionInfo {
     private String mMethod;
     private String mToken;
+    private ArrayList<String> hosting;
 
-    public ConnectionInfo(String method, String token) {
+    public ConnectionInfo(String method, String token, ArrayList<String> hosting) {
         mMethod = method;
         mToken = token;
+        this.hosting = hosting;
     }
 
     public String getMethod() {
@@ -20,4 +24,6 @@ public class ConnectionInfo {
     public String getToken() {
         return mToken;
     }
+
+    public  ArrayList<String> getHosting() {return hosting;}
 }

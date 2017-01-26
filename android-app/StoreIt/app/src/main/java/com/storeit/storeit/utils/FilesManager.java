@@ -31,7 +31,7 @@ public class FilesManager {
     public FilesManager(Context ctx, StoreitFile rootFile) {
 
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(ctx);
-        storageLocation = SP.getString("pref_key_storage_location", "");
+        storageLocation = SP.getString("pref_key_storage_location", ctx.getExternalFilesDirs(null)[0].getPath());
 
         if (storageLocation.equals("")) {
             File path[] = ctx.getExternalFilesDirs(null);
@@ -48,6 +48,11 @@ public class FilesManager {
     }
 
     private void createFilesMap(StoreitFile root) {
+        if (root.getPath().contains("//")){
+            root.setPath(root.getPath().replace("//", "/"));
+        }
+
+
         if (!mFileMap.containsKey(root.getPath())) {
             mFileMap.put(root.getPath(), root);
         }
@@ -159,6 +164,10 @@ public class FilesManager {
     }
 
     public void addFile(StoreitFile file, StoreitFile parent) {
+        if (file.getPath().contains("//")){
+            file.setPath(file.getPath().replace("//", "/"));
+        }
+
         StoreitFile p = getFileByPath(parent.getPath());
         if (p != null) {
             p.addFile(file);
@@ -168,6 +177,10 @@ public class FilesManager {
     }
 
     public void addFile(StoreitFile file) {
+        if (file.getPath().contains("//")){
+            file.setPath(file.getPath().replace("//", "/"));
+        }
+
         StoreitFile parent = getParentFile(file);
         if (parent != null)
             parent.addFile(file);
