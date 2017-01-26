@@ -5,7 +5,6 @@ import * as tree from './lib/tree.js'
 import * as store from './store.js'
 import {logger} from './lib/log.js'
 import cmd from './main.js'
-var sleep = require('sleep')
 
 export const users = {}
 export const sockets = {}
