@@ -64,6 +64,7 @@ export default class Watcher {
   start() {
     this.monitor = chokidar.watch(this.watchPath, {
       persistent: true,
+      useFsEvents: false,
       ignored: [...OS_GENERATED, ...(this.ignoredPath.map(p =>
         p instanceof RegExp ? p : new RegExp(p.replace(/\./g, '\\.'))
       ))]
