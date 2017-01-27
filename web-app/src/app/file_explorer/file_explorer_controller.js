@@ -1,43 +1,50 @@
 export default class FileExplorerController {
-  constructor(FilesService, $scope) {
+  constructor(FilesService, StoreItClient, $scope) {
     'ngInject'
 
     this.scope = $scope
+    StoreItClient.handlers['FADD'] = (params) => this.recvFADD(params.files[0])
     FilesService.getFiles()
       .then((home) => {
         console.log('before:', home)
         this.path = []
-        this.root = {home}
-        this.cwd = {files: home}
-        if (!Array.isArray(this.cwd.files.files)) {
-          this.cwd.files = Object
-            .keys(this.cwd.files.files)
-            .map((key) => this.cwd.files.files[key])
-        }
+        this.root = home
+        this.cwd = home
         console.log('after:', this.cwd.files)
         this.scope.$apply()
       })
   }
 
-  action(index) {
-    let target = this.cwd.files[index]
+  action(fileName) {
+    let target = this.cwd.files[fileName]
     if (target.isDir) {
       this.cd(target)
     }
     else {
-      window.open(`http://ipfs.io/ipfs/${target.IPFSHash}`)
+      const link = document.createElement('a')
+      link.download = target.IPFSHash
+      link.href = `http://ipfs.io/ipfs/${target.IPFSHash}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 
   cd(dest) {
     this.path.push(this.cwd)
     this.cwd = dest
-    if (!Array.isArray(this.cwd.files)) {
-      this.cwd.files = Object
-        .keys(this.cwd.files)
-        .map((key) => this.cwd.files[key])
+  }
+
+  recvFADD(file) {
+    const subDirs = file.path.split('/')
+      .filter(dir => dir !== '')
+    let curr = this.root
+    let i
+    for (i = 0; curr.isDir && i < subDirs.length - 1; ++i) {
+      curr = curr.files[subDirs[i]]
     }
-    console.log('path', this.path)
+    curr.files[subDirs[i]] = file
+    this.scope.$apply()
   }
 
   parent() {

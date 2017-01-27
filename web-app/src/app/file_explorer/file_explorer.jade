@@ -19,10 +19,10 @@ div.page-layout(layout="row" flex)
       md-list-item(ng-if="vm.path.length" ng-click="vm.parent()")
         md-icon(md-font-set="material-icons") folder
         p ..
-      md-list-item(ng-repeat="file in vm.cwd.files" ng-click="vm.action($index)")
+      md-list-item(ng-repeat="(name, file) in vm.cwd.files" ng-click="vm.action(name)")
         md-icon(ng-if="file.isDir" md-font-set="material-icons") folder
         md-icon(ng-if="!file.isDir" md-font-set="material-icons") insert_drive_file
-        p {{file.path.split('/').slice(-1)[0]}}
+        p {{name}}
         md-menu
           md-button(ng-click="$mdOpenMenu($event)")
             md-icon(md-font-set="material-icons") more_vert

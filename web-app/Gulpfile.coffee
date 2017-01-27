@@ -13,6 +13,6 @@ gulp.task 'watch', (done) ->
   browserSync.init
     proxy: 'http://localhost:3000'
     files: SRC
-    port: 8080
+    port: 8888
   gulp.watch SRC, browserSync.stream()
   done()

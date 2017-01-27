@@ -24,7 +24,14 @@ class StoreItClientService {
       this.recoTime = 1
       resolve()
     })
-    this.sock.onmessage = (ev) => this.manageResponse(JSON.parse(ev.data))
+    this.sock.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data)
+      console.log('received: ', JSON.stringify(msg))
+      if (msg.command === 'RESP')
+        this.manageResponse(msg)
+      else
+        this.manageMessage(msg)
+    }
     this.sock.onerror = () => this.reconnect()
   }
 
@@ -48,9 +55,15 @@ class StoreItClientService {
     return new Promise((resolve) => this.handlers[req.uid] = resolve)
   }
 
+  manageMessage(msg) {
+    const handler = this.handlers[msg.command]
+    if (handler) {
+      handler(msg.parameters)
+    }
+  }
+
   manageResponse(res) {
-    console.log('received: ', JSON.stringify(res))
-    let handler = this.handlers[res.commandUid]
+    const handler = this.handlers[res.commandUid]
     if (handler) {
       handler(res.parameters)
       delete this.handlers[res.commandUid]
