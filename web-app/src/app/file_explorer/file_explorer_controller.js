@@ -24,6 +24,9 @@ export default class FileExplorerController {
     if (target.isDir) {
       this.cd(target)
     }
+    else {
+      window.open(`http://ipfs.io/ipfs/${target.IPFSHash}`)
+    }
   }
 
   cd(dest) {
