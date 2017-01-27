@@ -8,6 +8,7 @@
 
 import UIKit
 import QuickLook
+import APESuperHUD
 
 class FileView: UIViewController, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
 

@@ -107,6 +107,7 @@ class WebSocketManager {
             if (response.text == CommandInfos.JOIN_RESPONSE_TEXT) {
                 if let params = response.parameters {
                     if let home = params.home {
+                        print(home.files)
                         navigationManager.set(home: home)
                         loginHandler?(true, "Connection succeeded - Home set", false)
                     }
@@ -295,6 +296,7 @@ class WebSocketManager {
     }
     
     private func onText(request: String) {
+        print("RECEIVED TEXT FROM SERVER \(request)")
         if let command: ResponseResolver = Mapper<ResponseResolver>().map(JSONString: request) {
             
             // SEREVR HAS RESPONDED

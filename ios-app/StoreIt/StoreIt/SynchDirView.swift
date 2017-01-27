@@ -11,6 +11,7 @@ import Photos
 import ObjectMapper
 import QuickLook
 import MobileCoreServices
+import APESuperHUD
 
 enum CellIdentifiers: String {
     case directory = "directoryCell"
@@ -112,13 +113,17 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                 listView.navigationManager.movingOptions.isMoving = navigationManager.movingOptions.isMoving
             }
                 
+                
+                
+                
             // TODO: TRY WITHOUT FILE VIEW (PRESENT QL HERE)
             else if (segue.identifier == "showFileSegue") {
                 let fileView = segue.destination as! FileView
                 
                 fileView.navigationItem.title = navigationManager.getName(for: target)
+                
                 fileView.showActivityIndicatory()
-
+                
                 let offlineActivated = navigationManager.isOfflineActivated(for: target.IPFSHash)
                 
                 if (offlineActivated) {
@@ -294,13 +299,20 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingImage image: UIImage!, editingInfo: [AnyHashable: Any]!) {
         func _ipfsAdd(fileName: String, data: Data) {
             // TODO: Maybe begin some loading in interface here...
+            
+            APESuperHUD.showOrUpdateHUD(loadingIndicator: .standard,
+                                        messages: ["Importation en cours..."],
+                                        presentingView: self.view)
+            
             IpfsManager.add(fileName: fileName, data: data) {
                 (
                 data, response, error) in
                 
                 guard let _:Data = data, let _:URLResponse = response  , error == nil else {
                     print("[IPFS.ADD] Error while IPFS ADD: \(error?.localizedDescription)")
-                    self.displayAlert(withMessage: "Impossible d'upload le fichier pour le moment.")
+                    APESuperHUD.removeHUD(animated: true, presentingView: self.view, completion: { _ in
+                        self.displayAlert(withMessage: "Impossible d'upload le fichier pour le moment.")
+                    })
                     return
                 }
                 
@@ -314,6 +326,14 @@ class SynchDirView:  UIViewController, UITableViewDelegate, UITableViewDataSourc
                 self.networkManager.fadd(files: [file]) { success in
                     if (!success) {
                         self.displayAlert(withMessage: "L'ajout du fichier a échoué. Veuillez réessayer.")
+                    } else {
+                        APESuperHUD.removeHUD(animated: true, presentingView: self.view, completion: { _ in
+                            APESuperHUD.showOrUpdateHUD(icon: .checkMark,
+                                                        message: "Terminé !",
+                                                        duration: 2.0, presentingView: self.view, completion: { _ in
+                                                            // Completed
+                            })
+                        })
                     }
                 }
             }

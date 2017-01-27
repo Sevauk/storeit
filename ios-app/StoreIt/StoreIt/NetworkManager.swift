@@ -16,10 +16,10 @@ class NetworkManager {
     private let WSManager: WebSocketManager
     
     //private let _host = "localhost"
-    //private let _host = "iglu.mobi"
-    //private let _host = "192.168.1.12"
+    private let _host = "iglu.mobi"
+    //private let _host = "192.168.0.17"
     //private let _host = "localhost"
-    private let _host = "louismondesir.me"
+    //private let _host = "louismondesir.me"
     
     private let _port = 7641
     

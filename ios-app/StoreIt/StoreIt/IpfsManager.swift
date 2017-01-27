@@ -11,11 +11,13 @@ import Alamofire
 
 class IpfsManager {
     
-    static let host: String = "127.0.0.1"
+    //static let host: String = "127.0.0.1"
+    static let host: String = "louismondesir.me"
+
     static let port: Int = 5001
     
     static func get(hash: String, completionHandler: @escaping ((Data?) -> Void)) {
-        Alamofire.request("http://ipfs.io/ipfs/\(hash)").responseString { response in
+        Alamofire.request("http:/\(host):8080/ipfs/\(hash)").responseString { response in
         	completionHandler(response.data)
         }
     }
