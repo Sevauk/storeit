@@ -4,6 +4,7 @@ export default class FileExplorerController {
 
     this.scope = $scope
     StoreItClient.handlers['FADD'] = (params) => this.recvFADD(params.files[0])
+    StoreItClient.handlers['FDEL'] = (params) => this.recvFDEL(params.files[0])
     FilesService.getFiles()
       .then((home) => {
         console.log('before:', home)
@@ -44,6 +45,18 @@ export default class FileExplorerController {
       curr = curr.files[subDirs[i]]
     }
     curr.files[subDirs[i]] = file
+    this.scope.$apply()
+  }
+
+  recvFDEL(file) {
+    const subDirs = file.split('/')
+      .filter(dir => dir !== '')
+    let curr = this.root
+    let i
+    for (i = 0; curr.isDir && i < subDirs.length - 1; ++i) {
+      curr = curr.files[subDirs[i]]
+    }
+    delete curr.files[subDirs[i]]
     this.scope.$apply()
   }
 
