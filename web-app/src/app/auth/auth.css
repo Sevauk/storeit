@@ -1,3 +1,7 @@
+auth, auth .content {
+  height: 100%;
+}
+
 #login button {
   color: #fff;
   height: 50px;
