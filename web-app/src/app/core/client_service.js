@@ -13,12 +13,17 @@ class StoreItClientService {
     this.addr = STOREIT.serverAddr
     this.port = STOREIT.serverPort
     this.recoTime = 1
+    this.isReady = false
     this.connect()
   }
 
   connect() {
     this.sock = new WebSocket(`ws://${this.addr}:${this.port}`)
-    this.sock.onopen = () => this.recoTime = 1
+    this.onReady = new Promise(resolve => this.sock.onopen = () => {
+      this.isReady = true
+      this.recoTime = 1
+      resolve()
+    })
     this.sock.onmessage = (ev) => this.manageResponse(JSON.parse(ev.data))
     this.sock.onerror = () => this.reconnect()
   }
@@ -29,9 +34,16 @@ class StoreItClientService {
     if (this.recoTime < MAX_RECO_TIME) ++this.recoTime
   }
 
+  ready() {
+    if (this.isReady) return Promise.resolve()
+    return this.onReady
+  }
+
   request(cmd, params, noHandler=false) {
     let req = new Request(cmd, params)
-    this.sock.send(JSON.stringify(req))
+    console.log('sending: ', JSON.stringify(req))
+    this.ready()
+      .then(() => this.sock.send(JSON.stringify(req)))
     if (noHandler) return Promise.resolve()
     return new Promise((resolve) => this.handlers[req.uid] = resolve)
   }

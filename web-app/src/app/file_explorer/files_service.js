@@ -45,11 +45,14 @@ let files = [
 // if (window.userFiles) files = window.userFiles
 //
 export default class FilesService {
-  constructor() {
+  constructor(StoreItClient) {
     'ngInject'
+
+    this.client = StoreItClient
   }
 
   getFiles() {
-    return window.join().then((res) => res.home)
+    return this.client.request('JOIN', JSON.parse(localStorage.getItem('authParams')))
+      .then((res) => res.home)
   }
 }

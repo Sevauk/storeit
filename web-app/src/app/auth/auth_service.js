@@ -19,10 +19,9 @@ export default class AuthService {
     return this.join(authTypes[network], token)
   }
 
-  join(authType, accessToken) {
-    window.join = () => {
-      return this.client.request('JOIN', {authType, accessToken, hosting: {}})
-    }
-    return Promise.resolve()
+  join(type, accessToken) {
+    const authParams = {auth: {type, accessToken}, hosting: {}}
+    localStorage.setItem('authParams', JSON.stringify(authParams))
+    return this.client.request('JOIN', authParams)
   }
 }
